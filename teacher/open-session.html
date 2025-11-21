@@ -31,7 +31,7 @@
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
-      margin-bottom:1.8rem;
+      margin-bottom:1.4rem;
     }
 
     .title-box h2 {
@@ -69,7 +69,7 @@
       border:1px solid rgba(148,163,184,.35);
       background:rgba(15,23,42,.98);
       color:#e5e7eb;
-      margin-bottom:1.4rem;
+      margin-bottom:1.1rem;
       outline:none;
       font-size:.95rem;
     }
@@ -79,22 +79,44 @@
       box-shadow:0 0 0 1px rgba(99,102,241,.6);
     }
 
+    .btn-row {
+      display:flex;
+      gap:.7rem;
+      margin-top:.3rem;
+      margin-bottom:1.1rem;
+    }
+
     .btn {
-      width:100%;
-      padding:.95rem;
+      flex:1;
+      padding:.9rem;
       border-radius:999px;
       border:none;
       cursor:pointer;
       font-weight:600;
-      background:linear-gradient(135deg,#4f46e5,#22c55e);
-      color:white;
       font-size:.95rem;
+      color:white;
+      transition:.16s;
+    }
+
+    .btn-open {
+      background:linear-gradient(135deg,#4f46e5,#22c55e);
       box-shadow:0 16px 38px rgba(34,197,94,.48);
     }
 
+    .btn-close {
+      background:linear-gradient(135deg,#f97316,#dc2626);
+      box-shadow:0 16px 38px rgba(248,113,113,.4);
+    }
+
+    .btn:disabled {
+      opacity:.6;
+      cursor:default;
+      box-shadow:none;
+    }
+
     .token-box {
-      margin-top:1.7rem;
-      padding:1.3rem 1rem;
+      margin-top:.5rem;
+      padding:1.1rem 1rem;
       border-radius:1.1rem;
       background:rgba(15,23,42,.98);
       border:1px solid rgba(148,163,184,.35);
@@ -105,19 +127,25 @@
     .token-label {
       font-size:.9rem;
       color:#cbd5f5;
-      margin-bottom:.4rem;
+      margin-bottom:.3rem;
     }
 
     #token {
-      font-size:2.2rem;
+      font-size:2.1rem;
       letter-spacing:0.3em;
       font-weight:700;
       color:#38bdf8;
       text-shadow:0 0 14px rgba(56,189,248,.7);
     }
 
+    .session-status {
+      font-size:.85rem;
+      margin-top:.4rem;
+      color:#e5e7eb;
+    }
+
     #msg {
-      margin-top:1.1rem;
+      margin-top:.6rem;
       text-align:center;
       font-size:.9rem;
     }
@@ -129,8 +157,8 @@
   <div class="wrap">
     <div class="header">
       <div class="title-box">
-        <h2>เปิดคาบเรียน</h2>
-        <p>สร้าง TOKEN สำหรับให้นักเรียนเช็คชื่อในคาบนี้</p>
+        <h2>จัดการคาบเรียน</h2>
+        <p>เปิดคาบด้วย TOKEN และปิดคาบเพื่อสรุปมา/สาย/ขาด</p>
       </div>
       <div class="teacher-chip">
         👩‍🏫 <span id="teacherName">-</span>
@@ -140,7 +168,21 @@
     <label>รหัสวิชา / รายวิชา</label>
     <input type="text" id="subjectCode" placeholder="เช่น CPVC101, ระบบเช็คชื่อ">
 
-    <button id="openSessionBtn" class="btn">เปิดคาบเรียน</button>
+    <label>ห้อง / กลุ่มเรียน</label>
+    <input type="text" id="room" placeholder="เช่น ปวช.2/1">
+
+    <div class="session-status" id="sessionStatus">
+      สถานะคาบ: ยังไม่เปิดคาบ
+    </div>
+
+    <div class="btn-row">
+      <button id="openSessionBtn" class="btn btn-open">
+        เปิดคาบเรียน
+      </button>
+      <button id="closeSessionBtn" class="btn btn-close" disabled>
+        ปิดคาบเรียน
+      </button>
+    </div>
 
     <div id="tokenBox" class="token-box">
       <div class="token-label">TOKEN สำหรับคาบนี้</div>
