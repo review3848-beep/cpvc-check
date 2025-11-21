@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ประวัติการเข้าเรียน | CPVC-Check</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="../css/styles.css">
+  <script type="module" src="../js/student-history.js" defer></script>
+
+  <style>
+    body {
+      background:#0b1120; padding:2rem; color:white;
+    }
+
+    .history-card {
+      max-width:680px; margin:auto; padding:2rem;
+      border-radius:1.2rem;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.08);
+      backdrop-filter:blur(14px);
+    }
+
+    h2 { text-align:center; margin-bottom:1.5rem; }
+
+    table {
+      width:100%; border-collapse:collapse; margin-top:1rem;
+    }
+
+    th, td {
+      padding:0.75rem; text-align:left;
+      border-bottom:1px solid rgba(255,255,255,0.07);
+    }
+
+    th { color:#93c5fd; }
+    td.status-ok { color:#4ade80; font-weight:600; }
+  </style>
+</head>
+
+<body>
+
+  <div class="history-card">
+    <h2>ประวัติการเข้าเรียน</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>คาบเรียน</th>
+          <th>วันที่</th>
+          <th>สถานะ</th>
+        </tr>
+      </thead>
+
+      <tbody id="historyTable">
+        <!-- JS เติมข้อมูล -->
+      </tbody>
+    </table>
+
+  </div>
+
+</body>
+</html>

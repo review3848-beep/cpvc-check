@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>เข้าสู่ระบบนักเรียน | CPVC-Check</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="../css/styles.css">
+  <script type="module" src="../js/student-login.js" defer></script>
+
+  <style>
+    body {
+      background: radial-gradient(circle at 20% 20%, #1e293b, #0b1120 75%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      padding: 2.4rem;
+      border-radius: 1.4rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 10px 45px rgba(0,0,0,0.45);
+      animation: fadeUp 0.7s ease-out;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(30px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .header {
+      text-align:center;
+      margin-bottom:1.6rem;
+    }
+
+    .title {
+      font-size:1.6rem;
+      font-weight:700;
+      color:#f8fafc;
+    }
+
+    .subtitle {
+      font-size:0.9rem;
+      color:#94a3b8;
+    }
+
+    .box { margin-bottom:1.2rem; }
+    .box label { display:block; margin-bottom:0.3rem; color:#e2e8f0; }
+    .box input {
+      width:100%; padding:0.9rem; border-radius:0.9rem;
+      border:1px solid rgba(255,255,255,0.1);
+      background:rgba(255,255,255,0.08);
+      color:white; font-size:1rem;
+    }
+
+    .btn-modern {
+      width:100%; padding:0.9rem; border-radius:999px;
+      background:linear-gradient(135deg,#2563eb,#4f46e5);
+      border:none; color:white; font-weight:600; cursor:pointer;
+      box-shadow:0 10px 25px rgba(79,70,229,0.45);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+    <div class="header">
+      <div class="logo-mark" style="margin:0 auto 0.6rem;">✔</div>
+      <div class="title">เข้าสู่ระบบนักเรียน</div>
+      <div class="subtitle">กรอกรหัสนักเรียนเพื่อลงชื่อเข้าเรียน</div>
+    </div>
+
+    <div class="box">
+      <label>รหัสนักเรียน</label>
+      <input type="text" id="studentId" placeholder="12345678">
+    </div>
+
+    <div class="box">
+      <label>รหัสผ่าน</label>
+      <input type="password" id="password" placeholder="••••••••">
+    </div>
+
+    <button class="btn-modern" id="loginBtn">เข้าสู่ระบบ</button>
+
+    <p style="text-align:center; margin-top:1rem;">
+      ยังไม่มีบัญชี? <a href="register.html">สมัครใช้งาน</a>
+    </p>
+
+    <div id="msg"></div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>เช็คชื่อเข้าเรียน | CPVC-Check</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://unpkg.com/html5-qrcode" defer></script>
+  <script type="module" src="../js/student-scan.js" defer></script>
+
+  <style>
+    body {
+      background: radial-gradient(circle at 50% 20%, #1e293b, #0b1120 75%);
+      padding:2rem; color:white;
+    }
+
+    .scan-card {
+      max-width:520px; margin:2rem auto; padding:2rem;
+      border-radius:1.4rem; background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.08);
+      box-shadow:0 10px 45px rgba(0,0,0,0.45);
+      backdrop-filter:blur(16px);
+    }
+
+    .title { text-align:center; font-size:1.6rem; margin-bottom:1rem; }
+    .label { margin-top:1rem; }
+
+    input {
+      width:100%; padding:0.9rem; border-radius:0.9rem;
+      background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
+      color:white; font-size:1rem;
+    }
+
+    .btn-modern {
+      margin-top:1rem;
+      width:100%; padding:0.9rem; border-radius:999px;
+      background:linear-gradient(135deg,#2563eb,#4f46e5);
+      border:none; color:white; font-weight:600;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="scan-card">
+
+    <div class="title">เช็คชื่อเข้าเรียน</div>
+
+    <p style="text-align:center; color:#93c5fd;">
+      👤 <span id="studentName"></span>  
+      <br>
+      🆔 <span id="studentId"></span>
+    </p>
+
+    <div id="reader" style="width:100%; margin-top:1.2rem;"></div>
+
+    <label class="label">หรือกรอก TOKEN เอง</label>
+    <input type="text" id="tokenInput" placeholder="TOKEN 6 หลัก">
+
+    <button id="scanBtn" class="btn-modern">เช็คชื่อ</button>
+
+    <div id="msg" style="margin-top:1rem; text-align:center;"></div>
+
+  </div>
+
+</body>
+</html>

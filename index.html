@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <title>CPVC-Check | ระบบเช็คชื่อออนไลน์</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="bg-main">
+  <!-- TOP NAV -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <div class="logo">
+        <!-- ถ้ามีไฟล์โลโก้ ให้ชี้ path ถูกตรงนี้ -->
+        <!-- <img src="assets/cpvc-logo.png" alt="CPVC Logo" class="logo-img" /> -->
+        <div class="logo-mark">✔</div>
+        <div class="logo-text-group">
+          <div class="logo-title">CPVC-Check</div>
+          <div class="logo-sub">SMART ATTENDANCE SYSTEM</div>
+        </div>
+      </div>
+    </div>
+    <nav class="nav-right">
+      <a href="#features">ฟีเจอร์หลัก</a>
+      <a href="#users">ผู้ใช้งาน</a>
+      <a href="#workflow">วิธีการทำงาน</a>
+      <a href="#about">เกี่ยวกับโปรเจกต์</a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <main>
+    <section class="hero">
+      <div class="hero-left">
+        <p class="eyebrow">ระบบเช็คชื่อออนไลน์สำหรับวิทยาลัยอาชีวศึกษา</p>
+        <h1>
+          CPVC-Check ระบบเช็คชื่อออนไลน์<br />
+          สำหรับ <span class="accent">ครูและนักเรียน</span>
+        </h1>
+        <p class="hero-body">
+          ลดงานเอกสาร เช็คชื่อได้แบบเรียลไทม์ รองรับทั้งครูประจำวิชาและนักเรียน  
+          ออกแบบให้ใช้งานง่าย ปลอดภัย และเชื่อมข้อมูลกับ Google Sheet โดยอัตโนมัติ
+        </p>
+
+        <div class="hero-actions">
+          <a href="teacher/login.html" class="btn btn-primary">
+            เข้าสู่ระบบครู
+          </a>
+          <a href="student/login.html" class="btn btn-outline">
+            เข้าสู่ระบบนักเรียน
+          </a>
+        </div>
+
+        <p class="hero-meta">
+          ✓ Auto Token + QR Code &nbsp;&nbsp;·&nbsp;&nbsp; ✓ บันทึกลง Google Sheet อัตโนมัติ &nbsp;&nbsp;·&nbsp;&nbsp; ✓ ดูประวัติย้อนหลังได้
+        </p>
+      </div>
+
+      <!-- DASHBOARD PREVIEW -->
+      <div class="hero-right">
+        <div class="dashboard-card">
+          <div class="dashboard-header">
+            <div>
+              <h2>Dashboard ตัวอย่าง</h2>
+              <p>ข้อมูลจำลองสำหรับแสดงภาพรวมการเข้าเรียน</p>
+            </div>
+            <span class="badge-live">LIVE DEMO</span>
+          </div>
+
+          <div class="dashboard-stats">
+            <div class="stat">
+              <div class="stat-label">นักเรียนทั้งหมด</div>
+              <div class="stat-value">120</div>
+              <div class="stat-sub">ทุกห้อง / ทุกระดับชั้น</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">มาเรียนวันนี้</div>
+              <div class="stat-value stat-green">108</div>
+              <div class="stat-sub">อัปเดตแบบเรียลไทม์</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">สาย</div>
+              <div class="stat-value stat-yellow">7</div>
+              <div class="stat-sub">นับรวมทุกวิชา</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">ขาด</div>
+              <div class="stat-value stat-red">5</div>
+              <div class="stat-sub">แจ้งเตือนครูผู้สอน</div>
+            </div>
+          </div>
+
+          <div class="dashboard-table">
+            <div class="table-header">
+              <span>คาบเรียนวันนี้</span>
+              <span class="table-sub">ตัวอย่างข้อมูลจากชีต SESSIONS / ATTENDANCE</span>
+            </div>
+            <div class="table-row table-row-head">
+              <span>วิชา</span>
+              <span>ห้อง</span>
+              <span>เวลา</span>
+              <span>สถานะ</span>
+            </div>
+            <div class="table-row">
+              <span>CPVC101</span>
+              <span>ปวช.2/1</span>
+              <span>08:30–10:00</span>
+              <span class="pill pill-open">กำลังเรียน</span>
+            </div>
+            <div class="table-row">
+              <span>MATH201</span>
+              <span>ปวช.3/2</span>
+              <span>10:15–12:00</span>
+              <span class="pill pill-closed">ปิดคาบแล้ว</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INFO STRIP -->
+    <section class="info-strip" id="features">
+      <div class="info-item">
+        <h3>ออกแบบสำหรับครู</h3>
+        <p>เปิดคาบ สร้าง TOKEN และดูข้อมูลการเข้าเรียนได้ในไม่กี่คลิก</p>
+      </div>
+      <div class="info-item">
+        <h3>ง่ายสำหรับนักเรียน</h3>
+        <p>สแกน QR หรือกรอก TOKEN ก็เช็คชื่อได้ทันที ไม่ต้องโหลดแอปเพิ่ม</p>
+      </div>
+      <div class="info-item">
+        <h3>เก็บข้อมูลเป็นระบบ</h3>
+        <p>เก็บทุกอย่างไว้ใน Google Sheet แยกเป็น TEACHERS, STUDENTS, SESSIONS, ATTENDANCE</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="main-footer" id="about">
+    <div>โปรเจกต์ CPVC-Check · ระบบเช็คชื่อออนไลน์เชื่อมต่อ Google Apps Script &amp; Google Sheet</div>
+    <div class="footer-sub">พัฒนาเพื่อใช้เป็นระบบต้นแบบในงานโปรเจกต์/ภายในวิทยาลัย</div>
+  </footer>
+</body>
+</html>

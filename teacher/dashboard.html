@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <title>Dashboard ครู | CPVC-Check</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body class="bg-dark-gradient">
+  <header class="top-nav">
+    <div class="logo">
+      <span class="logo-mark">✔</span>
+      <span class="logo-text">CPVC-Check</span>
+    </div>
+    <nav class="nav-links">
+      <a href="open-session.html">เปิดคาบใหม่</a>
+      <span id="teacher-name" class="user-chip"></span>
+      <button id="logout-btn" class="btn btn-small btn-outline">ออกจากระบบ</button>
+    </nav>
+  </header>
+
+  <main class="page-container">
+    <section class="card">
+      <h1>Dashboard ครู 👩‍🏫</h1>
+      <p class="hint">
+        ดูภาพรวมคาบเรียนและจำนวนการเช็คชื่อจากข้อมูลในชีต SESSIONS / ATTENDANCE
+      </p>
+
+      <div class="dashboard-grid stats-compact">
+        <div class="stat">
+          <span class="stat-label">จำนวนคาบทั้งหมด</span>
+          <span class="stat-value" id="stat-total-sessions">-</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">จำนวนการเช็คชื่อทั้งหมด</span>
+          <span class="stat-value" id="stat-total-attendance">-</span>
+        </div>
+      </div>
+
+      <h2 style="margin-top:1.5rem;">คาบล่าสุด (ไม่เกิน 20 คาบ)</h2>
+      <div class="table-wrapper">
+        <table class="data-table" id="sessions-table">
+          <thead>
+            <tr>
+              <th>วันที่เวลา</th>
+              <th>วิชา/ห้อง</th>
+              <th>TOKEN</th>
+              <th>สถานะ</th>
+              <th>จำนวนเช็คชื่อ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JS เติม -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="dashboard-message" class="message-area"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Dashboard ครู · ข้อมูลจาก Google Sheets · CPVC-Check
+  </footer>
+
+  <script type="module" src="../js/teacher-dashboard.js"></script>
+</body>
+</html>

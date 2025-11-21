@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>สมัครนักเรียน | CPVC-Check</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="../css/styles.css">
+  <script type="module" src="../js/student-register.js" defer></script>
+
+  <style>
+    body {
+      background: radial-gradient(circle at 75% 25%, #1e293b, #0b1120 80%);
+      min-height:100vh; display:flex; justify-content:center; align-items:center;
+    }
+
+    .card {
+      max-width:460px; width:100%; padding:2.5rem;
+      background:rgba(255,255,255,0.05); border-radius:1.4rem;
+      border:1px solid rgba(255,255,255,0.08);
+      backdrop-filter:blur(18px);
+      box-shadow:0 12px 50px rgba(0,0,0,.45);
+    }
+
+    .title { font-size:1.6rem; font-weight:700; text-align:center; color:#f8fafc; }
+    .subtitle { text-align:center; color:#94a3b8; margin-bottom:1.6rem; }
+
+    label { color:#e2e8f0; font-size:0.9rem; }
+    input {
+      width:100%; padding:0.9rem; border-radius:0.9rem;
+      background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1);
+      color:white; margin-bottom:1.2rem;
+    }
+
+    .btn-modern {
+      width:100%; padding:0.9rem; border-radius:999px;
+      background:linear-gradient(135deg,#4f46e5,#2563eb);
+      border:none; color:white; font-weight:600; cursor:pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+
+    <div class="logo-mark" style="margin:0 auto 0.6rem;">✔</div>
+    <div class="title">สมัครนักเรียน</div>
+    <div class="subtitle">ใช้รหัสนักเรียนที่มีในระบบเท่านั้น</div>
+
+    <label>รหัสนักเรียน</label>
+    <input type="text" id="studentId" placeholder="กรอกรหัสนักเรียน">
+
+    <label>ชื่อ – นามสกุล</label>
+    <input type="text" id="name" placeholder="ชื่อจริงตามระบบ">
+
+    <label>รหัสผ่าน</label>
+    <input type="password" id="password" placeholder="••••••••">
+
+    <button id="registerBtn" class="btn-modern">สมัครใช้งาน</button>
+
+    <p style="text-align:center; margin-top:1rem;">
+      มีบัญชีแล้ว? <a href="login.html">เข้าสู่ระบบ</a>
+    </p>
+
+    <div id="msg"></div>
+
+  </div>
+
+</body>
+</html>
