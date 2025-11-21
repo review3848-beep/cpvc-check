@@ -1,51 +1,59 @@
 // js/student-register.js
-import { callApi } from "./api.js";
+import { API_BASE } from "./api.js";
 
-const form = document.getElementById("student-register-form");
-const msgEl = document.getElementById("register-message");
+const idInput = document.getElementById("studentId");
+const nameInput = document.getElementById("name");
+const passInput = document.getElementById("password");
+const btn = document.getElementById("registerBtn");
+const msg = document.getElementById("msg");
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  msgEl.textContent = "";
-  msgEl.className = "message-area";
+function show(text, type="error") {
+  msg.textContent = text;
+  msg.style.color = type === "success" ? "#4ade80" : "#fb7185";
+}
 
-  const studentId = document.getElementById("regStudentId").value.trim();
-  const password = document.getElementById("regPassword").value.trim();
-  const passwordConfirm = document.getElementById("regPasswordConfirm").value.trim();
+async function handleRegister() {
+  const studentId = idInput.value.trim();
+  const name = nameInput.value.trim();
+  const password = passInput.value.trim();
 
-  if (!studentId || !password || !passwordConfirm) {
-    msgEl.textContent = "กรุณากรอกข้อมูลให้ครบถ้วน";
-    msgEl.classList.add("error");
-    return;
+  if (!studentId || !name || !password) {
+    return show("กรุณากรอกข้อมูลให้ครบ");
   }
 
-  if (password.length < 6) {
-    msgEl.textContent = "รหัสผ่านควรยาวอย่างน้อย 6 ตัวอักษร";
-    msgEl.classList.add("error");
-    return;
-  }
-
-  if (password !== passwordConfirm) {
-    msgEl.textContent = "รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน";
-    msgEl.classList.add("error");
-    return;
-  }
+  btn.disabled = true;
+  btn.textContent = "กำลังสมัครใช้งาน...";
 
   try {
-    const res = await callApi("registerStudent", {
-      studentId,
-      password,
+    const res = await fetch(API_BASE, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        action: "registerStudent",
+        studentId,
+        name,
+        password,
+      }),
     });
 
-    msgEl.textContent = res.message || "ตั้งรหัสผ่านสำเร็จ สามารถเข้าสู่ระบบได้แล้ว";
-    msgEl.classList.add("success");
+    const data = await res.json();
+    console.log("registerStudent >", data);
 
-    // สมัครเสร็จ → ส่งไปหน้า login
-    setTimeout(() => {
-      window.location.href = "login.html";
-    }, 800);
-  } catch (err) {
-    msgEl.textContent = err.message || "สมัครใช้งานไม่สำเร็จ";
-    msgEl.classList.add("error");
+    if (data.success) {
+      show("สมัครสำเร็จ! กรุณาเข้าสู่ระบบ","success");
+      setTimeout(() => {
+        window.location.href = "login.html";
+      }, 900);
+    } else {
+      show(data.message || "สมัครไม่สำเร็จ");
+    }
+  } catch(err) {
+    console.error(err);
+    show("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์");
   }
-});
+
+  btn.disabled = false;
+  btn.textContent = "สมัครใช้งาน";
+}
+
+btn.addEventListener("click", handleRegister);

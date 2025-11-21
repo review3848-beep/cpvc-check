@@ -1,77 +1,29 @@
 // js/student-history.js
-import { callApi } from "./api.js";
 
-const studentStr = sessionStorage.getItem("student");
-const studentNameChip = document.getElementById("student-name");
-const infoIdEl = document.getElementById("info-id");
-const infoNameEl = document.getElementById("info-name");
-const logoutBtn = document.getElementById("logout-btn");
-const msgEl = document.getElementById("history-message");
-const tableBody = document.querySelector("#history-table tbody");
+const name = sessionStorage.getItem("studentName");
+const id = sessionStorage.getItem("studentId");
 
-// ถ้าไม่ได้ล็อกอิน → เด้งกลับ
-if (!studentStr) {
+if (!id) {
   window.location.href = "login.html";
-} else {
-  const student = JSON.parse(studentStr);
-  studentNameChip.textContent = `${student.name || "นักเรียน"} (${student.id || ""})`;
-  infoIdEl.textContent = student.id || "";
-  infoNameEl.textContent = student.name || "";
-  loadHistory(student.id);
 }
 
-logoutBtn.addEventListener("click", () => {
-  sessionStorage.removeItem("student");
-  window.location.href = "login.html";
+document.getElementById("histName").textContent = name || "-";
+document.getElementById("histId").textContent = id;
+
+// ยังไม่มี API getHistory จริง ใช้ mock data ไว้โชว์หน้าให้สวย ๆ ก่อน
+const tbody = document.getElementById("historyTable");
+
+const dummy = [
+  { subject: "CPVC101", datetime: "2025-11-21 09:00", status: "OK" },
+  { subject: "CPVC102", datetime: "2025-11-22 10:00", status: "OK" },
+];
+
+dummy.forEach(row => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td>${row.subject}</td>
+    <td>${row.datetime}</td>
+    <td class="status-ok">${row.status}</td>
+  `;
+  tbody.appendChild(tr);
 });
-
-async function loadHistory(studentId) {
-  msgEl.textContent = "";
-  msgEl.className = "message-area";
-
-  try {
-    const res = await callApi("getStudentHistory", { studentId });
-    const data = res.data || {};
-    const records = data.records || [];
-
-    tableBody.innerHTML = "";
-
-    if (!records.length) {
-      const tr = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = 4;
-      td.textContent = "ยังไม่มีประวัติการเช็คชื่อในระบบ";
-      td.style.textAlign = "center";
-      tr.appendChild(td);
-      tableBody.appendChild(tr);
-      return;
-    }
-
-    records.forEach((r) => {
-      const tr = document.createElement("tr");
-
-      const tdDatetime = document.createElement("td");
-      tdDatetime.textContent = r.datetime || "-";
-
-      const tdSubject = document.createElement("td");
-      tdSubject.textContent = r.subjectCode || "-";
-
-      const tdToken = document.createElement("td");
-      tdToken.textContent = r.token || "-";
-
-      const tdStatus = document.createElement("td");
-      tdStatus.textContent = r.status || "-";
-      tdStatus.className = r.status === "OK" ? "badge-cell badge-open" : "badge-cell badge-closed";
-
-      tr.appendChild(tdDatetime);
-      tr.appendChild(tdSubject);
-      tr.appendChild(tdToken);
-      tr.appendChild(tdStatus);
-
-      tableBody.appendChild(tr);
-    });
-  } catch (err) {
-    msgEl.textContent = err.message || "โหลดประวัติการเข้าเรียนไม่สำเร็จ";
-    msgEl.classList.add("error");
-  }
-}

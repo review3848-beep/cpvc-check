@@ -1,48 +1,33 @@
-// teacher-register.js
+// js/teacher-register.js
+import { API_BASE } from "./api.js";
 
-// ใช้ URL /exec ของ Web App
-const API_BASE = "https://script.google.com/macros/s/AKfycbxS5yjl5fXvkMeiwYKCtjNNtM897KtTcdOx.../exec";
-// ↑ แก้ให้เป็นของโปรเจกต์เธอเองให้ครบทั้งบรรทัด
+const nameInput = document.getElementById("name");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const btn = document.getElementById("registerBtn");
+const msg = document.getElementById("msg");
 
-const form = document.getElementById("teacherRegisterForm");
-const nameInput = document.getElementById("teacherName");
-const emailInput = document.getElementById("teacherEmail");
-const passwordInput = document.getElementById("teacherPassword");
-const submitBtn = document.getElementById("registerBtn");
-const statusText = document.getElementById("registerStatus");
-
-function loading(state) {
-  if (!submitBtn) return;
-  submitBtn.disabled = state;
-  submitBtn.textContent = state ? "กำลังสมัครใช้งาน..." : "สมัครใช้งาน";
+function show(text, type="error") {
+  msg.textContent = text;
+  msg.style.color = type === "success" ? "#4ade80" : "#fb7185";
 }
 
-function showStatus(msg, isError = false) {
-  if (!statusText) return;
-  statusText.textContent = msg;
-  statusText.style.color = isError ? "#f87171" : "#4ade80";
-}
-
-async function registerTeacher(event) {
-  event.preventDefault();
-
+async function handleRegister() {
   const name = nameInput.value.trim();
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
 
   if (!name || !email || !password) {
-    showStatus("กรุณากรอกข้อมูลให้ครบถ้วน", true);
-    return;
+    return show("กรุณากรอกข้อมูลให้ครบ");
   }
 
-  loading(true);
-  showStatus("");
+  btn.disabled = true;
+  btn.textContent = "กำลังสมัครใช้งาน...";
 
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
-      // ❌ อย่าใส่ headers Content-Type
-      // browser จะส่งเป็น text/plain ให้เอง (ไม่ต้อง preflight)
+      headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
         action: "registerTeacher",
         name,
@@ -51,27 +36,25 @@ async function registerTeacher(event) {
       }),
     });
 
-    if (!res.ok) {
-      throw new Error("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ (" + res.status + ")");
-    }
-
     const data = await res.json();
+    console.log("registerTeacher >", data);
 
-    if (!data.success) {
-      showStatus(data.message || "เกิดข้อผิดพลาด", true);
-      return;
+    if (data.success) {
+      show("สมัครสำเร็จ! กรุณาเข้าสู่ระบบ","success");
+      setTimeout(() => {
+        window.location.href = "login.html";
+      }, 900);
+    } else {
+      show(data.message || "สมัครไม่สำเร็จ");
     }
 
-    showStatus(data.message || "สมัครครูสำเร็จ 🎉", false);
-    form.reset();
   } catch (err) {
     console.error(err);
-    showStatus("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง", true);
-  } finally {
-    loading(false);
+    show("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์");
   }
+
+  btn.disabled = false;
+  btn.textContent = "สมัครใช้งาน";
 }
 
-if (form) {
-  form.addEventListener("submit", registerTeacher);
-}
+btn.addEventListener("click", handleRegister);

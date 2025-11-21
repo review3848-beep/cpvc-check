@@ -1,145 +1,131 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
   <title>Admin Dashboard | CPVC-Check</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script type="module" src="../js/admin-dashboard.js" defer></script>
 
   <style>
     body {
-      background: #020617;
-      color: #e5e7eb;
-      font-family: "Prompt", sans-serif;
+      margin: 0;
+      background: #0c0a1d;
+      color: white;
+      font-family: "Inter", sans-serif;
       min-height: 100vh;
     }
-    .navbar {
-      background: #0f172a;
+
+    .nav {
+      padding: 1.2rem 2rem;
+      background: rgba(30,27,75,0.75);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      backdrop-filter: blur(12px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
+
+    .nav .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #c7d2fe;
+    }
+
+    .nav .user {
+      font-size: 0.95rem;
+      color: #a5b4fc;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1.4rem;
+    }
+
+    .grid {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
     .card {
-      background: #020617;
-      border: 1px solid #1f2937;
-      border-radius: 16px;
+      padding: 1.8rem;
+      border-radius: 1.2rem;
+      background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(60,60,100,0.15));
+      border: 1px solid rgba(255,255,255,0.15);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0,0,50,0.4);
+      transition: 0.15s;
     }
-    .table-dark {
-      --bs-table-bg: #020617;
-      --bs-table-border-color: #1f2937;
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 40px rgba(0,0,80,0.6);
     }
-    .badge-active {
-      background: #16a34a;
+
+    .card h3 {
+      margin: 0;
+      margin-bottom: 0.4rem;
+      font-size: 1.25rem;
+      color: #c7d2fe;
     }
-    .badge-inactive {
-      background: #ef4444;
+
+    .card p {
+      margin: 0.3rem 0 1rem 0;
+      color: #a5b4fc;
+      font-size: 0.92rem;
     }
+
+    .btn {
+      padding: 0.55rem 0.9rem;
+      border-radius: 0.7rem;
+      border: none;
+      background: linear-gradient(135deg,#4f46e5,#9333ea);
+      color:white;
+      cursor:pointer;
+      font-weight:600;
+      font-size:0.9rem;
+    }
+
   </style>
 </head>
-
 <body>
-  <nav class="navbar navbar-dark px-3">
-    <span class="navbar-brand mb-0 h5">CPVC-Check | Admin Dashboard</span>
-    <span class="text-sm">
-      ผู้ดูแล: <span id="adminName">-</span>
-      &nbsp;|&nbsp;
-      <a href="#" id="logoutBtn" class="text-danger text-decoration-none">ออกจากระบบ</a>
-    </span>
-  </nav>
 
-  <div class="container py-4">
-    <div id="adminGlobalStatus" class="mb-3 small"></div>
+  <div class="nav">
+    <div class="logo">⚡ Admin Panel</div>
+    <div class="user">🔐Admin <span id="adminName"></span></div>
+  </div>
 
-    <div class="row g-4">
+  <div class="container">
+    <div class="grid">
 
-      <!-- จัดการครู -->
-      <div class="col-lg-6">
-        <div class="card p-3 mb-3">
-          <h5>เพิ่มครูใหม่</h5>
-          <form id="createTeacherForm" class="row g-2 mt-1">
-            <div class="col-12">
-              <input type="text" id="newTeacherName" class="form-control form-control-sm" placeholder="ชื่อ – นามสกุล" required>
-            </div>
-            <div class="col-12">
-              <input type="email" id="newTeacherEmail" class="form-control form-control-sm" placeholder="อีเมล" required>
-            </div>
-            <div class="col-12 col-md-6">
-              <input type="password" id="newTeacherPassword" class="form-control form-control-sm" placeholder="รหัสผ่าน" required>
-            </div>
-            <div class="col-12 col-md-6 text-md-end">
-              <button class="btn btn-primary btn-sm mt-2 mt-md-0">บันทึกครู</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="card p-3">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <h5 class="mb-0">รายชื่อครู</h5>
-            <button class="btn btn-outline-light btn-sm" id="refreshTeachersBtn">รีเฟรช</button>
-          </div>
-          <div class="table-responsive" style="max-height: 320px; overflow:auto;">
-            <table class="table table-dark table-sm align-middle mb-0">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>ชื่อ</th>
-                  <th>อีเมล</th>
-                  <th>สถานะ</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="teacherTableBody"></tbody>
-            </table>
-          </div>
-        </div>
+      <div class="card">
+        <h3>จัดการครู</h3>
+        <p>ดู / เพิ่ม / ลบครูในระบบ</p>
+        <button class="btn">เปิดดู</button>
       </div>
 
-      <!-- จัดการนักเรียน -->
-      <div class="col-lg-6">
-        <div class="card p-3 mb-3">
-          <h5>เพิ่มนักเรียนใหม่</h5>
-          <form id="createStudentForm" class="row g-2 mt-1">
-            <div class="col-6">
-              <input type="text" id="newStudentId" class="form-control form-control-sm" placeholder="รหัสนักเรียน" required>
-            </div>
-            <div class="col-6">
-              <input type="text" id="newStudentClass" class="form-control form-control-sm" placeholder="ห้อง/แผนก" required>
-            </div>
-            <div class="col-12">
-              <input type="text" id="newStudentName" class="form-control form-control-sm" placeholder="ชื่อ – นามสกุล" required>
-            </div>
-            <div class="col-12 col-md-6">
-              <input type="password" id="newStudentPassword" class="form-control form-control-sm" placeholder="รหัสผ่าน" required>
-            </div>
-            <div class="col-12 col-md-6 text-md-end">
-              <button class="btn btn-primary btn-sm mt-2 mt-md-0">บันทึกนักเรียน</button>
-            </div>
-          </form>
-        </div>
+      <div class="card">
+        <h3>จัดการนักเรียน</h3>
+        <p>ข้อมูลนักเรียนทั้งหมด</p>
+        <button class="btn">เปิดดู</button>
+      </div>
 
-        <div class="card p-3">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <h5 class="mb-0">รายชื่อนักเรียน</h5>
-            <button class="btn btn-outline-light btn-sm" id="refreshStudentsBtn">รีเฟรช</button>
-          </div>
-          <div class="table-responsive" style="max-height: 320px; overflow:auto;">
-            <table class="table table-dark table-sm align-middle mb-0">
-              <thead>
-                <tr>
-                  <th>รหัส</th>
-                  <th>ชื่อ</th>
-                  <th>ห้อง</th>
-                  <th>สถานะ</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="studentTableBody"></tbody>
-            </table>
-          </div>
-        </div>
+      <div class="card">
+        <h3>คาบเรียนทั้งหมด</h3>
+        <p>ดู Sessions + สถานะ OPEN / CLOSED</p>
+        <button class="btn">เปิดดู</button>
+      </div>
+
+      <div class="card">
+        <h3>ประวัติการเช็คชื่อ</h3>
+        <p>ดู ATTENDANCE ทั้งหมด</p>
+        <button class="btn">เปิดดู</button>
       </div>
 
     </div>
   </div>
 
-  <script src="../js/admin-dashboard.js"></script>
 </body>
 </html>

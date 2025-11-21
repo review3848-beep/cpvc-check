@@ -10,62 +10,115 @@
 
   <style>
     body {
-      background: radial-gradient(circle at 75% 25%, #1e293b, #0b1120 80%);
-      min-height:100vh; display:flex; justify-content:center; align-items:center;
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background: radial-gradient(circle at 70% 20%, #1e293b, #020617 75%);
+      font-family:"Inter",system-ui,sans-serif;
     }
 
     .card {
-      max-width:460px; width:100%; padding:2.5rem;
-      background:rgba(255,255,255,0.05); border-radius:1.4rem;
-      border:1px solid rgba(255,255,255,0.08);
+      width:100%;
+      max-width:440px;
+      padding:2.7rem 2.3rem;
+      border-radius:1.4rem;
       backdrop-filter:blur(18px);
-      box-shadow:0 12px 50px rgba(0,0,0,.45);
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,.35);
+      box-shadow:0 18px 50px rgba(15,23,42,.9);
     }
 
-    .title { font-size:1.6rem; font-weight:700; text-align:center; color:#f8fafc; }
-    .subtitle { text-align:center; color:#94a3b8; margin-bottom:1.6rem; }
+    h2 {
+      text-align:center;
+      font-size:1.6rem;
+      margin:0 0 .4rem 0;
+      color:#f9fafb;
+    }
+    .subtitle {
+      text-align:center;
+      font-size:.9rem;
+      color:#94a3b8;
+      margin-bottom:1.8rem;
+    }
 
-    label { color:#e2e8f0; font-size:0.9rem; }
+    label {
+      font-size:.85rem;
+      color:#cbd5f5;
+      display:block;
+      margin-bottom:.35rem;
+    }
     input {
-      width:100%; padding:0.9rem; border-radius:0.9rem;
-      background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1);
-      color:white; margin-bottom:1.2rem;
+      width:100%;
+      padding:.9rem;
+      border-radius:.9rem;
+      border:1px solid rgba(148,163,184,.35);
+      background:rgba(15,23,42,.95);
+      color:#e5e7eb;
+      margin-bottom:1.2rem;
+      outline:none;
+      font-size:.95rem;
+    }
+    input:focus {
+      border-color:#4f46e5;
+      box-shadow:0 0 0 1px rgba(79,70,229,.55);
     }
 
-    .btn-modern {
-      width:100%; padding:0.9rem; border-radius:999px;
-      background:linear-gradient(135deg,#4f46e5,#2563eb);
-      border:none; color:white; font-weight:600; cursor:pointer;
+    .btn {
+      width:100%;
+      padding:.95rem;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      font-weight:600;
+      background:linear-gradient(135deg,#4f46e5,#8b5cf6);
+      color:white;
+      box-shadow:0 14px 32px rgba(79,70,229,.45);
+      font-size:.95rem;
+    }
+
+    #msg {
+      margin-top:1rem;
+      text-align:center;
+      font-size:.9rem;
+    }
+
+    .footer {
+      margin-top:1.1rem;
+      text-align:center;
+      font-size:.85rem;
+      color:#94a3b8;
+    }
+
+    .footer a {
+      color:#93c5fd;
+      text-decoration:none;
     }
   </style>
 </head>
 
 <body>
-
   <div class="card">
-
-    <div class="logo-mark" style="margin:0 auto 0.6rem;">✔</div>
-    <div class="title">สมัครนักเรียน</div>
-    <div class="subtitle">ใช้รหัสนักเรียนที่มีในระบบเท่านั้น</div>
+    <h2>สมัครนักเรียน</h2>
+    <div class="subtitle">ใช้รหัสนักเรียนที่มีอยู่ในระบบเท่านั้น</div>
 
     <label>รหัสนักเรียน</label>
-    <input type="text" id="studentId" placeholder="กรอกรหัสนักเรียน">
+    <input type="text" id="studentId" placeholder="เช่น 66001">
 
     <label>ชื่อ – นามสกุล</label>
-    <input type="text" id="name" placeholder="ชื่อจริงตามระบบ">
+    <input type="text" id="name" placeholder="ชื่อนักเรียนตามระบบ">
 
     <label>รหัสผ่าน</label>
-    <input type="password" id="password" placeholder="••••••••">
+    <input type="password" id="password" placeholder="กำหนดรหัสผ่านของคุณ">
 
-    <button id="registerBtn" class="btn-modern">สมัครใช้งาน</button>
-
-    <p style="text-align:center; margin-top:1rem;">
-      มีบัญชีแล้ว? <a href="login.html">เข้าสู่ระบบ</a>
-    </p>
+    <button id="registerBtn" class="btn">สมัครใช้งาน</button>
 
     <div id="msg"></div>
 
+    <div class="footer">
+      มีบัญชีแล้ว? <a href="login.html">เข้าสู่ระบบ</a>
+    </div>
   </div>
-
 </body>
 </html>

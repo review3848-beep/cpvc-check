@@ -1,68 +1,214 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8">
   <title>Dashboard ครู | CPVC-Check</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="../css/styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="../css/styles.css">
+  <script type="module" src="../js/teacher-dashboard.js" defer></script>
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #020617;
+      color: #e5e7eb;
+      font-family: "Inter", system-ui, sans-serif;
+    }
+
+    .nav {
+      padding: 1rem 1.8rem;
+      background: rgba(15,23,42,0.96);
+      border-bottom: 1px solid rgba(148,163,184,.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(14px);
+    }
+
+    .nav-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #f9fafb;
+    }
+
+    .nav-sub {
+      font-size: .85rem;
+      color: #94a3b8;
+    }
+
+    .nav-user {
+      font-size: .9rem;
+      color: #cbd5f5;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 1.8rem auto 2.4rem;
+      padding: 0 1.5rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      padding: 1.4rem 1.3rem;
+      border-radius: 1.1rem;
+      background: radial-gradient(circle at top left, rgba(56,189,248,.23), transparent 55%),
+                  rgba(15,23,42,.96);
+      border: 1px solid rgba(148,163,184,.35);
+      box-shadow: 0 14px 40px rgba(15,23,42,.9);
+    }
+
+    .card-label {
+      font-size: .85rem;
+      color: #9ca3af;
+      margin-bottom: .2rem;
+    }
+
+    .card-value {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: #f9fafb;
+    }
+
+    .card-sub {
+      margin-top: .2rem;
+      font-size: .8rem;
+      color: #a5b4fc;
+    }
+
+    h3 {
+      margin: 0 0 .8rem 0;
+      font-size: 1rem;
+      color: #e5e7eb;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .9rem;
+    }
+
+    th, td {
+      padding: .6rem .5rem;
+      border-bottom: 1px solid rgba(55,65,81,.6);
+      text-align: left;
+    }
+
+    th {
+      font-weight: 500;
+      color: #93c5fd;
+      font-size: .85rem;
+    }
+
+    .status-open {
+      color: #4ade80;
+      font-weight: 600;
+    }
+
+    .status-closed {
+      color: #f97316;
+      font-weight: 600;
+    }
+
+    .top-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: .8rem;
+    }
+
+    .btn-primary {
+      padding: .55rem 1rem;
+      border-radius: .8rem;
+      border: none;
+      cursor: pointer;
+      font-size: .9rem;
+      font-weight: 600;
+      background: linear-gradient(135deg,#4f46e5,#22c55e);
+      color:white;
+      box-shadow: 0 12px 28px rgba(34,197,94,.45);
+    }
+
+    .empty {
+      text-align: center;
+      padding: 1.2rem 0;
+      color: #9ca3af;
+      font-size: .9rem;
+    }
+  </style>
 </head>
-<body class="bg-dark-gradient">
-  <header class="top-nav">
-    <div class="logo">
-      <span class="logo-mark">✔</span>
-      <span class="logo-text">CPVC-Check</span>
+
+<body>
+
+  <div class="nav">
+    <div>
+      <div class="nav-title">Dashboard ครู</div>
+      <div class="nav-sub">ภาพรวมคาบเรียนและการเช็คชื่อ</div>
     </div>
-    <nav class="nav-links">
-      <a href="open-session.html">เปิดคาบใหม่</a>
-      <span id="teacher-name" class="user-chip"></span>
-      <button id="logout-btn" class="btn btn-small btn-outline">ออกจากระบบ</button>
-    </nav>
-  </header>
+    <div class="nav-user">
+      👩‍🏫 <span id="teacherName">-</span><br>
+      <span id="teacherEmail" style="font-size:.8rem;"></span>
+    </div>
+  </div>
 
-  <main class="page-container">
-    <section class="card">
-      <h1>Dashboard ครู 👩‍🏫</h1>
-      <p class="hint">
-        ดูภาพรวมคาบเรียนและจำนวนการเช็คชื่อจากข้อมูลในชีต SESSIONS / ATTENDANCE
-      </p>
+  <div class="container">
 
-      <div class="dashboard-grid stats-compact">
-        <div class="stat">
-          <span class="stat-label">จำนวนคาบทั้งหมด</span>
-          <span class="stat-value" id="stat-total-sessions">-</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">จำนวนการเช็คชื่อทั้งหมด</span>
-          <span class="stat-value" id="stat-total-attendance">-</span>
-        </div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-label">คาบทั้งหมดของครู</div>
+        <div class="card-value" id="totalSessions">0</div>
+        <div class="card-sub">จำนวนคาบที่เคยเปิดในระบบ</div>
       </div>
+      <div class="card">
+        <div class="card-label">คาบที่ยังเปิดอยู่</div>
+        <div class="card-value" id="openSessions">0</div>
+        <div class="card-sub">คาบที่ STATUS = OPEN</div>
+      </div>
+      <div class="card">
+        <div class="card-label">จำนวนการเช็คชื่อทั้งหมด</div>
+        <div class="card-value" id="totalAttendance">0</div>
+        <div class="card-sub">แถวทั้งหมดใน ATTENDANCE</div>
+      </div>
+    </div>
 
-      <h2 style="margin-top:1.5rem;">คาบล่าสุด (ไม่เกิน 20 คาบ)</h2>
-      <div class="table-wrapper">
-        <table class="data-table" id="sessions-table">
+    <div class="top-actions">
+      <button class="btn-primary" onclick="window.location.href='open-session.html'">
+        + เปิดคาบใหม่
+      </button>
+    </div>
+
+    <div class="card" style="margin-top:.8rem;">
+      <h3>คาบล่าสุดของคุณ</h3>
+
+      <div class="table-wrap">
+        <table>
           <thead>
             <tr>
-              <th>วันที่เวลา</th>
-              <th>วิชา/ห้อง</th>
+              <th>รายวิชา</th>
               <th>TOKEN</th>
+              <th>วันที่สร้าง</th>
               <th>สถานะ</th>
-              <th>จำนวนเช็คชื่อ</th>
             </tr>
           </thead>
-          <tbody>
-            <!-- JS เติม -->
+          <tbody id="sessionTable">
+            <tr><td colspan="4" class="empty">ยังไม่มีข้อมูลคาบ</td></tr>
           </tbody>
         </table>
       </div>
+    </div>
 
-      <div id="dashboard-message" class="message-area"></div>
-    </section>
-  </main>
+    <div id="msg" style="margin-top:1rem;text-align:center;font-size:.9rem;"></div>
 
-  <footer class="footer">
-    Dashboard ครู · ข้อมูลจาก Google Sheets · CPVC-Check
-  </footer>
+  </div>
 
-  <script type="module" src="../js/teacher-dashboard.js"></script>
 </body>
 </html>

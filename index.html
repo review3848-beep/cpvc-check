@@ -1,143 +1,523 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <title>CPVC-Check | ระบบเช็คชื่อออนไลน์</title>
+  <meta charset="UTF-8" />
+  <title>CPVC-Check | ระบบเช็คชื่อออนไลน์สำหรับครูและนักเรียน</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- ใช้ไฟล์ CSS หลักของโปรเจกต์ -->
   <link rel="stylesheet" href="css/styles.css" />
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 0% 0%, #1d2337 0, transparent 55%),
+        radial-gradient(circle at 100% 0%, #312e81 0, transparent 55%),
+        #020617;
+      color: #e5e7eb;
+      font-family: "Inter", system-ui, sans-serif;
+    }
+
+    /* ---------------- NAVBAR ---------------- */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(15,23,42,0.9);
+      border-bottom: 1px solid rgba(148,163,184,0.35);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      background: conic-gradient(from 210deg, #22c55e, #0ea5e9, #6366f1, #f97316, #22c55e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 18px rgba(59,130,246,.8);
+      font-size: 1.2rem;
+    }
+
+    .brand-text-main {
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: linear-gradient(135deg,#e5e7eb,#a5b4fc);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .brand-text-sub {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+    }
+
+    .nav-link {
+      color: #9ca3af;
+      text-decoration: none;
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      transition: 0.18s;
+    }
+    .nav-link:hover {
+      color: #e5e7eb;
+      background: rgba(148,163,184,0.25);
+    }
+
+    .nav-pill {
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(129,140,248,0.9);
+      background: rgba(15,23,42,0.9);
+      color: #e5e7eb;
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.18s;
+    }
+    .nav-pill:hover {
+      background: linear-gradient(135deg,#4f46e5,#6366f1);
+      border-color: transparent;
+      box-shadow: 0 12px 28px rgba(79,70,229,0.6);
+    }
+
+    /* ---------------- HERO ---------------- */
+    .hero {
+      max-width: 1120px;
+      margin: 2.4rem auto 2.2rem;
+      padding: 0 1.4rem;
+      display: grid;
+      grid-template-columns: minmax(0,1.4fr) minmax(0,1.1fr);
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .hero-kicker {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #a5b4fc;
+      margin-bottom: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .hero-title {
+      font-size: clamp(2.1rem, 3vw, 2.6rem);
+      line-height: 1.22;
+      font-weight: 700;
+      margin-bottom: 0.9rem;
+      color: #f9fafb;
+    }
+
+    .hero-title span.highlight {
+      background: linear-gradient(135deg,#60a5fa,#c4b5fd,#f97316);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 0.98rem;
+      color: #9ca3af;
+      margin-bottom: 1.8rem;
+      max-width: 32rem;
+    }
+
+    .hero-cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .btn-lg-primary,
+    .btn-lg-outline {
+      border-radius: 999px;
+      padding: 0.8rem 1.4rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      text-decoration: none;
+      transition: 0.18s;
+      white-space: nowrap;
+    }
+
+    .btn-lg-primary {
+      background: linear-gradient(135deg,#4f46e5,#6366f1);
+      color: #f9fafb;
+      box-shadow: 0 14px 32px rgba(79,70,229,0.6);
+    }
+    .btn-lg-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 40px rgba(79,70,229,0.7);
+    }
+
+    .btn-lg-outline {
+      border: 1px solid rgba(148,163,184,0.7);
+      background: rgba(15,23,42,0.7);
+      color: #e5e7eb;
+    }
+    .btn-lg-outline:hover {
+      background: rgba(148,163,184,0.18);
+    }
+
+    .hero-meta {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    /* ---------------- HERO RIGHT: DASHBOARD CARD ---------------- */
+    .hero-card {
+      border-radius: 1.4rem;
+      padding: 1.6rem 1.4rem 1.7rem;
+      background:
+        radial-gradient(circle at 0 0, rgba(96,165,250,0.4), transparent 60%),
+        rgba(15,23,42,0.98);
+      border: 1px solid rgba(148,163,184,0.4);
+      box-shadow: 0 22px 60px rgba(15,23,42,0.95);
+    }
+
+    .hero-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .hero-card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .hero-card-tag {
+      font-size: 0.75rem;
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      background: rgba(22,163,74,0.12);
+      color: #4ade80;
+      border: 1px solid rgba(34,197,94,0.55);
+    }
+
+    .hero-card-grid {
+      display: grid;
+      grid-template-columns: repeat(2,minmax(0,1fr));
+      gap: 0.9rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .hero-stat {
+      padding: 0.9rem 0.9rem;
+      border-radius: 0.9rem;
+      background: rgba(15,23,42,0.96);
+      border: 1px solid rgba(148,163,184,0.45);
+    }
+
+    .hero-stat-label {
+      font-size: 0.78rem;
+      color: #9ca3af;
+      margin-bottom: 0.18rem;
+    }
+    .hero-stat-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .hero-stat-foot {
+      font-size: 0.75rem;
+      color: #6ee7b7;
+      margin-top: 0.1rem;
+    }
+
+    .hero-card-footer {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      border-top: 1px dashed rgba(55,65,81,0.8);
+      padding-top: 0.7rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    /* ---------------- FEATURES SECTION ---------------- */
+    .section {
+      max-width: 1120px;
+      margin: 0 auto 3rem;
+      padding: 0 1.4rem;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .section-sub {
+      font-size: 0.9rem;
+      color: #9ca3af;
+      margin-bottom: 1.2rem;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .feature-card {
+      border-radius: 1rem;
+      padding: 1rem;
+      background: rgba(15,23,42,0.95);
+      border: 1px solid rgba(148,163,184,0.4);
+    }
+
+    .feature-icon {
+      font-size: 1.3rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .feature-title {
+      font-size: 0.98rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .feature-text {
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+
+    /* ---------------- FOOTER ---------------- */
+    footer {
+      border-top: 1px solid rgba(30,64,175,0.7);
+      padding: 1rem 1.4rem 1.4rem;
+      font-size: 0.8rem;
+      color: #6b7280;
+      text-align: center;
+      background: radial-gradient(circle at 50% 0%, rgba(49,46,129,0.8), #020617 65%);
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: minmax(0,1fr);
+        margin-top: 2rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .top-nav {
+        padding-inline: 1rem;
+      }
+      .nav-actions {
+        display: none;
+      }
+      .hero {
+        padding-inline: 1rem;
+      }
+      .feature-grid {
+        grid-template-columns: minmax(0,1fr);
+      }
+    }
+  </style>
 </head>
-<body class="bg-main">
-  <!-- TOP NAV -->
+
+<body>
+
+  <!-- NAVBAR -->
   <header class="top-nav">
-    <div class="nav-left">
-      <div class="logo">
-        <!-- ถ้ามีไฟล์โลโก้ ให้ชี้ path ถูกตรงนี้ -->
-        <!-- <img src="assets/cpvc-logo.png" alt="CPVC Logo" class="logo-img" /> -->
-        <div class="logo-mark">✔</div>
-        <div class="logo-text-group">
-          <div class="logo-title">CPVC-Check</div>
-          <div class="logo-sub">SMART ATTENDANCE SYSTEM</div>
-        </div>
+    <div class="brand">
+      <div class="brand-logo">✓</div>
+      <div>
+        <div class="brand-text-main">CPVC-Check</div>
+        <div class="brand-text-sub">SMART ATTENDANCE SYSTEM</div>
       </div>
     </div>
-    <nav class="nav-right">
-      <a href="#features">ฟีเจอร์หลัก</a>
-      <a href="#users">ผู้ใช้งาน</a>
-      <a href="#workflow">วิธีการทำงาน</a>
-      <a href="#about">เกี่ยวกับโปรเจกต์</a>
-    </nav>
+
+    <div class="nav-actions">
+      <a href="#features" class="nav-link">ฟีเจอร์</a>
+      <a href="#roles" class="nav-link">รูปแบบการใช้งาน</a>
+      <button class="nav-pill" onclick="location.href='teacher/login.html'">
+        เข้าสู่ระบบครู
+      </button>
+    </div>
   </header>
 
   <!-- HERO -->
   <main>
     <section class="hero">
-      <div class="hero-left">
-        <p class="eyebrow">ระบบเช็คชื่อออนไลน์สำหรับวิทยาลัยอาชีวศึกษา</p>
-        <h1>
-          CPVC-Check ระบบเช็คชื่อออนไลน์<br />
-          สำหรับ <span class="accent">ครูและนักเรียน</span>
+      <!-- LEFT -->
+      <div>
+        <div class="hero-kicker">
+          ระบบเช็คชื่อเชื่อมต่อ Google Sheet
+        </div>
+
+        <h1 class="hero-title">
+          จัดการการเข้าเรียนแบบดิจิทัล
+          สำหรับครูและนักเรียนในวิทยาลัย
         </h1>
-        <p class="hero-body">
-          ลดงานเอกสาร เช็คชื่อได้แบบเรียลไทม์ รองรับทั้งครูประจำวิชาและนักเรียน  
-          ออกแบบให้ใช้งานง่าย ปลอดภัย และเชื่อมข้อมูลกับ Google Sheet โดยอัตโนมัติ
+
+        <p class="hero-subtitle">
+          CPVC-Check ช่วยให้ครูเปิดคาบด้วย TOKEN เดียว  
+          นักเรียนสามารถสแกน QR หรือกรอก TOKEN เพื่อเช็คชื่อ  
+          ข้อมูลทั้งหมดถูกบันทึกลง Google Sheet พร้อมใช้งานทำรายงานจริง
         </p>
 
-        <div class="hero-actions">
-          <a href="teacher/login.html" class="btn btn-primary">
-            เข้าสู่ระบบครู
+        <div class="hero-cta">
+          <a href="teacher/login.html" class="btn-lg-primary">
+            👩‍🏫 เข้าสู่ระบบครู
           </a>
-          <a href="student/login.html" class="btn btn-outline">
-            เข้าสู่ระบบนักเรียน
+          <a href="student/login.html" class="btn-lg-outline">
+            🧑‍🎓 เข้าสู่ระบบนักเรียน
           </a>
         </div>
 
-        <p class="hero-meta">
-          ✓ Auto Token + QR Code &nbsp;&nbsp;·&nbsp;&nbsp; ✓ บันทึกลง Google Sheet อัตโนมัติ &nbsp;&nbsp;·&nbsp;&nbsp; ✓ ดูประวัติย้อนหลังได้
-        </p>
+        <div class="hero-meta">
+          ✓ ไม่ต้องติดตั้งโปรแกรม &nbsp;•&nbsp; ✓ ใช้ได้ทั้งคอมและมือถือ
+        </div>
       </div>
 
-      <!-- DASHBOARD PREVIEW -->
-      <div class="hero-right">
-        <div class="dashboard-card">
-          <div class="dashboard-header">
-            <div>
-              <h2>Dashboard ตัวอย่าง</h2>
-              <p>ข้อมูลจำลองสำหรับแสดงภาพรวมการเข้าเรียน</p>
-            </div>
-            <span class="badge-live">LIVE DEMO</span>
+      <!-- RIGHT: DASHBOARD PREVIEW -->
+      <aside class="hero-card" aria-label="ตัวอย่างแดชบอร์ด">
+        <div class="hero-card-header">
+          <div>
+            <div class="hero-card-title">Dashboard ตัวอย่าง</div>
+            <div style="font-size:.78rem;color:#9ca3af;">ข้อมูลจำลองเพื่อแสดงตัวอย่างหน้าจอ</div>
           </div>
+          <span class="hero-card-tag">Realtime</span>
+        </div>
 
-          <div class="dashboard-stats">
-            <div class="stat">
-              <div class="stat-label">นักเรียนทั้งหมด</div>
-              <div class="stat-value">120</div>
-              <div class="stat-sub">ทุกห้อง / ทุกระดับชั้น</div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">มาเรียนวันนี้</div>
-              <div class="stat-value stat-green">108</div>
-              <div class="stat-sub">อัปเดตแบบเรียลไทม์</div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">สาย</div>
-              <div class="stat-value stat-yellow">7</div>
-              <div class="stat-sub">นับรวมทุกวิชา</div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">ขาด</div>
-              <div class="stat-value stat-red">5</div>
-              <div class="stat-sub">แจ้งเตือนครูผู้สอน</div>
-            </div>
+        <div class="hero-card-grid">
+          <div class="hero-stat">
+            <div class="hero-stat-label">นักเรียนทั้งหมด</div>
+            <div class="hero-stat-value">240</div>
+            <div class="hero-stat-foot">ลงทะเบียนในระบบ</div>
           </div>
-
-          <div class="dashboard-table">
-            <div class="table-header">
-              <span>คาบเรียนวันนี้</span>
-              <span class="table-sub">ตัวอย่างข้อมูลจากชีต SESSIONS / ATTENDANCE</span>
-            </div>
-            <div class="table-row table-row-head">
-              <span>วิชา</span>
-              <span>ห้อง</span>
-              <span>เวลา</span>
-              <span>สถานะ</span>
-            </div>
-            <div class="table-row">
-              <span>CPVC101</span>
-              <span>ปวช.2/1</span>
-              <span>08:30–10:00</span>
-              <span class="pill pill-open">กำลังเรียน</span>
-            </div>
-            <div class="table-row">
-              <span>MATH201</span>
-              <span>ปวช.3/2</span>
-              <span>10:15–12:00</span>
-              <span class="pill pill-closed">ปิดคาบแล้ว</span>
-            </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label">คาบที่เปิดวันนี้</div>
+            <div class="hero-stat-value">18</div>
+            <div class="hero-stat-foot">กำลังใช้งาน</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label">เช็คชื่อแล้ว</div>
+            <div class="hero-stat-value">712</div>
+            <div class="hero-stat-foot">อัปเดตแบบเรียลไทม์</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label">อัตราการมาเรียน</div>
+            <div class="hero-stat-value">92%</div>
+            <div class="hero-stat-foot">วันนี้ทั้งหมด</div>
           </div>
         </div>
+
+        <div class="hero-card-footer">
+          <span>ข้อมูลจากชีต SESSIONS & ATTENDANCE</span>
+          <span style="font-size:.78rem;color:#a5b4fc;">เชื่อมต่อผ่าน Google Apps Script</span>
+        </div>
+      </aside>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="section">
+      <h2 class="section-title">ทำไมต้องใช้ CPVC-Check</h2>
+      <p class="section-sub">ออกแบบมาเพื่อวิทยาลัยอาชีวะ เน้นใช้งานจริงในห้องเรียน</p>
+
+      <div class="feature-grid">
+        <article class="feature-card">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">เก็บข้อมูลลง Google Sheet อัตโนมัติ</div>
+          <p class="feature-text">
+            ทุกคาบเรียนและทุกการเช็คชื่อถูกบันทึกลงชีต TEACHERS, STUDENTS,
+            SESSIONS และ ATTENDANCE พร้อมนำไปวิเคราะห์หรือทำรายงานต่อได้ทันที
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">🔐</div>
+          <div class="feature-title">ล็อกอินแยกสิทธิ์ ครู / นักเรียน / แอดมิน</div>
+          <p class="feature-text">
+            ครูเปิดคาบและดูสรุปเฉพาะของตัวเอง นักเรียนเช็คชื่อด้วยรหัสนักเรียน
+            และแอดมินสามารถดูภาพรวมระบบทุกคนได้จากหน้า Admin Panel
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">📱</div>
+          <div class="feature-title">ใช้งานได้ทุกอุปกรณ์</div>
+          <p class="feature-text">
+            รองรับทั้งคอมพิวเตอร์ โน้ตบุ๊ก และสมาร์ตโฟน
+            ใช้งานผ่านเบราว์เซอร์ ไม่ต้องลงแอปเพิ่ม
+          </p>
+        </article>
       </div>
     </section>
 
-    <!-- INFO STRIP -->
-    <section class="info-strip" id="features">
-      <div class="info-item">
-        <h3>ออกแบบสำหรับครู</h3>
-        <p>เปิดคาบ สร้าง TOKEN และดูข้อมูลการเข้าเรียนได้ในไม่กี่คลิก</p>
-      </div>
-      <div class="info-item">
-        <h3>ง่ายสำหรับนักเรียน</h3>
-        <p>สแกน QR หรือกรอก TOKEN ก็เช็คชื่อได้ทันที ไม่ต้องโหลดแอปเพิ่ม</p>
-      </div>
-      <div class="info-item">
-        <h3>เก็บข้อมูลเป็นระบบ</h3>
-        <p>เก็บทุกอย่างไว้ใน Google Sheet แยกเป็น TEACHERS, STUDENTS, SESSIONS, ATTENDANCE</p>
+    <!-- ROLES SHORT SUMMARY -->
+    <section id="roles" class="section">
+      <h2 class="section-title">รูปแบบการใช้งานตามบทบาท</h2>
+      <p class="section-sub">ออกแบบ flow แยกให้เหมาะกับการใช้งานแต่ละกลุ่มผู้ใช้</p>
+
+      <div class="feature-grid">
+        <article class="feature-card">
+          <div class="feature-title">สำหรับครูผู้สอน</div>
+          <p class="feature-text">
+            • สมัครและล็อกอินด้วยอีเมล<br>
+            • เปิดคาบด้วยรหัสวิชา / ห้องเรียน<br>
+            • ระบบสุ่ม TOKEN และบันทึก SESSIONS ให้อัตโนมัติ
+          </p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-title">สำหรับนักเรียน</div>
+          <p class="feature-text">
+            • สมัครด้วยรหัสนักเรียนที่มีอยู่ในชีตเท่านั้น<br>
+            • เช็คชื่อด้วยการสแกน QR หรือกรอก TOKEN<br>
+            • ระบบกันการเช็คชื่อซ้ำให้โดยอัตโนมัติ
+          </p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-title">สำหรับแอดมิน</div>
+          <p class="feature-text">
+            • ล็อกอินผ่านชีต ADMINS<br>
+            • ดูภาพรวม TEACHERS, STUDENTS, SESSIONS, ATTENDANCE<br>
+            • ขยายฟังก์ชันเพิ่มเติมได้ในอนาคต
+          </p>
+        </article>
       </div>
     </section>
   </main>
 
-  <footer class="main-footer" id="about">
-    <div>โปรเจกต์ CPVC-Check · ระบบเช็คชื่อออนไลน์เชื่อมต่อ Google Apps Script &amp; Google Sheet</div>
-    <div class="footer-sub">พัฒนาเพื่อใช้เป็นระบบต้นแบบในงานโปรเจกต์/ภายในวิทยาลัย</div>
+  <footer>
+    CPVC-Check · Smart Attendance System · Powered by Google Apps Script &amp; Google Sheets
   </footer>
+
 </body>
 </html>

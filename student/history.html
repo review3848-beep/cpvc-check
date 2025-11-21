@@ -10,52 +10,74 @@
 
   <style>
     body {
-      background:#0b1120; padding:2rem; color:white;
+      margin:0;
+      min-height:100vh;
+      background:#020617;
+      color:white;
+      font-family:"Inter",system-ui,sans-serif;
     }
 
-    .history-card {
-      max-width:680px; margin:auto; padding:2rem;
+    .nav {
+      padding:1rem 1.8rem;
+      background:rgba(15,23,42,.95);
+      border-bottom:1px solid rgba(148,163,184,.25);
+      display:flex;justify-content:space-between;align-items:center;
+    }
+
+    .nav-title { font-size:1.25rem; font-weight:600; }
+    .nav-user { font-size:.9rem; color:#cbd5f5; }
+
+    .wrap {
+      max-width:800px;
+      margin:2rem auto;
+      padding:1.6rem 1.4rem 2rem;
       border-radius:1.2rem;
-      background:rgba(255,255,255,0.04);
-      border:1px solid rgba(255,255,255,0.08);
-      backdrop-filter:blur(14px);
+      background:rgba(15,23,42,.9);
+      border:1px solid rgba(148,163,184,.3);
+      box-shadow:0 18px 48px rgba(15,23,42,.9);
     }
 
-    h2 { text-align:center; margin-bottom:1.5rem; }
+    h2 { margin-top:0; margin-bottom:1.2rem; }
 
     table {
-      width:100%; border-collapse:collapse; margin-top:1rem;
+      width:100%;
+      border-collapse:collapse;
+      font-size:.9rem;
     }
 
     th, td {
-      padding:0.75rem; text-align:left;
-      border-bottom:1px solid rgba(255,255,255,0.07);
+      padding:.7rem .6rem;
+      border-bottom:1px solid rgba(148,163,184,.25);
+      text-align:left;
     }
 
-    th { color:#93c5fd; }
-    td.status-ok { color:#4ade80; font-weight:600; }
+    th { color:#93c5fd; font-weight:500; }
+
+    .status-ok { color:#4ade80; font-weight:600; }
   </style>
 </head>
 
 <body>
 
-  <div class="history-card">
-    <h2>ประวัติการเข้าเรียน</h2>
+  <div class="nav">
+    <div class="nav-title">CPVC-Check – ประวัติการเข้าเรียน</div>
+    <div class="nav-user">👤 <span id="histName"></span> • <span id="histId"></span></div>
+  </div>
 
+  <div class="wrap">
+    <h2>ประวัติการเช็คชื่อ</h2>
     <table>
       <thead>
         <tr>
-          <th>คาบเรียน</th>
-          <th>วันที่</th>
+          <th>วิชา / คาบ</th>
+          <th>วันที่เวลา</th>
           <th>สถานะ</th>
         </tr>
       </thead>
-
       <tbody id="historyTable">
-        <!-- JS เติมข้อมูล -->
+        <!-- JS เติม -->
       </tbody>
     </table>
-
   </div>
 
 </body>

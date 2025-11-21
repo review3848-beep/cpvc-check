@@ -1,7 +1,7 @@
 // js/api.js
 
 // TODO: แก้เป็น Web App URL ของ Google Apps Script ของคุณ
-export const API_BASE = "https://script.google.com/macros/s/AKfycbw5YVRHj29JiCy9XA_WpwGB7t7NBaAJQXoDPbTX9mucDc-vZQMpYLIlGs2S8A4EXxh3tQ/exec";
+export const API_BASE = "https://script.google.com/macros/s/AKfycbxxPlFdsmBEoYQRHnbshhGkO7aWYgehtOv_lYJz81ibLjbg5TVQeJNIiEeuVWbCNXsIMA/exec";
 
 
 /**
