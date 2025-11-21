@@ -1,36 +1,44 @@
-// js/teacher-register.js
-import { API_BASE } from "./api.js";
+// teacher-register.js
+// ===============================
+// ใส่ลิงก์ Web App (แบบ /exec)
+// ===============================
+const API_BASE = "https://script.google.com/macros/s/XXXXX/exec"; 
+// ← เปลี่ยนเป็น URL ของ Apps Script ตัวจริง
 
-const nameInput = document.getElementById("name");
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const btn = document.getElementById("registerBtn");
-const msgEl = document.getElementById("msg");
+const form = document.getElementById("teacherRegisterForm");
+const nameInput = document.getElementById("teacherName");
+const emailInput = document.getElementById("teacherEmail");
+const passwordInput = document.getElementById("teacherPassword");
+const submitBtn = document.getElementById("registerBtn");
+const statusText = document.getElementById("registerStatus");
 
-function showMessage(text, type = "error") {
-  msgEl.textContent = text;
-  if (type === "success") {
-    msgEl.style.color = "#4ade80";
-  } else {
-    msgEl.style.color = "#fb7185";
-  }
+function loading(state) {
+  submitBtn.disabled = state;
+  submitBtn.textContent = state ? "กำลังสมัครใช้งาน..." : "สมัครใช้งาน";
 }
 
-async function registerTeacher() {
+function showStatus(msg, isError = false) {
+  statusText.textContent = msg;
+  statusText.style.color = isError ? "#f87171" : "#4ade80";
+}
+
+async function registerTeacher(event) {
+  event.preventDefault();
+
   const name = nameInput.value.trim();
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
 
   if (!name || !email || !password) {
-    showMessage("กรุณากรอกข้อมูลให้ครบถ้วน");
+    showStatus("กรุณากรอกข้อมูลให้ครบถ้วน", true);
     return;
   }
 
-  btn.disabled = true;
-  btn.textContent = "กำลังสมัครใช้งาน...";
+  loading(true);
+  showStatus("");
 
   try {
-    const res = await fetch("https://script.google.com/macros/s/AKfycbxS5yjL5fXvkMeiwYKCtjNTtM897KtTcdOxG-vVwssn70aM0zWK2R1ey9nWLcby8GiX7A/exec", {
+    const res = await fetch(API_BASE, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -41,25 +49,24 @@ async function registerTeacher() {
       }),
     });
 
+    if (!res.ok) throw new Error("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้");
+
     const data = await res.json();
-    console.log("registerTeacher >", data);
 
-    if (data.success) {
-      showMessage("สมัครสำเร็จ! กำลังพาไปหน้าเข้าสู่ระบบ...", "success");
-
-      setTimeout(() => {
-        window.location.href = "login.html";
-      }, 1200);
-    } else {
-      showMessage(data.message || "สมัครไม่สำเร็จ");
+    if (!data.success) {
+      showStatus(data.message || "เกิดข้อผิดพลาด", true);
+      return;
     }
+
+    showStatus("สมัครสำเร็จ! 🎉", false);
+    form.reset();
+
   } catch (err) {
     console.error(err);
-    showMessage("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์");
+    showStatus("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาลองใหม่", true);
   } finally {
-    btn.disabled = false;
-    btn.textContent = "สมัครใช้งาน";
+    loading(false);
   }
 }
 
-btn.addEventListener("click", registerTeacher);
+form.addEventListener("submit", registerTeacher);
