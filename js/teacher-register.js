@@ -1,9 +1,8 @@
 // teacher-register.js
-// ===============================
-// ใส่ลิงก์ Web App (แบบ /exec)
-// ===============================
-const API_BASE = "https://script.google.com/macros/s/XXXXX/exec"; 
-// ← เปลี่ยนเป็น URL ของ Apps Script ตัวจริง
+
+// ใช้ URL /exec ของ Web App
+const API_BASE = "https://script.google.com/macros/s/AKfycbxS5yjl5fXvkMeiwYKCtjNNtM897KtTcdOx.../exec";
+// ↑ แก้ให้เป็นของโปรเจกต์เธอเองให้ครบทั้งบรรทัด
 
 const form = document.getElementById("teacherRegisterForm");
 const nameInput = document.getElementById("teacherName");
@@ -13,11 +12,13 @@ const submitBtn = document.getElementById("registerBtn");
 const statusText = document.getElementById("registerStatus");
 
 function loading(state) {
+  if (!submitBtn) return;
   submitBtn.disabled = state;
   submitBtn.textContent = state ? "กำลังสมัครใช้งาน..." : "สมัครใช้งาน";
 }
 
 function showStatus(msg, isError = false) {
+  if (!statusText) return;
   statusText.textContent = msg;
   statusText.style.color = isError ? "#f87171" : "#4ade80";
 }
@@ -40,7 +41,8 @@ async function registerTeacher(event) {
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      // ❌ อย่าใส่ headers Content-Type
+      // browser จะส่งเป็น text/plain ให้เอง (ไม่ต้อง preflight)
       body: JSON.stringify({
         action: "registerTeacher",
         name,
@@ -49,7 +51,9 @@ async function registerTeacher(event) {
       }),
     });
 
-    if (!res.ok) throw new Error("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้");
+    if (!res.ok) {
+      throw new Error("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ (" + res.status + ")");
+    }
 
     const data = await res.json();
 
@@ -58,15 +62,16 @@ async function registerTeacher(event) {
       return;
     }
 
-    showStatus("สมัครสำเร็จ! 🎉", false);
+    showStatus(data.message || "สมัครครูสำเร็จ 🎉", false);
     form.reset();
-
   } catch (err) {
     console.error(err);
-    showStatus("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาลองใหม่", true);
+    showStatus("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง", true);
   } finally {
     loading(false);
   }
 }
 
-form.addEventListener("submit", registerTeacher);
+if (form) {
+  form.addEventListener("submit", registerTeacher);
+}
