@@ -88,3 +88,52 @@ async function loadDashboard() {
 }
 
 loadDashboard();
+const exportBtn = document.getElementById("exportBtn");
+
+async function handleExport() {
+  exportBtn.disabled = true;
+  exportBtn.textContent = "กำลังเตรียมไฟล์...";
+
+  try {
+    const res = await fetch(API_BASE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "exportTeacherAttendance",
+        teacherEmail: teacherEmail,   // ใช้อีเมลครูจาก sessionStorage
+      }),
+    });
+
+    const data = await res.json();
+    console.log("exportTeacherAttendance >", data);
+
+    if (!data.success) {
+      showMessage(data.message || "ไม่สามารถ export ข้อมูลได้");
+      return;
+    }
+
+    // สร้างไฟล์ CSV และ trigger download
+    const blob = new Blob([data.csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = data.fileName || "attendance.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showMessage("Export ข้อมูลเรียบร้อย","success");
+
+  } catch (err) {
+    console.error(err);
+    showMessage("เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ");
+  }
+
+  exportBtn.disabled = false;
+  exportBtn.textContent = "⬇ Export การเช็คชื่อ";
+}
+
+if (exportBtn) {
+  exportBtn.addEventListener("click", handleExport);
+}
