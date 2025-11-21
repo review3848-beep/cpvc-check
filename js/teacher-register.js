@@ -9,16 +9,14 @@ const msgEl = document.getElementById("msg");
 
 function showMessage(text, type = "error") {
   msgEl.textContent = text;
-  msgEl.style.marginTop = "0.8rem";
-  msgEl.style.fontSize = "0.9rem";
   if (type === "success") {
-    msgEl.style.color = "#4ade80"; // เขียว
+    msgEl.style.color = "#4ade80";
   } else {
-    msgEl.style.color = "#f87171"; // แดง
+    msgEl.style.color = "#fb7185";
   }
 }
 
-async function handleRegister() {
+async function registerTeacher() {
   const name = nameInput.value.trim();
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
@@ -30,14 +28,11 @@ async function handleRegister() {
 
   btn.disabled = true;
   btn.textContent = "กำลังสมัครใช้งาน...";
-  showMessage("");
 
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "registerTeacher",
         name,
@@ -46,36 +41,25 @@ async function handleRegister() {
       }),
     });
 
-    if (!res.ok) {
-      throw new Error("response_not_ok");
-    }
-
     const data = await res.json();
-    console.log("registerTeacher response:", data);
+    console.log("registerTeacher >", data);
 
     if (data.success) {
-      showMessage("สมัครใช้งานสำเร็จ! กำลังพาไปหน้าเข้าสู่ระบบ...", "success");
+      showMessage("สมัครสำเร็จ! กำลังพาไปหน้าเข้าสู่ระบบ...", "success");
 
-      // ล้างฟอร์ม
-      nameInput.value = "";
-      emailInput.value = "";
-      passwordInput.value = "";
-
-      // เว้นให้เขาอ่านข้อความก่อน แล้วค่อยเด้งไปหน้า login
       setTimeout(() => {
         window.location.href = "login.html";
       }, 1200);
     } else {
-      // message จาก Code.gs เช่น "อีเมลนี้มีในระบบแล้ว"
-      showMessage(data.message || "สมัครใช้งานไม่สำเร็จ");
+      showMessage(data.message || "สมัครไม่สำเร็จ");
     }
   } catch (err) {
     console.error(err);
-    showMessage("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+    showMessage("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์");
   } finally {
     btn.disabled = false;
     btn.textContent = "สมัครใช้งาน";
   }
 }
 
-btn.addEventListener("click", handleRegister);
+btn.addEventListener("click", registerTeacher);
