@@ -1,9 +1,6 @@
 // js/api.js
-
-// TODO: แก้เป็น Web App URL ของ Google Apps Script ของคุณ
+// ไฟล์กลางไว้เก็บ URL ของ Web App (GAS)
 export const API_BASE = "https://script.google.com/macros/s/AKfycbx0TtGAc0RU4xksCRvsW2j0S9ABinyOqVz7gwCJ8-3kJoUWB8Z5kK0gsYAWo8XkyUFu/exec";
-
-
 /**
  * เรียก API ที่ GAS
  * โครงสร้าง body: { action: "loginTeacher" | "openSession" | ... , ...payload }
