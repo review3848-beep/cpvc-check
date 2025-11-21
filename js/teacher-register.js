@@ -30,7 +30,7 @@ async function registerTeacher() {
   btn.textContent = "กำลังสมัครใช้งาน...";
 
   try {
-    const res = await fetch(API_BASE, {
+    const res = await fetch("https://script.google.com/macros/s/AKfycbxS5yjL5fXvkMeiwYKCtjNTtM897KtTcdOxG-vVwssn70aM0zWK2R1ey9nWLcby8GiX7A/exec", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
