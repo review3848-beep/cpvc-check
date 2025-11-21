@@ -49,20 +49,17 @@ async function handleRegister(e) {
       showMessage("สมัครใช้งานสำเร็จ! ไปหน้าล็อกอินได้เลย", "success");
       // จะ redirect ก็ได้
       // setTimeout(() => window.location.href = "login.html", 1200);
-      if (submitBtn) {
-    submitBtn.disabled = false;
-    submitBtn.textContent = "สมัครใช้งาน";
-     if (submitBtn) {
-    submitBtn.disabled = false;
-    submitBtn.textContent = "สมัครใช้งาน";
-  }
-}
     } else {
       showMessage(data.message || "สมัครไม่สำเร็จ");
     }
   } catch (err) {
     console.error(err);
     showMessage("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์");
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "สมัครใช้งาน";
   }
 }
 
