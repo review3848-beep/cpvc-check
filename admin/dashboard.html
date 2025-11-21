@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard | CPVC-Check</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #020617;
+      color: #e5e7eb;
+      font-family: "Prompt", sans-serif;
+      min-height: 100vh;
+    }
+    .navbar {
+      background: #0f172a;
+    }
+    .card {
+      background: #020617;
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+    }
+    .table-dark {
+      --bs-table-bg: #020617;
+      --bs-table-border-color: #1f2937;
+    }
+    .badge-active {
+      background: #16a34a;
+    }
+    .badge-inactive {
+      background: #ef4444;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-dark px-3">
+    <span class="navbar-brand mb-0 h5">CPVC-Check | Admin Dashboard</span>
+    <span class="text-sm">
+      ผู้ดูแล: <span id="adminName">-</span>
+      &nbsp;|&nbsp;
+      <a href="#" id="logoutBtn" class="text-danger text-decoration-none">ออกจากระบบ</a>
+    </span>
+  </nav>
+
+  <div class="container py-4">
+    <div id="adminGlobalStatus" class="mb-3 small"></div>
+
+    <div class="row g-4">
+
+      <!-- จัดการครู -->
+      <div class="col-lg-6">
+        <div class="card p-3 mb-3">
+          <h5>เพิ่มครูใหม่</h5>
+          <form id="createTeacherForm" class="row g-2 mt-1">
+            <div class="col-12">
+              <input type="text" id="newTeacherName" class="form-control form-control-sm" placeholder="ชื่อ – นามสกุล" required>
+            </div>
+            <div class="col-12">
+              <input type="email" id="newTeacherEmail" class="form-control form-control-sm" placeholder="อีเมล" required>
+            </div>
+            <div class="col-12 col-md-6">
+              <input type="password" id="newTeacherPassword" class="form-control form-control-sm" placeholder="รหัสผ่าน" required>
+            </div>
+            <div class="col-12 col-md-6 text-md-end">
+              <button class="btn btn-primary btn-sm mt-2 mt-md-0">บันทึกครู</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card p-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0">รายชื่อครู</h5>
+            <button class="btn btn-outline-light btn-sm" id="refreshTeachersBtn">รีเฟรช</button>
+          </div>
+          <div class="table-responsive" style="max-height: 320px; overflow:auto;">
+            <table class="table table-dark table-sm align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>ชื่อ</th>
+                  <th>อีเมล</th>
+                  <th>สถานะ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="teacherTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- จัดการนักเรียน -->
+      <div class="col-lg-6">
+        <div class="card p-3 mb-3">
+          <h5>เพิ่มนักเรียนใหม่</h5>
+          <form id="createStudentForm" class="row g-2 mt-1">
+            <div class="col-6">
+              <input type="text" id="newStudentId" class="form-control form-control-sm" placeholder="รหัสนักเรียน" required>
+            </div>
+            <div class="col-6">
+              <input type="text" id="newStudentClass" class="form-control form-control-sm" placeholder="ห้อง/แผนก" required>
+            </div>
+            <div class="col-12">
+              <input type="text" id="newStudentName" class="form-control form-control-sm" placeholder="ชื่อ – นามสกุล" required>
+            </div>
+            <div class="col-12 col-md-6">
+              <input type="password" id="newStudentPassword" class="form-control form-control-sm" placeholder="รหัสผ่าน" required>
+            </div>
+            <div class="col-12 col-md-6 text-md-end">
+              <button class="btn btn-primary btn-sm mt-2 mt-md-0">บันทึกนักเรียน</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card p-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0">รายชื่อนักเรียน</h5>
+            <button class="btn btn-outline-light btn-sm" id="refreshStudentsBtn">รีเฟรช</button>
+          </div>
+          <div class="table-responsive" style="max-height: 320px; overflow:auto;">
+            <table class="table table-dark table-sm align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>รหัส</th>
+                  <th>ชื่อ</th>
+                  <th>ห้อง</th>
+                  <th>สถานะ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="studentTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../js/admin-dashboard.js"></script>
+</body>
+</html>
