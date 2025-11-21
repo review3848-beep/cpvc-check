@@ -55,7 +55,6 @@ async function handleOpenSession() {
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "openSession",
         teacher: teacherEmail,
@@ -107,7 +106,6 @@ async function handleCloseSession() {
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "closeSession",
         token: currentToken

@@ -9,7 +9,6 @@ export const API_BASE = "https://script.google.com/macros/s/AKfycbx0TtGAc0RU4xks
 export async function callApi(action, payload = {}) {
   const res = await fetch(API_BASE, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action, ...payload }),
   });
 

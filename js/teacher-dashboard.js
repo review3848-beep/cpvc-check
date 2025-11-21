@@ -34,7 +34,6 @@ async function loadDashboard() {
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
-      headers: { "Content-Type":"application/json" },
       body: JSON.stringify({
         action: "getTeacherDashboard",
         teacherEmail
@@ -97,7 +96,6 @@ async function handleExport() {
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "exportTeacherAttendance",
         teacherEmail: teacherEmail,   // ใช้อีเมลครูจาก sessionStorage
