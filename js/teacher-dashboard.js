@@ -46,7 +46,7 @@ async function loadDashboard(teacherEmail) {
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
         action: "getTeacherDashboard",
         teacherEmail,
