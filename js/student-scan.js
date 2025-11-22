@@ -100,7 +100,7 @@ async function handleCheckin() {
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
-      // ไม่ใส่ headers เพื่อลด CORS/preflight
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
         action: "markAttendance",
         studentId,

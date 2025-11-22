@@ -62,7 +62,7 @@ async function loadHistory(studentId) {
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
-      // ไม่ใส่ headers เพื่อเลี่ยง preflight/CORS
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
         action: "getStudentHistory",
         studentId,
