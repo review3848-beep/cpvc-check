@@ -2,29 +2,31 @@
 import { API_BASE } from "./api.js";
 
 const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const btn = document.getElementById("loginBtn");
+const passInput = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
 const msg = document.getElementById("msg");
 
 function show(text, type = "error") {
+  if (!msg) return;
   msg.textContent = text;
   msg.style.color = type === "success" ? "#4ade80" : "#fb7185";
 }
 
 async function handleLogin() {
   const email = emailInput.value.trim();
-  const password = passwordInput.value.trim();
+  const password = passInput.value.trim();
 
   if (!email || !password) {
-    return show("กรุณากรอกอีเมลและรหัสผ่าน");
+    return show("กรุณากรอกอีเมลและรหัสผ่านให้ครบ");
   }
 
-  btn.disabled = true;
-  btn.textContent = "กำลังเข้าสู่ระบบ...";
+  loginBtn.disabled = true;
+  loginBtn.textContent = "กำลังเข้าสู่ระบบ...";
 
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
+      // ไม่ใส่ headers เพื่อลด preflight/CORS
       body: JSON.stringify({
         action: "loginTeacher",
         email,
@@ -36,26 +38,37 @@ async function handleLogin() {
     console.log("loginTeacher >", data);
 
     if (data.success) {
-      show("เข้าสู่ระบบสำเร็จ","success");
+      show("เข้าสู่ระบบสำเร็จ", "success");
 
-      // เก็บ session ครู
-      sessionStorage.setItem("teacherEmail", data.email);
       sessionStorage.setItem("teacherName", data.name);
+      sessionStorage.setItem("teacherEmail", data.email);
 
       setTimeout(() => {
         window.location.href = "dashboard.html";
-
-      }, 900);
+      }, 700);
     } else {
-      show(data.message || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      show(data.message || "เข้าสู่ระบบไม่สำเร็จ");
     }
   } catch (err) {
     console.error(err);
     show("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์");
   }
 
-  btn.disabled = false;
-  btn.textContent = "เข้าสู่ระบบ";
+  loginBtn.disabled = false;
+  loginBtn.textContent = "เข้าสู่ระบบ";
 }
 
-btn.addEventListener("click", handleLogin);
+loginBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  handleLogin();
+});
+
+// รองรับกด Enter
+[emailInput, passInput].forEach((el) => {
+  el.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleLogin();
+    }
+  });
+});

@@ -1,139 +1,158 @@
 // js/teacher-open-session.js
 import { API_BASE } from "./api.js";
 
+const teacherNameSpan = document.getElementById("teacherName");
+
 const subjectInput = document.getElementById("subjectCode");
 const roomInput = document.getElementById("room");
+
 const openBtn = document.getElementById("openSessionBtn");
 const closeBtn = document.getElementById("closeSessionBtn");
+
 const tokenBox = document.getElementById("tokenBox");
 const tokenEl = document.getElementById("token");
-const msg = document.getElementById("msg");
 const statusEl = document.getElementById("sessionStatus");
-const teacherNameEl = document.getElementById("teacherName");
-
-const teacherEmail = sessionStorage.getItem("teacherEmail");
-const teacherName = sessionStorage.getItem("teacherName");
-
-// ยังไม่ล็อกอิน → เด้งกลับ
-if (!teacherEmail) {
-  window.location.href = "login.html";
-}
-
-if (teacherNameEl) {
-  teacherNameEl.textContent = teacherName || "Teacher";
-}
+const msg = document.getElementById("msg");
 
 let currentToken = null;
 
 function show(text, type = "error") {
+  if (!msg) return;
   msg.textContent = text;
   msg.style.color = type === "success" ? "#4ade80" : "#fb7185";
 }
 
-function setStatus(text, color) {
-  statusEl.textContent = "สถานะคาบ: " + text;
-  if (color) statusEl.style.color = color;
-}
+document.addEventListener("DOMContentLoaded", () => {
+  const teacherName = sessionStorage.getItem("teacherName");
+  const teacherEmail = sessionStorage.getItem("teacherEmail");
 
-// เปิดคาบ
+  if (!teacherName || !teacherEmail) {
+    // ยังไม่ล็อกอิน → เด้งกลับหน้า login ครู
+    window.location.href = "login.html";
+    return;
+  }
+
+  teacherNameSpan.textContent = teacherName;
+});
+
+// ======================= เปิดคาบ =======================
 async function handleOpenSession() {
+  const teacherEmail = sessionStorage.getItem("teacherEmail");
   const subject = subjectInput.value.trim();
   const room = roomInput.value.trim();
 
-  if (!subject) {
-    return show("กรุณากรอกรหัสวิชา / รายวิชา");
+  if (!teacherEmail) {
+    show("ไม่พบข้อมูลครู กรุณาเข้าสู่ระบบใหม่", "error");
+    setTimeout(() => (window.location.href = "login.html"), 800);
+    return;
   }
 
-  if (!room) {
-    return show("กรุณากรอกห้อง / กลุ่มเรียน");
+  if (!subject || !room) {
+    return show("กรุณากรอกวิชาและห้องเรียนให้ครบ", "error");
   }
 
   openBtn.disabled = true;
   closeBtn.disabled = true;
-  openBtn.textContent = "กำลังเปิดคาบ...";
+  show("กำลังเปิดคาบเรียน...", "success");
 
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
+      // ไม่ใส่ headers เพื่อลด preflight/CORS
       body: JSON.stringify({
-        action: "openSession",
-        teacher: teacherEmail,
+        action: "openSession",      // ต้องตรงกับ Code.gs
+        teacherEmail,
         subject,
-        room
+        room,
       }),
     });
 
     const data = await res.json();
     console.log("openSession >", data);
 
-    if (data.success) {
-      currentToken = data.token;
-      tokenEl.textContent = data.token || "------";
-      tokenBox.style.display = "block";
-
-      setStatus("กำลังเปิด (OPEN)", "#4ade80");
-      show("เปิดคาบสำเร็จ! ส่ง TOKEN ให้นักเรียนได้เลย", "success");
-      closeBtn.disabled = false;
-    } else {
-      show(data.message || "เปิดคาบไม่สำเร็จ");
-      setStatus("ยังไม่เปิดคาบ", "#e5e7eb");
-      currentToken = null;
-      tokenBox.style.display = "none";
+    if (!data.success) {
+      show(data.message || "เปิดคาบไม่สำเร็จ", "error");
+      openBtn.disabled = false;
+      return;
     }
 
+    currentToken = data.token;
+    if (tokenBox) {
+      tokenBox.style.display = "block";
+      tokenEl.textContent = currentToken || "------";
+    }
+
+    if (statusEl) {
+      statusEl.textContent = `สถานะคาบ: เปิดคาบแล้ว (TOKEN: ${currentToken})`;
+    }
+
+    show("เปิดคาบสำเร็จ! ส่ง TOKEN ให้นักเรียนได้เลย", "success");
+
+    // เปิดให้ปิดคาบได้ / กันกดเปิดซ้ำ
+    closeBtn.disabled = false;
   } catch (err) {
     console.error(err);
-    show("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์");
-    setStatus("ยังไม่เปิดคาบ", "#e5e7eb");
-    currentToken = null;
-    tokenBox.style.display = "none";
+    show("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์", "error");
+    openBtn.disabled = false;
   }
-
-  openBtn.disabled = false;
-  openBtn.textContent = "เปิดคาบเรียน";
 }
 
-// ปิดคาบ
+// ======================= ปิดคาบ =======================
 async function handleCloseSession() {
-  if (!currentToken) {
-    return show("ยังไม่มีคาบที่เปิดอยู่ หรือยังไม่ได้สร้าง TOKEN");
+  const tokenFromUI = tokenEl.textContent.trim();
+  const token = currentToken || (tokenFromUI && tokenFromUI !== "------" ? tokenFromUI : "");
+
+  if (!token) {
+    return show("ยังไม่มี TOKEN ของคาบนี้ ไม่สามารถปิดคาบได้", "error");
   }
 
   closeBtn.disabled = true;
-  closeBtn.textContent = "กำลังปิดคาบ...";
-  show("", "success");
+  show("กำลังปิดคาบและสรุปมา/สาย/ขาด...", "success");
 
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
       body: JSON.stringify({
-        action: "closeSession",
-        token: currentToken
+        action: "closeSession",  // ต้องตรงกับ Code.gs
+        token,
       }),
     });
 
     const data = await res.json();
     console.log("closeSession >", data);
 
-    if (data.success) {
-      setStatus("ปิดแล้ว (CLOSED)", "#f97316");
-      show(data.message || "ปิดคาบและสรุปมา/ขาดเรียบร้อย", "success");
-      // หลังปิดคาบแล้วไม่ให้กดปิดซ้ำ
-      closeBtn.disabled = true;
-    } else {
-      show(data.message || "ปิดคาบไม่สำเร็จ");
-      // ยังให้ลองกดปิดใหม่ได้
+    if (!data.success) {
+      show(data.message || "ปิดคาบไม่สำเร็จ", "error");
       closeBtn.disabled = false;
+      return;
     }
 
+    if (statusEl) {
+      statusEl.textContent = "สถานะคาบ: ปิดคาบเรียบร้อยแล้ว";
+    }
+
+    show(data.message || "ปิดคาบสำเร็จ", "success");
+
+    // หลังปิดคาบ เสร็จ  → อนุญาตให้เปิดคาบใหม่
+    openBtn.disabled = false;
   } catch (err) {
     console.error(err);
-    show("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์");
+    show("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์", "error");
     closeBtn.disabled = false;
   }
-
-  closeBtn.textContent = "ปิดคาบเรียน";
 }
 
-openBtn.addEventListener("click", handleOpenSession);
-closeBtn.addEventListener("click", handleCloseSession);
+// ======================= Event Listeners =======================
+if (openBtn) {
+  openBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    handleOpenSession();
+  });
+}
+
+if (closeBtn) {
+  closeBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    handleCloseSession();
+  });
+}

@@ -1,6 +1,6 @@
 // js/api.js
 // ไฟล์กลางไว้เก็บ URL ของ Web App (GAS)
-export const API_BASE = "https://script.google.com/macros/s/AKfycbzBGSBlnXB-Ol9Z0kAmexx-ZB1c7wRpZ5-q7kGvL_EP9l9GlMqz88Gv5Fhy17LTzLMoEg/exec";
+export const API_BASE = "https://script.google.com/macros/s/AKfycbz_CxOQ_MaZsu8wj2NKqkevQX2q9JZYTj0eKdzwkSpqG4-JPO4fBgS_gLJfQeH8Hn4f0A/exec";
 /**
  * เรียก API ที่ GAS
  * โครงสร้าง body: { action: "loginTeacher" | "openSession" | ... , ...payload }
