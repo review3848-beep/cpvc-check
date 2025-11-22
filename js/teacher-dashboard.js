@@ -1,47 +1,52 @@
 // js/teacher-dashboard.js
 import { API_BASE } from "./api.js";
 
-const nameSpan = document.getElementById("teacherName");
-const emailSpan = document.getElementById("teacherEmail");
+const nameEl   = document.getElementById("teacherName");
+const emailEl  = document.getElementById("teacherEmail");
+const msgEl    = document.getElementById("msg");
+const tbody    = document.getElementById("sessionTable");
+const btnExport = document.getElementById("exportBtn");
 
-const totalSessionsEl = document.getElementById("totalSessions");
-const openSessionsEl = document.getElementById("openSessions");
-const totalAttendanceEl = document.getElementById("totalAttendance");
+const totalSessionsEl   = document.getElementById("totalSessions");
+const openSessionsEl    = document.getElementById("openSessions");
+const totalAttendEl     = document.getElementById("totalAttendance");
 
-const sessionTable = document.getElementById("sessionTable");
-const exportBtn = document.getElementById("exportBtn");
-const msg = document.getElementById("msg");
-
-function show(text, type = "error") {
-  if (!msg) return;
-  msg.textContent = text;
-  msg.style.color = type === "success" ? "#4ade80" : "#fb7185";
+// --------------------- utils ---------------------
+function showMessage(text, type = "error") {
+  if (!msgEl) return;
+  msgEl.textContent = text || "";
+  msgEl.style.color = type === "success" ? "#4ade80" : "#f97373";
 }
 
-// โหลดข้อมูลครู
+// --------------------- init ---------------------
 document.addEventListener("DOMContentLoaded", () => {
-  const name = sessionStorage.getItem("teacherName");
-  const email = sessionStorage.getItem("teacherEmail");
+  const teacherName  = sessionStorage.getItem("teacherName");
+  const teacherEmail = sessionStorage.getItem("teacherEmail");
 
-  if (!name || !email) {
+  if (!teacherEmail) {
+    // ถ้าไม่มี session ให้เด้งกลับหน้า login
     window.location.href = "login.html";
     return;
   }
 
-  nameSpan.textContent = name;
-  emailSpan.textContent = email;
+  if (nameEl)  nameEl.textContent  = teacherName || "-";
+  if (emailEl) emailEl.textContent = teacherEmail;
 
-  loadSummary(email);
-  loadRecentSessions(email);
+  loadDashboard(teacherEmail);
+
+  if (btnExport) {
+    btnExport.addEventListener("click", () => exportAttendance(teacherEmail));
+  }
 });
 
-// =============================================================
-// สรุป Dashboard
-// =============================================================
-async function loadSummary(teacherEmail) {
+// --------------------- call API ---------------------
+async function loadDashboard(teacherEmail) {
+  showMessage("");
+
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "getTeacherDashboard",
         teacherEmail,
@@ -52,133 +57,113 @@ async function loadSummary(teacherEmail) {
     console.log("getTeacherDashboard >", data);
 
     if (!data.success) {
-      return show(data.message || "โหลดข้อมูลสรุปไม่สำเร็จ");
-    }
-
-    const sum = data.summary;
-    totalSessionsEl.textContent = sum.totalSessions ?? 0;
-    openSessionsEl.textContent = sum.openSessions ?? 0;
-    totalAttendanceEl.textContent = sum.totalAttendance ?? 0;
-
-  } catch (err) {
-    console.error(err);
-    show("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้");
-  }
-}
-
-// =============================================================
-// โหลดคาบล่าสุดของครู
-// =============================================================
-async function loadRecentSessions(teacherEmail) {
-  try {
-    const res = await fetch(API_BASE, {
-      method: "POST",
-      body: JSON.stringify({
-        action: "getTeacherDashboard", // ใช้ action เดิม (รวมข้อมูล)
-        teacherEmail,
-      }),
-    });
-
-    const data = await res.json();
-    if (!data.success) return;
-
-    // ต้องดึงข้อมูลจาก SESSIONS ด้วยแยกต่างหาก
-    loadSessionsList(teacherEmail);
-
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-async function loadSessionsList(teacherEmail) {
-  try {
-    const res = await fetch(API_BASE, {
-      method: "POST",
-      body: JSON.stringify({
-        action: "getSessionsByTeacher", // ❗ ถ้ายังไม่มี เดี๋ยวสร้างอธิบายให้ต่อ
-        teacherEmail,
-      }),
-    });
-
-    const data = await res.json();
-    console.log("getSessionsByTeacher >", data);
-
-    sessionTable.innerHTML = "";
-
-    if (!data.success || data.sessions.length === 0) {
-      sessionTable.innerHTML =
-        `<tr><td colspan="4" class="empty">ยังไม่มีข้อมูลคาบ</td></tr>`;
+      showMessage(data.message || "ไม่สามารถโหลดข้อมูลได้");
+      renderSessions([]); // เคลียร์ตาราง
       return;
     }
 
-    data.sessions.forEach((s) => {
-      const tr = document.createElement("tr");
+    // อัปเดตตัวเลข summary
+    if (totalSessionsEl)  totalSessionsEl.textContent  = data.summary?.totalSessions ?? 0;
+    if (openSessionsEl)   openSessionsEl.textContent   = data.summary?.openSessions ?? 0;
+    if (totalAttendEl)    totalAttendEl.textContent    = data.summary?.totalAttendance ?? 0;
 
-      const created = s.start
-        ? new Date(s.start).toLocaleString("th-TH", {
-            dateStyle: "short",
-            timeStyle: "short",
-          })
-        : "-";
-
-      tr.innerHTML = `
-        <td>${s.subject}</td>
-        <td>${s.token}</td>
-        <td>${created}</td>
-        <td class="${s.status === "OPEN" ? "status-open" : "status-closed"}">
-            ${s.status === "OPEN" ? "เปิดอยู่" : "ปิดแล้ว"}
-        </td>
-      `;
-      sessionTable.appendChild(tr);
-    });
+    // เรนเดอร์คาบล่าสุดจาก data.sessions (raw row จากชีต)
+    renderSessions(data.sessions || []);
 
   } catch (err) {
     console.error(err);
-    sessionTable.innerHTML =
-      `<tr><td colspan="4" class="empty">โหลดข้อมูลไม่ได้</td></tr>`;
+    showMessage("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้");
+    renderSessions([]);
   }
 }
 
-// =============================================================
-// Export CSV
-// =============================================================
-if (exportBtn) {
-  exportBtn.addEventListener("click", async () => {
-    const teacherEmail = sessionStorage.getItem("teacherEmail");
-    if (!teacherEmail) return;
+function renderSessions(sessions) {
+  if (!tbody) return;
 
-    try {
-      const res = await fetch(API_BASE, {
-        method: "POST",
-        body: JSON.stringify({
-          action: "exportTeacherAttendance",
-          teacherEmail,
-        }),
-      });
+  if (!sessions || sessions.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="empty">ยังไม่มีข้อมูลคาบ</td></tr>`;
+    return;
+  }
 
-      const data = await res.json();
-      console.log("exportTeacherAttendance >", data);
+  // เอาแค่คาบล่าสุด 5 คาบพอ
+  const latest = sessions.slice(0, 5);
 
-      if (!data.success) {
-        return show(data.message || "Export ไม่สำเร็จ");
+  const rowsHtml = latest
+    .map((row) => {
+      // row = [ TEACHER_EMAIL, SUBJECT, ROOM, TOKEN, STATUS, START_TIME ]
+      const subject = row[1] || "-";
+      const room    = row[2] || "";
+      const token   = row[3] || "-";
+      const status  = row[4] || "";
+      const start   = row[5];
+
+      let dateStr = "-";
+      if (start) {
+        const d = new Date(start);
+        if (!isNaN(d.getTime())) {
+          dateStr = d.toLocaleString("th-TH", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        }
       }
 
-      // ดาวน์โหลดไฟล์ CSV
-      const blob = new Blob([data.csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
+      const statusClass = status === "OPEN" ? "status-open" : "status-closed";
+      const subjectText = room ? `${subject} (${room})` : subject;
 
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = data.fileName || "attendance.csv";
-      a.click();
+      return `
+        <tr>
+          <td>${subjectText}</td>
+          <td>${token}</td>
+          <td>${dateStr}</td>
+          <td class="${statusClass}">${status || "-"}</td>
+        </tr>
+      `;
+    })
+    .join("");
 
-      URL.revokeObjectURL(url);
+  tbody.innerHTML = rowsHtml;
+}
 
-      show("ดาวน์โหลดไฟล์สำเร็จ", "success");
+// export CSV
+async function exportAttendance(teacherEmail) {
+  showMessage("");
 
-    } catch (err) {
-      console.error(err);
-      show("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้");
+  try {
+    const res = await fetch(API_BASE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "exportTeacherAttendance",
+        teacherEmail,
+      }),
+    });
+
+    const data = await res.json();
+    console.log("exportTeacherAttendance >", data);
+
+    if (!data.success) {
+      showMessage(data.message || "ไม่สามารถ Export ข้อมูลได้");
+      return;
     }
-  });
+
+    // สร้างไฟล์ CSV แล้วดาวน์โหลด
+    const blob = new Blob([data.csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = data.fileName || "attendance.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showMessage("Export ข้อมูลเรียบร้อย", "success");
+  } catch (err) {
+    console.error(err);
+    showMessage("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้");
+  }
 }
