@@ -13,40 +13,118 @@
     body {
       margin:0;
       min-height:100vh;
-      background: radial-gradient(circle at 50% 10%, #1e293b, #020617 75%);
+      background: radial-gradient(circle at 20% 20%, #1e293b, #020617 75%);
       font-family:"Inter",system-ui,sans-serif;
       color:white;
     }
 
-    .wrap {
-      max-width:640px;
-      margin:2rem auto;
-      padding:1.8rem 1.5rem 2.3rem;
-      border-radius:1.4rem;
-      background:rgba(15,23,42,.92);
+    /* ---------- Header Avatar ---------- */
+    .profile-box {
+      max-width:760px;
+      margin:1.2rem auto 0;
+      display:flex;
+      align-items:center;
+      gap:1rem;
+      padding:1rem 1.3rem;
+      border-radius:1.2rem;
+      background:rgba(15,23,42,.88);
       border:1px solid rgba(148,163,184,.35);
-      box-shadow:0 18px 50px rgba(15,23,42,.9);
+      box-shadow:0 18px 40px rgba(15,23,42,.9);
+    }
+
+    .avatar-circle {
+      width:60px;
+      height:60px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:2rem;
+      background:radial-gradient(circle at 30% 20%, #f9a8d4, #4f46e5);
+      box-shadow:0 0 16px rgba(236,72,153,.6);
+      flex-shrink:0;
+    }
+
+    .profile-info {
+      line-height:1.25rem;
+    }
+
+    .profile-info .name {
+      font-size:1rem;
+      font-weight:600;
+      color:#f9fafb;
+    }
+
+    .profile-info .id {
+      font-size:.85rem;
+      color:#94a3b8;
+    }
+
+    /* ---------- Tabs ---------- */
+    .tab-row {
+      max-width:760px;
+      margin:1.2rem auto 1rem;
+      display:flex;
+      background:rgba(15,23,42,.9);
+      border:1px solid rgba(148,163,184,.4);
+      border-radius:999px;
+      overflow:hidden;
+      box-shadow:0 14px 32px rgba(15,23,42,.9);
+    }
+
+    .tab-btn {
+      flex:1;
+      padding:.75rem 0;
+      text-align:center;
+      font-weight:600;
+      font-size:.9rem;
+      cursor:pointer;
+      transition:.18s;
+      color:#cbd5f5;
+    }
+
+    .tab-btn.active {
+      background:linear-gradient(135deg,#4f46e5,#ec4899);
+      color:white;
+      box-shadow:0 14px 32px rgba(79,70,229,.6);
+    }
+
+    /* ---------- Card ---------- */
+    .wrap {
+      max-width:760px;
+      margin:0 auto 2.2rem;
+      padding:1.6rem 1.5rem 2rem;
+      background:rgba(15,23,42,.95);
+      border-radius:1.4rem;
+      border:1px solid rgba(148,163,184,.4);
+      box-shadow:0 22px 60px rgba(15,23,42,.95);
     }
 
     h2 {
-      margin:0;
-      font-size:1.6rem;
+      margin:0 0 .2rem 0;
       text-align:center;
-      margin-bottom:.3rem;
+      font-size:1.4rem;
+      color:#e5e7eb;
     }
 
-    .stu-info {
+    .sub {
       text-align:center;
-      font-size:.95rem;
-      color:#93c5fd;
-      margin-bottom:1.2rem;
+      font-size:.85rem;
+      color:#94a3b8;
+      margin-bottom:1rem;
     }
 
     #reader {
       width:100%;
-      margin:0 auto 1.4rem;
+      margin-top:1rem;
       border-radius:1rem;
       overflow:hidden;
+      display:none;
+    }
+
+    .token-box {
+      display:none;
+      margin-top:1.2rem;
     }
 
     label {
@@ -60,29 +138,30 @@
       width:100%;
       padding:.9rem;
       border-radius:.9rem;
-      border:1px solid rgba(148,163,184,.35);
-      background:rgba(15,23,42,.95);
+      border:1px solid rgba(148,163,184,.4);
+      background:rgba(15,23,42,.98);
       color:#e5e7eb;
-      margin-bottom:1rem;
+      font-size:.95rem;
       outline:none;
     }
 
     input:focus {
-      border-color:#22c55e;
-      box-shadow:0 0 0 1px rgba(34,197,94,.55);
+      border-color:#4f46e5;
+      box-shadow:0 0 0 1px rgba(79,70,229,.65);
     }
 
-    .btn {
+    .btn-main {
       width:100%;
-      padding:.9rem;
+      padding:.95rem;
+      margin-top:1.3rem;
       border-radius:999px;
       border:none;
       cursor:pointer;
       font-weight:600;
-      background:linear-gradient(135deg,#22c55e,#16a34a);
+      font-size:.98rem;
+      background:linear-gradient(135deg,#4f46e5,#ec4899);
       color:white;
-      box-shadow:0 14px 32px rgba(22,163,74,.45);
-      font-size:.95rem;
+      box-shadow:0 18px 40px rgba(79,70,229,.65);
     }
 
     #msg {
@@ -95,19 +174,36 @@
 
 <body>
 
+  <!-- Header / Avatar -->
+  <div class="profile-box">
+    <div class="avatar-circle">👩🏻‍🎓</div>
+    <div class="profile-info">
+      <div class="name" id="studentName">นักเรียน</div>
+      <div class="id" id="studentId">ID : -</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-row">
+    <div id="tabCam" class="tab-btn active">📷 สแกนด้วยกล้อง</div>
+    <div id="tabToken" class="tab-btn">🔢 กรอก TOKEN เอง</div>
+  </div>
+
+  <!-- Main card -->
   <div class="wrap">
     <h2>เช็คชื่อเข้าเรียน</h2>
-    <div class="stu-info">
-      👤 <span id="studentName"></span><br>
-      🆔 <span id="studentId"></span>
-    </div>
+    <div class="sub">เลือกสแกนด้วยกล้อง หรือกรอก TOKEN ด้วยตัวเอง</div>
 
+    <!-- กล่องกล้อง -->
     <div id="reader"></div>
 
-    <label>หรือกรอก TOKEN เอง</label>
-    <input type="text" id="tokenInput" placeholder="TOKEN 6 ตัว">
+    <!-- กล่อง TOKEN -->
+    <div class="token-box" id="tokenBox">
+      <label>TOKEN 6 ตัว</label>
+      <input type="text" id="tokenInput" placeholder="เช่น ABC123">
+    </div>
 
-    <button id="scanBtn" class="btn">เช็คชื่อ</button>
+    <button class="btn-main" id="scanBtn">เช็คชื่อ</button>
 
     <div id="msg"></div>
   </div>

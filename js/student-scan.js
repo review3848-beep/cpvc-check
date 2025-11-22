@@ -1,136 +1,111 @@
 // js/student-scan.js
 import { API_BASE } from "./api.js";
 
-const nameSpan = document.getElementById("studentName");
-const idSpan = document.getElementById("studentId");
-const readerDiv = document.getElementById("reader");
-const tokenInput = document.getElementById("tokenInput");
-const scanBtn = document.getElementById("scanBtn");
-const msg = document.getElementById("msg");
+// เติมชื่อ/ID จาก sessionStorage
+const stuName = sessionStorage.getItem("studentName") || "นักเรียน";
+const stuId   = sessionStorage.getItem("studentId")   || "-";
 
-let html5QrInstance = null;
+document.getElementById("studentName").textContent = stuName;
+document.getElementById("studentId").textContent   = "ID : " + stuId;
 
-function show(text, type = "error") {
-  if (!msg) return;
-  msg.textContent = text;
-  msg.style.color = type === "success" ? "#4ade80" : "#fb7185";
+// ------- UI Tab สลับกล้อง / TOKEN -------
+const tabCam   = document.getElementById("tabCam");
+const tabToken = document.getElementById("tabToken");
+const reader   = document.getElementById("reader");
+const tokenBox = document.getElementById("tokenBox");
+const msgEl    = document.getElementById("msg");
+
+let qrScanner = null;
+let currentToken = "";
+
+// เริ่มกล้อง
+async function startCamera() {
+  try {
+    if (qrScanner) return;
+    reader.style.display = "block";
+    tokenBox.style.display = "none";
+
+    qrScanner = new Html5Qrcode("reader");
+    await qrScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      (decoded) => {
+        currentToken = decoded.trim();
+        document.getElementById("tokenInput").value = currentToken;
+        msgEl.textContent = "อ่าน TOKEN สำเร็จ: " + currentToken;
+      }
+    );
+  } catch (err) {
+    console.error(err);
+    msgEl.textContent = "เปิดกล้องไม่สำเร็จ";
+  }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const studentId = sessionStorage.getItem("studentId");
-  const studentName = sessionStorage.getItem("studentName");
-
-  // ยังไม่ล็อกอิน → เด้งกลับ
-  if (!studentId || !studentName) {
-    window.location.href = "login.html";
-    return;
+// หยุดกล้อง
+async function stopCamera() {
+  if (qrScanner) {
+    try {
+      await qrScanner.stop();
+    } catch (_) {}
+    qrScanner.clear();
+    qrScanner = null;
   }
+  reader.style.display = "none";
+}
 
-  if (nameSpan) nameSpan.textContent = studentName;
-  if (idSpan) idSpan.textContent = studentId;
-
-  initQrReader();
+// คลิกแท็บกล้อง
+tabCam.addEventListener("click", () => {
+  tabCam.classList.add("active");
+  tabToken.classList.remove("active");
+  msgEl.textContent = "";
+  startCamera();
 });
 
-function initQrReader() {
-  if (!readerDiv) return;
-  if (!window.Html5Qrcode) {
-    console.warn("Html5Qrcode ยังไม่โหลด");
-    return;
-  }
+// คลิกแท็บ TOKEN
+tabToken.addEventListener("click", () => {
+  tabToken.classList.add("active");
+  tabCam.classList.remove("active");
+  msgEl.textContent = "";
+  stopCamera();
+  tokenBox.style.display = "block";
+});
 
-  html5QrInstance = new Html5Qrcode("reader");
+// เริ่มต้นด้วยโหมดกล้อง
+startCamera();
 
-  const config = {
-    fps: 10,
-    qrbox: 220
-  };
-
-  html5QrInstance
-    .start(
-      { facingMode: "environment" },
-      config,
-      onQrSuccess,
-      (err) => {
-        // error ตอนสแกน (จะขึ้นถี่ ๆ) ไม่ต้องสนใจ
-      }
-    )
-    .catch((err) => {
-      console.error("เปิดกล้องไม่สำเร็จ:", err);
-      show("ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้กล้อง หรือกรอก TOKEN เอง", "error");
-    });
-}
-
-function onQrSuccess(decodedText) {
-  console.log("QR decoded:", decodedText);
-
-  if (!tokenInput) return;
-
-  // ถ้า QR เป็น URL ที่มี ?token=XXXX
-  try {
-    const url = new URL(decodedText);
-    const t = url.searchParams.get("token");
-    tokenInput.value = t || decodedText;
-  } catch {
-    // ถ้าไม่ใช่ URL ก็ใช้ค่าตรง ๆ
-    tokenInput.value = decodedText;
-  }
-
-  show("อ่าน QR สำเร็จ กรุณากดปุ่มเช็คชื่อ", "success");
-}
-
-async function handleCheckin() {
-  const studentId = sessionStorage.getItem("studentId");
-  const studentName = sessionStorage.getItem("studentName");
-  const token = tokenInput.value.trim();
-
-  if (!studentId || !studentName) {
-    show("ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่", "error");
-    setTimeout(() => (window.location.href = "login.html"), 800);
-    return;
-  }
+// ------- ปุ่มเช็คชื่อ -------
+document.getElementById("scanBtn").addEventListener("click", async () => {
+  const tokenInput = document.getElementById("tokenInput").value.trim();
+  const token = tokenInput || currentToken;
 
   if (!token) {
-    return show("กรุณากรอก TOKEN หรือสแกน QR ก่อน", "error");
+    msgEl.textContent = "กรุณาสแกนหรือกรอก TOKEN ก่อน";
+    return;
   }
 
-  scanBtn.disabled = true;
-  scanBtn.textContent = "กำลังเช็คชื่อ...";
-
+  msgEl.textContent = "กำลังส่งข้อมูล...";
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "markAttendance",
-        studentId,
-        studentName,
-        token,
-      }),
+        studentId: stuId,
+        studentName: stuName,
+        token
+      })
     });
 
     const data = await res.json();
     console.log("markAttendance >", data);
 
-    if (!data.success) {
-      show(data.message || "เช็คชื่อไม่สำเร็จ", "error");
+    if (data.success) {
+      msgEl.textContent = `เช็คชื่อสำเร็จ (${data.status || "OK"})`;
     } else {
-      let text = "เช็คชื่อสำเร็จ";
-      if (data.status === "LATE") text += " (สาย)";
-      show(text, "success");
+      msgEl.textContent = data.message || "เช็คชื่อไม่สำเร็จ";
     }
   } catch (err) {
     console.error(err);
-    show("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์", "error");
+    msgEl.textContent = "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้";
   }
-
-  scanBtn.disabled = false;
-  scanBtn.textContent = "เช็คชื่อ";
-}
-
-if (scanBtn) {
-  scanBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    handleCheckin();
-  });
-}
+});

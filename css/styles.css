@@ -261,3 +261,146 @@ nav {
     grid-template-columns: 1fr;
   }
 }
+.student-card {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  padding: 1.2rem 1.6rem;
+  border-radius: 1.4rem;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.28);
+  width: fit-content;
+  margin: 0 auto 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Avatar Zone */
+.avatar-wrap {
+  position: relative;
+  width: 68px;
+  height: 68px;
+}
+
+.avatar-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #6366f1, #ec4899);
+  filter: blur(18px);
+  opacity: 0.55;
+}
+
+.avatar-icon {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #4f46e5, #a855f7);
+  color: white;
+  font-size: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 1rem;
+  z-index: 2;
+  box-shadow: 0 8px 24px rgba(99,102,241,0.6);
+}
+
+/* Info zone */
+.student-info {
+  color: #e2e8f0;
+}
+
+.student-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.student-id-row {
+  margin-top: 0.25rem;
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  font-size: 0.95rem;
+  color: #cbd5e1;
+}
+
+/* Badge styling */
+.id-badge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(99,102,241,0.18);
+  color: #a5b4fc;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+}
+    .stu-info {
+      display:flex;
+      align-items:center;
+      gap:0.9rem;
+      font-size:.95rem;
+      color:#e5e7eb;
+      margin-bottom:1.4rem;
+    }
+
+    .stu-avatar {
+      width:52px;
+      height:52px;
+      border-radius:999px;
+      overflow:hidden;
+      border:2px solid rgba(96,165,250,.9);
+      box-shadow:0 0 18px rgba(59,130,246,.45);
+      background:radial-gradient(circle at 30% 0,#38bdf8,#1d4ed8);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .stu-avatar img {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .stu-name {
+      font-size:1rem;
+      font-weight:600;
+      color:#f9fafb;
+    }
+
+    .stu-id {
+      font-size:.8rem;
+      color:#9ca3af;
+    }
+
+    .mode-toggle {
+      display:flex;
+      gap:.6rem;
+      margin-bottom:1.1rem;
+    }
+
+    .mode-btn {
+      flex:1;
+      padding:.5rem .8rem;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.5);
+      background:rgba(15,23,42,.9);
+      color:#e5e7eb;
+      font-size:.85rem;
+      cursor:pointer;
+      transition:.18s;
+    }
+
+    .mode-btn.active {
+      border-color:#22c55e;
+      background:linear-gradient(135deg,#22c55e,#16a34a);
+      box-shadow:0 10px 24px rgba(34,197,94,.4);
+      color:white;
+    }
+
