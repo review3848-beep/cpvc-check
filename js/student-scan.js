@@ -87,7 +87,7 @@ document.getElementById("scanBtn").addEventListener("click", async () => {
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
         action: "markAttendance",
         studentId: stuId,
