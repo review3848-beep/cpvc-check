@@ -25,14 +25,15 @@ async function handleLogin() {
 
   try {
     const res = await fetch(API_BASE, {
-      method: "POST",
-      headers: { "Content-Type": "application/json;charset=utf-8" },
-      body: JSON.stringify({
-        action: "loginStudent",   // ต้องตรงกับ Code.gs
-        studentId,
-        password,
-      }),
-    });
+    method: "POST",
+    // บรรทัดนี้สำคัญมาก! ต้องเปลี่ยนเป็น text/plain
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({
+        action: "loginStudent", // หรือ action ที่ไฟล์นั้นใช้
+        id: studentId,
+        password: password
+    })
+});
 
     const data = await res.json();
     console.log("loginStudent >", data);
