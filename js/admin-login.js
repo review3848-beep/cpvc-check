@@ -1,72 +1,58 @@
-// js/admin-login.js
-import { API_BASE } from "./api.js";
+// js/admin-dashboard.js
+import { callApi } from "./api.js";
 
-const form = document.querySelector("form");
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const msg = document.getElementById("msg");
-const btn = form ? form.querySelector("button[type=submit]") : null;
+const adminName  = sessionStorage.getItem("adminName");
+const adminEmail = sessionStorage.getItem("adminEmail");
 
-function show(text, type = "error") {
-  if (!msg) return;
-  msg.textContent = text;
-  msg.style.color = type === "success" ? "#4ade80" : "#fb7185";
+// ถ้าไม่ได้ล็อกอิน -> เด้งกลับหน้า admin login
+if (!adminEmail) {
+  window.location.href = "login.html";
 }
 
-async function loginAdmin(e) {
-  e.preventDefault();
+document.getElementById("adminName").textContent  = adminName || "Admin";
+document.getElementById("adminEmail").textContent = adminEmail || "";
 
-  const email = emailInput.value.trim();
-  const password = passwordInput.value.trim();
+//ที่หน้า Dashboard ยังไม่ได้ดึงข้อมูลจาก GAS จริง ๆ
+// เดี๋ยวรอบหน้าเราจะเพิ่ม action สำหรับ admin เช่น getAdminSummary ใน Code.gs
+// ตอนนี้ให้ set ค่า mock ไว้ก่อน หรือดึงจาก API ถ้าพร้อมแล้ว
 
-  if (!email || !password) {
-    return show("กรุณากรอกข้อมูลให้ครบ");
-  }
+const totalTeachersEl   = document.getElementById("totalTeachers");
+const totalStudentsEl   = document.getElementById("totalStudents");
+const totalSessionsEl   = document.getElementById("totalSessions");
+const totalAttendanceEl = document.getElementById("totalAttendance");
+const msgTableBody      = document.getElementById("sessionTable");
+const reloadBtn         = document.getElementById("reloadBtn");
+const logoutBtn         = document.getElementById("logoutBtn");
 
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = "กำลังเข้าสู่ระบบ...";
-  }
-
+// ฟังก์ชันโหลด summary จาก GAS (ต้องไปเพิ่ม action ใน Code.gs ชื่อ getAdminSummary)
+async function loadSummary() {
   try {
-    const res = await fetch(API_BASE, {
-      method: "POST",
-      // ❗ ไม่ต้องใส่ headers เพื่อเลี่ยง preflight/CORS
-      body: JSON.stringify({
-        action: "adminLogin",   // << ตรงกับ Code.gs แล้ว
-        email,
-        password,
-      }),
-    });
+    // ถ้า Code.gs ยังไม่มี getAdminSummary ให้ยังไม่เรียก
+    // ถ้าพร้อมแล้ว เราจะใช้โค้ดแบบนี้:
+    // const res = await callApi("getAdminSummary", {});
+    // if (res.success) { ... }
 
-    const data = await res.json();
-    console.log("adminLogin >", data);
+    // ตอนนี้ขอใส่ mock data ชั่วคราวเพื่อให้ UI ดูมีชีวิต
+    totalTeachersEl.textContent   = "—";
+    totalStudentsEl.textContent   = "—";
+    totalSessionsEl.textContent   = "—";
+    totalAttendanceEl.textContent = "—";
 
-    if (data.success) {
-      show("เข้าสู่ระบบสำเร็จ", "success");
-      sessionStorage.setItem("adminName", data.name);
-      sessionStorage.setItem("adminEmail", data.email);
-
-      setTimeout(() => {
-        window.location.href = "dashboard.html";
-      }, 800);
-    } else {
-      show(data.message || "เข้าสู่ระบบไม่สำเร็จ");
-    }
+    // ปล่อยตารางไว้ตาม placeholder เดิม
   } catch (err) {
     console.error(err);
-    show("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์");
-  }
-
-  if (btn) {
-    btn.disabled = false;
-    btn.textContent = "เข้าสู่ระบบ";
   }
 }
 
-if (form) {
-  form.addEventListener("submit", loginAdmin);
-}
-if (btn) {
-  btn.addEventListener("click", loginAdmin);
-}
+// ปุ่มรีเฟรช
+reloadBtn.addEventListener("click", loadSummary);
+
+// ปุ่มออกจากระบบ
+logoutBtn.addEventListener("click", () => {
+  sessionStorage.removeItem("adminName");
+  sessionStorage.removeItem("adminEmail");
+  window.location.href = "login.html";
+});
+
+// เรียกตอนเปิดหน้า
+loadSummary();

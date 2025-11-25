@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Login | CPVC-Check</title>
+  <title>เข้าสู่ระบบผู้ดูแล | CPVC-Check</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="stylesheet" href="../css/styles.css">
@@ -15,146 +15,100 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: radial-gradient(circle at 25% 20%, #1e1b4b, #0a0a1a 70%);
-      font-family: 'Inter', sans-serif;
-      overflow: hidden;
-    }
-
-    /* แสงวงกลมไล่สีด้านหลัง */
-    .bg-glow {
-      position: absolute;
-      width: 550px;
-      height: 550px;
-      background: radial-gradient(circle, #6366f1 0%, transparent 70%);
-      filter: blur(80px);
-      border-radius: 50%;
-      top: -120px;
-      left: -120px;
-      opacity: 0.45;
-      animation: pulse 5s infinite alternate ease-in-out;
-    }
-
-    @keyframes pulse {
-      from { transform: scale(1); opacity: 0.35; }
-      to   { transform: scale(1.2); opacity: 0.55; }
+      background: radial-gradient(circle at 20% 20%, #1e293b, #020617 75%);
+      font-family: "Inter", system-ui, sans-serif;
+      color: #e5e7eb;
     }
 
     .card {
-      position: relative;
       width: 100%;
       max-width: 420px;
-      padding: 3rem 2.4rem;
-      border-radius: 1.6rem;
+      padding: 2.6rem 2.3rem;
+      border-radius: 1.4rem;
       backdrop-filter: blur(18px);
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.15);
-      box-shadow: 0 20px 60px rgba(0,0,50,0.6);
-      animation: fadeUp 0.8s ease-out;
+      background: rgba(15,23,42,0.95);
+      border: 1px solid rgba(148,163,184,0.35);
+      box-shadow: 0 22px 55px rgba(15,23,42,0.95);
     }
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(28px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .admin-icon {
-      width: 65px;
-      height: 65px;
-      margin: 0 auto 1.2rem;
+    .icon {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 1rem;
       border-radius: 50%;
-      background: linear-gradient(135deg,#6366f1,#7c3aed);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-size: 1.9rem;
-      box-shadow: 0 0 18px rgba(123,104,238,0.6);
+      background: linear-gradient(135deg,#4f46e5,#f97316);
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-size:1.8rem;
+      box-shadow:0 0 16px rgba(249,115,22,.7);
     }
 
     h2 {
-      text-align: center;
-      font-size: 1.7rem;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 0.4rem;
+      text-align:center;
+      margin:0 0 .4rem 0;
+      font-size:1.6rem;
+      color:#f9fafb;
     }
 
     .subtitle {
-      color: #cbd5f5;
-      text-align: center;
-      font-size: 0.95rem;
-      margin-bottom: 2rem;
+      text-align:center;
+      font-size:.9rem;
+      color:#94a3b8;
+      margin-bottom:1.8rem;
     }
 
     label {
-      color: #d1d5db;
-      font-size: 0.88rem;
-      margin-bottom: 0.35rem;
-      display: block;
+      font-size:.85rem;
+      color:#cbd5f5;
+      margin-bottom:.35rem;
+      display:block;
     }
 
     input {
-      width: 100%;
-      padding: 0.95rem;
-      font-size: 1rem;
-      border-radius: 0.9rem;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(255,255,255,0.08);
-      color: #fff;
-      margin-bottom: 1.3rem;
-      outline: none;
-      transition: 0.2s;
+      width:100%;
+      padding:.9rem;
+      border-radius:.9rem;
+      border:1px solid rgba(148,163,184,.35);
+      background:rgba(15,23,42,.96);
+      color:#e5e7eb;
+      margin-bottom:1.2rem;
+      font-size:.95rem;
+      outline:none;
+      transition:.18s;
     }
 
     input:focus {
-      border-color: #818cf8;
-      box-shadow: 0 0 0 2px rgba(129,140,248,0.5);
-      background: rgba(255,255,255,0.12);
+      border-color:#6366f1;
+      box-shadow:0 0 0 1px rgba(99,102,241,.6);
     }
 
     .btn {
-      width: 100%;
-      padding: 1rem;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      font-size: 1rem;
-      font-weight: 600;
-      background: linear-gradient(135deg,#4f46e5,#9333ea);
-      color: white;
-      box-shadow: 0 12px 30px rgba(99,102,241,0.45);
-      transition: 0.15s;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 14px 34px rgba(99,102,241,0.6);
+      width:100%;
+      padding:.95rem;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      font-weight:600;
+      font-size:.95rem;
+      background:linear-gradient(135deg,#4f46e5,#f97316);
+      color:#fff;
+      box-shadow:0 16px 36px rgba(79,70,229,.6);
     }
 
     #msg {
-      margin-top: 1rem;
-      text-align: center;
-      font-size: 0.9rem;
-    }
-
-    a {
-      color: #93c5fd;
-      text-decoration: none;
+      margin-top:1rem;
+      text-align:center;
+      font-size:.9rem;
     }
   </style>
 </head>
 
 <body>
-
-  <div class="bg-glow"></div>
-
   <div class="card">
-    <div class="admin-icon">⚡</div>
+    <div class="icon">🛡️</div>
+    <h2>เข้าสู่ระบบผู้ดูแล</h2>
+    <div class="subtitle">จัดการครู นักเรียน และข้อมูลในระบบ CPVC-Check</div>
 
-    <h2>Admin Login</h2>
-    <div class="subtitle">จัดการระบบทั้งหมดของ CPVC-Check</div>
-
-    <label>Email แอดมิน</label>
+    <label>อีเมลผู้ดูแล</label>
     <input type="email" id="email" placeholder="admin@example.com">
 
     <label>รหัสผ่าน</label>
@@ -163,11 +117,6 @@
     <button id="loginBtn" class="btn">เข้าสู่ระบบ</button>
 
     <div id="msg"></div>
-
-    <p style="margin-top:1.2rem;text-align:center;">
-      ↩ <a href="../index.html">กลับหน้าแรก</a>
-    </p>
   </div>
-
 </body>
 </html>

@@ -1,55 +1,50 @@
-// js/admin-dashboard.js
+// js/admin-login.js
+import { callApi } from "./api.js";
 
-// ช่องโชว์ชื่อแอดมินบน navbar
-const adminNameSpan = document.getElementById("adminName");
+const emailInput = document.getElementById("email");
+const passInput  = document.getElementById("password");
+const loginBtn   = document.getElementById("loginBtn");
+const msgEl      = document.getElementById("msg");
 
-// การ์ดทั้งหมด (ปุ่ม "เปิดดู")
-const cards = document.querySelectorAll(".card");
-
-// เวลาเจอ error หรืออยากแจ้งเตือนอะไร ใช้ alert ไปก่อน
-function guardAdmin() {
-  const adminName = sessionStorage.getItem("adminName");
-  const adminEmail = sessionStorage.getItem("adminEmail");
-
-  // ถ้าไม่มี session แอดมิน -> เด้งกลับหน้า login admin
-  if (!adminName || !adminEmail) {
-    window.location.href = "login.html";
-    return null;
-  }
-
-  if (adminNameSpan) {
-    adminNameSpan.textContent = adminName;
-  }
-
-  return { adminName, adminEmail };
+function setMsg(text, type = "error") {
+  msgEl.textContent = text || "";
+  msgEl.style.color = type === "success" ? "#4ade80" : "#f97373";
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const admin = guardAdmin();
-  if (!admin) return;
+loginBtn.addEventListener("click", async () => {
+  const email = emailInput.value.trim();
+  const password = passInput.value.trim();
 
-  // ปุ่มแต่ละการ์ดยังไม่ทำหน้าแยก → ให้ขึ้น alert นิ่ม ๆ ไปก่อน
-  cards.forEach((card, index) => {
-    const btn = card.querySelector(".btn");
-    if (!btn) return;
+  if (!email || !password) {
+    setMsg("กรุณากรอกอีเมลและรหัสผ่านให้ครบ");
+    return;
+  }
 
-    btn.addEventListener("click", () => {
-      switch (index) {
-        case 0:
-          alert("ฟีเจอร์: จัดการครู (ยังไม่ทำหน้าแยกให้)");
-          break;
-        case 1:
-          alert("ฟีเจอร์: จัดการนักเรียน (ยังไม่ทำหน้าแยกให้)");
-          break;
-        case 2:
-          alert("ฟีเจอร์: ดูคาบเรียนทั้งหมด (ยังไม่ทำหน้าแยกให้)");
-          break;
-        case 3:
-          alert("ฟีเจอร์: ดูประวัติการเช็คชื่อทั้งหมด (ยังไม่ทำหน้าแยกให้)");
-          break;
-        default:
-          alert("เมนูนี้ยังไม่เปิดใช้งาน");
-      }
-    });
-  });
+  loginBtn.disabled = true;
+  loginBtn.textContent = "กำลังเข้าสู่ระบบ...";
+  setMsg("");
+
+  try {
+    const res = await callApi("loginAdmin", { email, password });
+
+    if (!res.success) {
+      setMsg(res.message || "เข้าสู่ระบบไม่สำเร็จ");
+      return;
+    }
+
+    // เก็บ session แอดมิน
+    sessionStorage.setItem("adminName",  res.name || "");
+    sessionStorage.setItem("adminEmail", res.email || email);
+
+    setMsg("เข้าสู่ระบบสำเร็จ", "success");
+
+    // เด้งไป dashboard
+    window.location.href = "dashboard.html";
+  } catch (err) {
+    console.error(err);
+    setMsg("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้");
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = "เข้าสู่ระบบ";
+  }
 });
