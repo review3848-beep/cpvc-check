@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="stylesheet" href="../css/styles.css">
+  <!-- โหลดไลบรารีสร้าง QR -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script type="module" src="../js/teacher-open-session.js" defer></script>
 
   <style>
@@ -79,6 +81,13 @@
       box-shadow:0 0 0 1px rgba(99,102,241,.6);
     }
 
+    .session-status {
+      font-size:.85rem;
+      margin-top:.1rem;
+      margin-bottom:.6rem;
+      color:#e5e7eb;
+    }
+
     .btn-row {
       display:flex;
       gap:.7rem;
@@ -138,16 +147,39 @@
       text-shadow:0 0 14px rgba(56,189,248,.7);
     }
 
-    .session-status {
-      font-size:.85rem;
-      margin-top:.4rem;
-      color:#e5e7eb;
+    /* กล่อง QR CODE */
+    .qr-section {
+      margin-top:1.1rem;
+      padding:1.1rem 1rem 1.2rem;
+      border-radius:1.1rem;
+      background:rgba(15,23,42,.98);
+      border:1px dashed rgba(148,163,184,.5);
+      text-align:center;
+      display:none;
+    }
+
+    .qr-label {
+      font-size:.9rem;
+      color:#cbd5f5;
+      margin-bottom:.4rem;
+    }
+
+    #qrCode {
+      width:180px;
+      height:180px;
+      margin:0 auto .6rem;
+    }
+
+    .qr-note {
+      font-size:.8rem;
+      color:#9ca3af;
     }
 
     #msg {
-      margin-top:.6rem;
+      margin-top:.8rem;
       text-align:center;
       font-size:.9rem;
+      min-height:1.2rem;
     }
   </style>
 </head>
@@ -158,7 +190,7 @@
     <div class="header">
       <div class="title-box">
         <h2>จัดการคาบเรียน</h2>
-        <p>เปิดคาบด้วย TOKEN และปิดคาบเพื่อสรุปมา/สาย/ขาด</p>
+        <p>เปิดคาบด้วย รหัส และ QR ให้นักเรียนสแกน</p>
       </div>
       <div class="teacher-chip">
         👩‍🏫 <span id="teacherName">-</span>
@@ -185,8 +217,17 @@
     </div>
 
     <div id="tokenBox" class="token-box">
-      <div class="token-label">TOKEN สำหรับคาบนี้</div>
+      <div class="token-label"> รหัสสำหรับคาบนี้</div>
       <div id="token">------</div>
+    </div>
+
+    <!-- กล่องแสดง QR CODE -->
+    <div id="qrSection" class="qr-section">
+      <div class="qr-label">QR CODE สำหรับให้นักเรียนสแกน</div>
+      <div id="qrCode"></div>
+      <div class="qr-note">
+        นักเรียนสามารถสแกน QR นี้ หรือกรอก รหัส เองที่หน้าเช็คชื่อได้
+      </div>
     </div>
 
     <div id="msg"></div>

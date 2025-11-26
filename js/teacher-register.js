@@ -28,7 +28,7 @@ async function handleRegister() {
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
-      // ❗ ไม่ใส่ headers -> ลดปัญหา preflight CORS
+      headers: { "Content-Type": "application/json;charset=utf-8" },
       body: JSON.stringify({
         action: "registerTeacher", // ต้องตรงกับ Code.gs
         name,
