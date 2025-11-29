@@ -4,39 +4,79 @@ import { callApi } from "./api.js";
 document.addEventListener("DOMContentLoaded", () => {
   const teacherJson = sessionStorage.getItem("teacher");
   if (!teacherJson) {
-    // ถ้ายังไม่ล็อกอินครู ให้เด้งกลับหน้า login
-    window.location.href = "../teacher/login.html";
+    window.location.href = "login.html";
     return;
   }
 
   const teacher = JSON.parse(teacherJson);
-  const teacherNameEl   = document.getElementById("teacherName");
-  const subjectInput    = document.getElementById("subjectCode");
-  const roomInput       = document.getElementById("room");
-  const statusEl        = document.getElementById("sessionStatus");
-  const openBtn         = document.getElementById("openSessionBtn");
-  const closeBtn        = document.getElementById("closeSessionBtn");
-  const tokenBox        = document.getElementById("tokenBox");
-  const tokenEl         = document.getElementById("token");
-  const qrSection       = document.getElementById("qrSection");
-  const qrBox           = document.getElementById("qrCode");
-  const msgEl           = document.getElementById("msg");
+  const teacherNameEl = document.getElementById("teacherName");
+  const courseSelect  = document.getElementById("courseSelect");
+  const statusEl      = document.getElementById("sessionStatus");
+  const openBtn       = document.getElementById("openSessionBtn");
+  const closeBtn      = document.getElementById("closeSessionBtn");
+  const tokenBox      = document.getElementById("tokenBox");
+  const tokenEl       = document.getElementById("token");
+  const qrSection     = document.getElementById("qrSection");
+  const qrBox         = document.getElementById("qrCode");
+  const msgEl         = document.getElementById("msg");
 
   teacherNameEl.textContent = teacher.name || "-";
 
   let currentToken = null;
 
+  // โหลดรายวิชาของครูจาก COURSES
+  loadCourses(teacher.email);
+
+  async function loadCourses(email) {
+    try {
+      const res = await callApi("getTeacherCourses", {
+        teacherEmail: email,
+      });
+
+      if (!res || !res.success) {
+        throw new Error(res?.message || "โหลดรายวิชาไม่สำเร็จ");
+      }
+
+      const courses = res.courses || [];
+      if (courses.length === 0) {
+        courseSelect.innerHTML = `
+          <option value="">ยังไม่มีรายวิชาที่ผูกกับอีเมลนี้ใน COURSES</option>
+        `;
+        return;
+      }
+
+      courseSelect.innerHTML = `<option value="">เลือกวิชาที่ต้องการเปิดคาบ</option>`;
+
+      courses.forEach((c) => {
+        const opt = document.createElement("option");
+        opt.value = c.code;
+        opt.textContent = `${c.code} – ${c.name} (${c.group})`;
+        opt.dataset.subject = `${c.code} ${c.name}`;
+        opt.dataset.room    = c.group || "";
+        courseSelect.appendChild(opt);
+      });
+    } catch (err) {
+      console.error(err);
+      courseSelect.innerHTML = `
+        <option value="">เกิดข้อผิดพลาดในการโหลดรายวิชา</option>
+      `;
+    }
+  }
+
   // เปิดคาบ
   openBtn.addEventListener("click", async () => {
     msgEl.textContent = "";
-    const subject = subjectInput.value.trim();
-    const room    = roomInput.value.trim();
+    const selected = courseSelect.value;
 
-    if (!subject || !room) {
-      msgEl.textContent = "กรุณากรอกวิชาและห้องให้ครบ";
+    if (!selected) {
+      msgEl.textContent = "กรุณาเลือกวิชาที่ต้องการเปิดคาบ";
       msgEl.style.color = "#f97373";
       return;
     }
+
+    const opt     = courseSelect.options[courseSelect.selectedIndex];
+    const subject = opt.dataset.subject || selected;
+    const room    = opt.dataset.room || "";
 
     openBtn.disabled  = true;
     closeBtn.disabled = true;
@@ -59,10 +99,9 @@ document.addEventListener("DOMContentLoaded", () => {
       tokenBox.style.display = "block";
 
       statusEl.textContent = "สถานะคาบ: กำลังเปิดคาบ (OPEN)";
-      msgEl.textContent = "เปิดคาบเรียบร้อย สามารถให้เด็กสแกนหรือกรอก TOKEN ได้แล้ว ✅";
+      msgEl.textContent = "เปิดคาบเรียบร้อย สามารถให้นักเรียนสแกนหรือกรอก TOKEN ได้แล้ว ✅";
       msgEl.style.color = "#4ade80";
 
-      // แสดง QR CODE จาก TOKEN
       renderQr(currentToken, qrSection, qrBox);
 
       closeBtn.disabled = false;
@@ -102,11 +141,6 @@ document.addEventListener("DOMContentLoaded", () => {
       statusEl.textContent = "สถานะคาบ: ปิดคาบแล้ว (CLOSED)";
       msgEl.textContent = res.message || "ปิดคาบและสรุปมา/ขาดเรียบร้อย ✅";
       msgEl.style.color = "#4ade80";
-
-      // หลังปิดคาบจะยังเห็น TOKEN + QR ได้ เผื่อเช็กย้อนหลัง
-      // ถ้าอยากให้หายไปเลย ก็สามารถซ่อน tokenBox / qrSection ตรงนี้ได้
-      // tokenBox.style.display = "none";
-      // qrSection.style.display = "none";
     } catch (err) {
       console.error(err);
       msgEl.textContent = err.message || "เกิดข้อผิดพลาดในการปิดคาบ";
@@ -126,10 +160,10 @@ function renderQr(token, qrSection, qrBox) {
   }
 
   qrSection.style.display = "block";
-  qrBox.innerHTML = ""; // เคลียร์ของเก่าเผื่อครูเปิดคาบใหม่
+  qrBox.innerHTML = "";
 
   new QRCode(qrBox, {
-    text: token,          // ตอนนี้ให้ QR เก็บแค่ TOKEN
+    text: token,
     width: 180,
     height: 180,
     correctLevel: QRCode.CorrectLevel.H,

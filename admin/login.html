@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>เข้าสู่ระบบผู้ดูแล | NexAttend</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="../css/styles.css">
+  <script type="module" src="../js/admin-login.js" defer></script>
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at 15% 20%, #1e293b, #020617 78%);
+      font-family: "Inter", system-ui, sans-serif;
+      color: #e5e7eb;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      padding: 2.6rem 2.3rem;
+      border-radius: 1.4rem;
+      backdrop-filter: blur(18px);
+      background: rgba(15,23,42,0.95);
+      border: 1px solid rgba(148,163,184,0.35);
+      box-shadow: 0 22px 60px rgba(15,23,42,0.95);
+    }
+
+    .icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1rem;
+      border-radius: 999px;
+      background: conic-gradient(from 180deg, #4f46e5, #22c55e, #06b6d4, #4f46e5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 2rem;
+      box-shadow: 0 0 20px rgba(59,130,246,0.7);
+    }
+
+    h2 {
+      text-align: center;
+      margin: 0 0 .4rem 0;
+      font-size: 1.6rem;
+      color: #f9fafb;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: .9rem;
+      color: #94a3b8;
+      margin-bottom: 1.8rem;
+    }
+
+    label {
+      font-size: .85rem;
+      color: #cbd5f5;
+      margin-bottom: .35rem;
+      display: block;
+    }
+
+    input {
+      width: 100%;
+      padding: .9rem;
+      border-radius: .9rem;
+      border: 1px solid rgba(148,163,184,.35);
+      background: rgba(15,23,42,.96);
+      color: #e5e7eb;
+      margin-bottom: 1.2rem;
+      font-size: .95rem;
+      outline: none;
+      transition: .18s;
+    }
+
+    input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 1px rgba(99,102,241,.55);
+    }
+
+    .btn {
+      width: 100%;
+      padding: .95rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: .95rem;
+      background: linear-gradient(135deg,#4f46e5,#22c55e);
+      color: #fff;
+      box-shadow: 0 18px 45px rgba(37,99,235,.65);
+    }
+
+    #msg {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: .9rem;
+    }
+
+    .msg-ok { color: #4ade80; }
+    .msg-err { color: #f97373; }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="icon">🔐</div>
+    <h2>NexAttend Admin</h2>
+    <div class="subtitle">เข้าสู่ระบบผู้ดูแลเพื่อดูข้อมูลรวมทั้งระบบ</div>
+
+    <label>อีเมลแอดมิน</label>
+    <input type="email" id="email" placeholder="admin@nexattend.com">
+
+    <label>รหัสผ่าน</label>
+    <input type="password" id="password" placeholder="••••••••">
+
+    <button id="loginBtn" class="btn">เข้าสู่ระบบ</button>
+
+    <div id="msg"></div>
+  </div>
+</body>
+</html>

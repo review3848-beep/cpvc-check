@@ -24,7 +24,6 @@ const tokenBox  = document.getElementById("tokenBox");
 const tokenInput = document.getElementById("tokenInput");
 const statusMsg  = document.getElementById("statusMsg");
 const checkBtn   = document.getElementById("checkBtn");
-
 const successModal = document.getElementById("successModal");
 const successText  = document.getElementById("successText");
 const closeSuccess = document.getElementById("closeSuccess");

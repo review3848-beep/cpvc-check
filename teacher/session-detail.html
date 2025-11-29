@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>รายละเอียดคาบเรียน | NexAttend</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="../css/styles.css">
+  <script type="module" src="../js/teacher-session-detail.js" defer></script>
+
+  <style>
+    body {
+      margin:0;
+      min-height:100vh;
+      background:#020617;
+      color:#e5e7eb;
+      font-family:"Inter",system-ui,sans-serif;
+    }
+
+    .nav {
+      padding:1rem 1.8rem;
+      background:rgba(15,23,42,.96);
+      border-bottom:1px solid rgba(148,163,184,.3);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+
+    .nav-title { font-size:1.1rem;font-weight:600; }
+    .nav-sub   { font-size:.8rem;color:#94a3b8; }
+    .nav-user  { font-size:.85rem;color:#cbd5f5;text-align:right; }
+
+    .container {
+      max-width:1100px;
+      margin:1.8rem auto 2.4rem;
+      padding:0 1.5rem;
+    }
+
+    .summary-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+      gap:1.1rem;
+      margin-bottom:1.6rem;
+    }
+
+    .card {
+      padding:1.3rem 1.2rem;
+      border-radius:1.1rem;
+      background:radial-gradient(circle at top left,rgba(56,189,248,.22),transparent 55%),
+                 rgba(15,23,42,.97);
+      border:1px solid rgba(148,163,184,.35);
+      box-shadow:0 14px 40px rgba(15,23,42,.9);
+    }
+
+    .card-label { font-size:.8rem;color:#9ca3af;margin-bottom:.15rem; }
+    .card-value { font-size:1.1rem;font-weight:600; }
+    .card-sub   { font-size:.8rem;color:#a5b4fc;margin-top:.2rem; }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:.85rem;
+    }
+
+    th, td {
+      padding:.55rem .5rem;
+      border-bottom:1px solid rgba(55,65,81,.8);
+      text-align:left;
+    }
+
+    th {
+      font-weight:500;
+      color:#93c5fd;
+      font-size:.8rem;
+    }
+
+    .status-ok    { color:#4ade80;font-weight:600; }
+    .status-late  { color:#facc15;font-weight:600; }
+    .status-absent{ color:#f97373;font-weight:600; }
+
+    .empty {
+      text-align:center;
+      padding:1rem 0;
+      color:#9ca3af;
+    }
+
+    .badge {
+      display:inline-block;
+      padding:.1rem .5rem;
+      border-radius:999px;
+      font-size:.7rem;
+      border:1px solid rgba(148,163,184,.7);
+      color:#cbd5f5;
+    }
+
+    #msg {
+      margin-top:1rem;
+      text-align:center;
+      font-size:.9rem;
+      min-height:1.1rem;
+    }
+
+    .back-link {
+      font-size:.85rem;
+      color:#93c5fd;
+      text-decoration:none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="nav">
+    <div>
+      <div class="nav-title">รายละเอียดคาบเรียน</div>
+      <div class="nav-sub">
+        TOKEN: <span id="navToken">-</span>
+      </div>
+    </div>
+    <div class="nav-user">
+      👩‍🏫 <span id="teacherName">-</span><br>
+      <span id="teacherEmail" style="font-size:.78rem;"></span>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <a href="dashboard.html" class="back-link">← กลับ Dashboard ครู</a>
+
+    <div class="summary-grid" style="margin-top:1rem;">
+      <div class="card">
+        <div class="card-label">รายวิชา</div>
+        <div class="card-value" id="sessSubject">-</div>
+        <div class="card-sub" id="sessRoom">-</div>
+      </div>
+      <div class="card">
+        <div class="card-label">สถานะคาบ</div>
+        <div class="card-value" id="sessStatus">-</div>
+        <div class="card-sub" id="sessStartTime">-</div>
+      </div>
+      <div class="card">
+        <div class="card-label">สรุปการเช็คชื่อ</div>
+        <div class="card-value">
+          <span id="sumTotal">0</span> คน
+        </div>
+        <div class="card-sub">
+          ✅ <span id="sumOk">0</span> ปกติ • ⏰ <span id="sumLate">0</span> สาย • ❌ <span id="sumAbsent">0</span> ขาด
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label" style="margin-bottom:.5rem;">รายชื่อนักเรียนในคาบนี้</div>
+      <div style="max-height:420px;overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>รหัสนักเรียน</th>
+              <th>ชื่อ – นามสกุล</th>
+              <th>วันที่เวลา</th>
+              <th>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody id="attTable">
+            <tr><td colspan="4" class="empty">กำลังโหลดข้อมูล...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="msg"></div>
+
+  </div>
+
+</body>
+</html>
