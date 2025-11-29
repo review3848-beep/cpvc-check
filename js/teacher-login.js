@@ -2,7 +2,7 @@
 import { callApi } from "./api.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const emailInput = document.getElementById("email");      // id จากหน้า login.html ของครู
+  const emailInput = document.getElementById("email");
   const passInput  = document.getElementById("password");
   const btn        = document.getElementById("loginBtn");
   const msgEl      = document.getElementById("msg");
@@ -12,18 +12,18 @@ document.addEventListener("DOMContentLoaded", () => {
     msgEl.style.color = ok ? "#4ade80" : "#f97373";
   };
 
-  // ถ้ามี session ครูอยู่แล้ว → เด้งไปหน้าเปิดคาบเลย
-  const existing = sessionStorage.getItem("teacher");
-  if (existing) {
-    try {
+  // ถ้าเคยล็อกอินแล้ว → เด้งไป Dashboard เลย
+  try {
+    const existing = sessionStorage.getItem("teacher");
+    if (existing) {
       const t = JSON.parse(existing);
       if (t && t.email) {
-        window.location.href = "open-session.html";
+        window.location.href = "dashboard.html";
         return;
       }
-    } catch (e) {
-      sessionStorage.removeItem("teacher");
     }
+  } catch (e) {
+    sessionStorage.removeItem("teacher");
   }
 
   btn.addEventListener("click", async () => {
@@ -40,20 +40,25 @@ document.addEventListener("DOMContentLoaded", () => {
     setMsg("");
 
     try {
-      // Code.gs: loginTeacher → { success, name, email }
+      // เรียก Code.gs → loginTeacher
       const res = await callApi("loginTeacher", { email, password });
 
-      const teacher = {
-        name:  res.name,
-        email: res.email
-      };
-      sessionStorage.setItem("teacher", JSON.stringify(teacher));
+      if (!res.success) {
+        setMsg(res.message || "เข้าสู่ระบบไม่สำเร็จ");
+      } else {
+        const teacher = {
+          name:  res.name,
+          email: res.email
+        };
+        sessionStorage.setItem("teacher", JSON.stringify(teacher));
+        setMsg("เข้าสู่ระบบสำเร็จ กำลังไป Dashboard...", true);
 
-      setMsg("เข้าสู่ระบบสำเร็จ กำลังไปหน้าเปิดคาบ...", true);
-      window.location.href = "open-session.html";
+        // ✅ เด้งไปหน้า Dashboard ครู
+        window.location.href = "dashboard.html";
+      }
     } catch (err) {
       console.error(err);
-      setMsg(err.message || "เข้าสู่ระบบไม่สำเร็จ");
+      setMsg("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้", false);
     } finally {
       btn.disabled = false;
       btn.textContent = "เข้าสู่ระบบ";
