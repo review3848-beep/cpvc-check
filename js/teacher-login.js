@@ -2,33 +2,35 @@
 import { callApi } from "./api.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+
   const emailInput = document.getElementById("email");
   const passInput  = document.getElementById("password");
   const btn        = document.getElementById("loginBtn");
   const msgEl      = document.getElementById("msg");
 
-  const setMsg = (text, ok = false) => {
+  function setMsg(text, ok = false) {
     msgEl.textContent = text || "";
-    msgEl.style.color = ok ? "#4ade80" : "#f97373";
-  };
+    msgEl.style.color = ok ? "#4ade80" : "#f87171";
+  }
 
-  // ถ้าเคยล็อกอินแล้ว → เด้งไป Dashboard เลย
+  // ✅ หากเคย login แล้ว → เข้า dashboard ทันที
   try {
-    const existing = sessionStorage.getItem("teacher");
-    if (existing) {
-      const t = JSON.parse(existing);
-      if (t && t.email) {
+    const raw = sessionStorage.getItem("teacher");
+    if (raw) {
+      const teacher = JSON.parse(raw);
+      if (teacher?.email) {
         window.location.href = "dashboard.html";
         return;
       }
     }
-  } catch (e) {
+  } catch {
     sessionStorage.removeItem("teacher");
   }
 
-  btn.addEventListener("click", async () => {
-    const email = (emailInput.value || "").trim();
-    const password = (passInput.value || "").trim();
+  // ✅ คลิกปุ่ม Login
+  async function doLogin() {
+    const email = emailInput.value.trim();
+    const password = passInput.value.trim();
 
     if (!email || !password) {
       setMsg("กรุณากรอกอีเมลและรหัสผ่าน");
@@ -36,39 +38,46 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     btn.disabled = true;
-    btn.textContent = "กำลังเข้าสู่ระบบ...";
+    btn.textContent = "กำลังตรวจสอบ...";
     setMsg("");
 
     try {
-      // เรียก Code.gs → loginTeacher
       const res = await callApi("loginTeacher", { email, password });
 
       if (!res.success) {
-        setMsg(res.message || "เข้าสู่ระบบไม่สำเร็จ");
-      } else {
-        const teacher = {
-          name:  res.name,
-          email: res.email
-        };
-        sessionStorage.setItem("teacher", JSON.stringify(teacher));
-        setMsg("เข้าสู่ระบบสำเร็จ กำลังไป Dashboard...", true);
-
-        // ✅ เด้งไปหน้า Dashboard ครู
-        window.location.href = "dashboard.html";
+        setMsg(res.message || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+        btn.disabled = false;
+        btn.textContent = "เข้าสู่ระบบ";
+        return;
       }
+
+      // ✅ บันทึก session
+      sessionStorage.setItem("teacher", JSON.stringify({
+        name: res.name,
+        email: res.email
+      }));
+
+      setMsg("เข้าสู่ระบบสำเร็จ กำลังเข้าสู่ระบบ...", true);
+
+      // ✅ ไป Dashboard
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 600);
+
     } catch (err) {
       console.error(err);
-      setMsg("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้", false);
-    } finally {
+      setMsg("ไม่สามารถเชื่อมต่อระบบได้");
       btn.disabled = false;
       btn.textContent = "เข้าสู่ระบบ";
     }
-  });
+  }
 
-  // กด Enter เพื่อ login
+  btn.addEventListener("click", doLogin);
+
+  // ✅ กด Enter เพื่อ Login
   [emailInput, passInput].forEach((el) => {
-    el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") btn.click();
+    el.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") doLogin();
     });
   });
 });
