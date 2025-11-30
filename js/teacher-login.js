@@ -1,5 +1,6 @@
 // js/teacher-login.js
-import { callApi } from "./api.js";
+// เปลี่ยนจาก callApi เป็นดึง API_BASE มาใช้แทน
+import { API_BASE } from "./api.js"; 
 
 document.addEventListener("DOMContentLoaded", () => {
   const emailInput = document.getElementById("email");
@@ -26,10 +27,24 @@ document.addEventListener("DOMContentLoaded", () => {
     setMsg("");
 
     try {
-      const res = await callApi("loginTeacher", { email, password });
+      // -------------------------------------------------------
+      // ✅ แก้ไขส่วนเชื่อมต่อ API ให้ใช้ text/plain แก้ CORS
+      // -------------------------------------------------------
+      const res = await fetch(API_BASE, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "loginTeacher",
+          email: email,
+          password: password
+        })
+      });
 
-      if (!res.success) {
-        setMsg(res.message || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      const data = await res.json();
+      // -------------------------------------------------------
+
+      if (!data.success) {
+        setMsg(data.message || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
         btn.disabled = false;
         btn.textContent = "เข้าสู่ระบบ";
         return;
@@ -37,8 +52,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // บันทึก session ครู
       sessionStorage.setItem("teacher", JSON.stringify({
-        name:  res.name,
-        email: res.email,
+        name:  data.name,
+        email: data.email,
+        id:    data.id // เผื่อต้องใช้ ID ครู
       }));
 
       setMsg("เข้าสู่ระบบสำเร็จ กำลังไป Dashboard...", true);

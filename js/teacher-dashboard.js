@@ -1,5 +1,5 @@
 // js/teacher-dashboard.js
-import { callApi } from "./api.js";
+import { API_BASE } from "./api.js"; // เปลี่ยนมา import URL แทน
 
 document.addEventListener("DOMContentLoaded", async () => {
   const nameEl  = document.getElementById("teacherName");
@@ -38,17 +38,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // 3) ดึงข้อมูล Dashboard จาก GAS
   try {
-    const res = await callApi("getTeacherDashboard", {
-      teacherEmail: teacher.email,
+    // ✅ แก้ไข: ใช้ fetch โดยตรง + text/plain แก้ CORS
+    const res = await fetch(API_BASE, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "getTeacherDashboard",
+        teacherEmail: teacher.email
+      })
     });
 
-    if (!res.success) {
-      setMsg(res.message || "โหลดข้อมูลไม่สำเร็จ");
+    const data = await res.json();
+
+    if (!data.success) {
+      setMsg(data.message || "โหลดข้อมูลไม่สำเร็จ");
       return;
     }
 
-    const summary = res.summary || {};
-    const sessions = res.sessions || [];
+    const summary = data.summary || {};
+    const sessions = data.sessions || [];
 
     const totalSessionsEl   = document.getElementById("totalSessions");
     const openSessionsEl    = document.getElementById("openSessions");
@@ -65,6 +73,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         tableBody.innerHTML = `<tr><td colspan="4" class="empty">ยังไม่มีข้อมูลคาบ</td></tr>`;
       } else {
         sessions.slice(0, 10).forEach(row => {
+          // ปรับ index ตามโครงสร้างข้อมูล Array ที่ส่งมาจาก GAS
           const subject = row[1] || "-";
           const token   = row[3] || "-";
           const dt      = row[5] ? new Date(row[5]) : null;
@@ -98,21 +107,31 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (exportBtn) {
     exportBtn.addEventListener("click", async () => {
       try {
-        const res = await callApi("exportTeacherAttendance", {
-          teacherEmail: teacher.email,
+        setMsg("กำลัง Export ข้อมูล...", true);
+        
+        // ✅ แก้ไข: ใช้ fetch โดยตรง + text/plain แก้ CORS สำหรับปุ่ม Export ด้วย
+        const res = await fetch(API_BASE, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "exportTeacherAttendance",
+            teacherEmail: teacher.email
+          })
         });
 
-        if (!res.success) {
-          setMsg(res.message || "Export ไม่สำเร็จ");
+        const data = await res.json();
+
+        if (!data.success) {
+          setMsg(data.message || "Export ไม่สำเร็จ");
           return;
         }
 
         // โหลดไฟล์ CSV
-        const blob = new Blob([res.csv], { type: "text/csv;charset=utf-8;" });
+        const blob = new Blob([data.csv], { type: "text/csv;charset=utf-8;" });
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement("a");
         a.href = url;
-        a.download = res.fileName || "attendance.csv";
+        a.download = data.fileName || "attendance.csv";
         document.body.appendChild(a);
         a.click();
         a.remove();
