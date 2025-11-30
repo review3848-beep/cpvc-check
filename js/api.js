@@ -5,11 +5,11 @@ export const API_BASE = "https://script.google.com/macros/s/AKfycbzA1qNwN1uDs40Y
 /**
  * เรียก API ที่ GAS
  * โครงสร้าง body: { action: "loginTeacher" | "openSession" | ... , ...payload }
- * ให้ Code.gs ฝั่ง GAS อ่าน action แล้วไปทำงานตามฟังก์ชันที่ต้องการ
  */
 export async function callApi(action, payload = {}) {
   const res = await fetch(API_BASE, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },   // ใส่ header ให้เรียบร้อย
     body: JSON.stringify({ action, ...payload }),
   });
 
@@ -18,9 +18,7 @@ export async function callApi(action, payload = {}) {
   }
 
   const data = await res.json();
-  // แนะนำให้ GAS ส่งรูปแบบ { success: true/false, message: "", data: {...} }
-  if (!data.success) {
-    throw new Error(data.message || "เกิดข้อผิดพลาดจากฝั่งเซิร์ฟเวอร์");
-  }
+  // ❌ ไม่ต้อง throw ถ้า success = false
+  // ให้แต่ละหน้า (login, register, etc.) ไปเช็ก data.success กันเอง
   return data;
 }
