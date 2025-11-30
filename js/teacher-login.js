@@ -2,7 +2,6 @@
 import { callApi } from "./api.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-
   const emailInput = document.getElementById("email");
   const passInput  = document.getElementById("password");
   const btn        = document.getElementById("loginBtn");
@@ -13,21 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
     msgEl.style.color = ok ? "#4ade80" : "#f87171";
   }
 
-  // ✅ หากเคย login แล้ว → เข้า dashboard ทันที
-  try {
-    const raw = sessionStorage.getItem("teacher");
-    if (raw) {
-      const teacher = JSON.parse(raw);
-      if (teacher?.email) {
-        window.location.href = "dashboard.html";
-        return;
-      }
-    }
-  } catch {
-    sessionStorage.removeItem("teacher");
-  }
-
-  // ✅ คลิกปุ่ม Login
   async function doLogin() {
     const email = emailInput.value.trim();
     const password = passInput.value.trim();
@@ -51,18 +35,17 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // ✅ บันทึก session
+      // บันทึก session ครู
       sessionStorage.setItem("teacher", JSON.stringify({
-        name: res.name,
-        email: res.email
+        name:  res.name,
+        email: res.email,
       }));
 
-      setMsg("เข้าสู่ระบบสำเร็จ กำลังเข้าสู่ระบบ...", true);
+      setMsg("เข้าสู่ระบบสำเร็จ กำลังไป Dashboard...", true);
 
-      // ✅ ไป Dashboard
       setTimeout(() => {
         window.location.href = "dashboard.html";
-      }, 600);
+      }, 500);
 
     } catch (err) {
       console.error(err);
@@ -74,7 +57,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btn.addEventListener("click", doLogin);
 
-  // ✅ กด Enter เพื่อ Login
   [emailInput, passInput].forEach((el) => {
     el.addEventListener("keypress", (e) => {
       if (e.key === "Enter") doLogin();
