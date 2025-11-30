@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="stylesheet" href="../css/styles.css">
-  <!-- โหลดไลบรารีสร้าง QR -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
   <script type="module" src="../js/teacher-open-session.js" defer></script>
 
   <style>
@@ -81,13 +80,6 @@
       box-shadow:0 0 0 1px rgba(99,102,241,.6);
     }
 
-    .session-status {
-      font-size:.85rem;
-      margin-top:.1rem;
-      margin-bottom:.6rem;
-      color:#e5e7eb;
-    }
-
     .btn-row {
       display:flex;
       gap:.7rem;
@@ -124,8 +116,8 @@
     }
 
     .token-box {
-      margin-top:.5rem;
-      padding:1.1rem 1rem;
+      margin-top:.8rem;
+      padding:1.2rem 1rem 1.4rem;
       border-radius:1.1rem;
       background:rgba(15,23,42,.98);
       border:1px solid rgba(148,163,184,.35);
@@ -145,41 +137,35 @@
       font-weight:700;
       color:#38bdf8;
       text-shadow:0 0 14px rgba(56,189,248,.7);
+      margin-bottom:.8rem;
     }
 
-    /* กล่อง QR CODE */
-    .qr-section {
-      margin-top:1.1rem;
-      padding:1.1rem 1rem 1.2rem;
-      border-radius:1.1rem;
-      background:rgba(15,23,42,.98);
-      border:1px dashed rgba(148,163,184,.5);
-      text-align:center;
-      display:none;
-    }
-
-    .qr-label {
-      font-size:.9rem;
-      color:#cbd5f5;
-      margin-bottom:.4rem;
-    }
-
-    #qrCode {
-      width:180px;
-      height:180px;
+    #qrCanvas {
+      width:220px;
+      height:220px;
+      max-width:100%;
       margin:0 auto .6rem;
+      display:block;
+      background:#020617;
+      border-radius:.75rem;
+      padding:.4rem;
     }
 
-    .qr-note {
+    .qr-hint {
       font-size:.8rem;
       color:#9ca3af;
     }
 
+    .session-status {
+      font-size:.85rem;
+      margin-top:.4rem;
+      color:#e5e7eb;
+    }
+
     #msg {
-      margin-top:.8rem;
+      margin-top:.6rem;
       text-align:center;
       font-size:.9rem;
-      min-height:1.2rem;
     }
   </style>
 </head>
@@ -190,7 +176,7 @@
     <div class="header">
       <div class="title-box">
         <h2>จัดการคาบเรียน</h2>
-        <p>เปิดคาบด้วย TOKEN และ QR ให้นักเรียนสแกน</p>
+        <p>กดเปิดคาบ → ระบบสร้าง TOKEN + QR ให้พร้อมใช้ทันที</p>
       </div>
       <div class="teacher-chip">
         👩‍🏫 <span id="teacherName">-</span>
@@ -219,14 +205,11 @@
     <div id="tokenBox" class="token-box">
       <div class="token-label">TOKEN สำหรับคาบนี้</div>
       <div id="token">------</div>
-    </div>
 
-    <!-- กล่องแสดง QR CODE -->
-    <div id="qrSection" class="qr-section">
-      <div class="qr-label">QR CODE สำหรับให้นักเรียนสแกน</div>
-      <div id="qrCode"></div>
-      <div class="qr-note">
-        นักเรียนสามารถสแกน QR นี้ หรือกรอก TOKEN เองที่หน้าเช็คชื่อได้
+      <!-- ✅ QR CODE แสดงทันทีเมื่อเปิดคาบสำเร็จ -->
+      <canvas id="qrCanvas"></canvas>
+      <div class="qr-hint">
+        ให้นักเรียนสแกน QR นี้ หรือใช้ TOKEN 6 ตัวด้านบนในการเช็คชื่อ
       </div>
     </div>
 

@@ -2,217 +2,449 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard ครู | NexAttend</title>
+  <title>NexAttend | Dashboard ครู</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <link rel="stylesheet" href="../css/styles.css">
-  <script type="module" src="../js/teacher-dashboard.js" defer></script>
 
   <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: #020617;
-      color: #e5e7eb;
-      font-family: "Inter", system-ui, sans-serif;
+    body{
+      margin:0;
+      min-height:100vh;
+      background:
+        radial-gradient(circle at 0 0,#1d2337,transparent 55%),
+        radial-gradient(circle at 100% 0,#312e81,transparent 55%),
+        #020617;
+      color:#e5e7eb;
+      font-family:"Inter",system-ui,sans-serif;
     }
 
-    .nav {
-      padding: 1rem 1.8rem;
-      background: rgba(15,23,42,0.96);
-      border-bottom: 1px solid rgba(148,163,184,.3);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      backdrop-filter: blur(14px);
+    header{
+      padding:1.1rem 2rem;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      border-bottom:1px solid rgba(148,163,184,.35);
+      background:rgba(15,23,42,.95);
+      backdrop-filter:blur(16px);
+      position:sticky;top:0;z-index:40;
+    }
+    header h2{
+      margin:0;
+      font-size:1.4rem;
+      font-weight:700;
+    }
+    .userbox{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      font-size:.85rem;
+      color:#c7d2fe;
+    }
+    .userbox span.email{
+      font-size:.78rem;
+      color:#9ca3af;
     }
 
-    .nav-title {
-      font-size: 1.3rem;
-      font-weight: 600;
-      color: #f9fafb;
+    /* STATS */
+    .stats{
+      max-width:1100px;
+      margin:1.6rem auto 1.1rem;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:1rem;
+      padding:0 1.4rem;
     }
-
-    .nav-sub {
-      font-size: .85rem;
-      color: #94a3b8;
+    .stat{
+      background:rgba(15,23,42,.97);
+      border:1px solid rgba(148,163,184,.45);
+      border-radius:1.2rem;
+      padding:1rem 1rem 1.1rem;
+      box-shadow:0 20px 50px rgba(15,23,42,.95);
     }
+    .stat-label{font-size:.78rem;color:#9ca3af;}
+    .stat-value{font-size:1.6rem;font-weight:700;margin-top:.2rem;}
+    .stat-footer{font-size:.75rem;color:#60a5fa;margin-top:.2rem;}
 
-    .nav-user {
-      font-size: .9rem;
-      color: #cbd5f5;
+    /* ACTION BAR */
+    .action-bar{
+      max-width:1100px;
+      margin:0 auto 1.2rem;
+      padding:0 1.4rem;
+      display:flex;
+      justify-content:space-between;
+      gap:.8rem;
+      flex-wrap:wrap;
     }
-
-    .container {
-      max-width: 1100px;
-      margin: 1.8rem auto 2.4rem;
-      padding: 0 1.5rem;
+    .btn-main,
+    .btn-outline{
+      padding:.7rem 1.5rem;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      font-weight:600;
+      font-size:.9rem;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:.4rem;
+      white-space:nowrap;
     }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1.2rem;
-      margin-bottom: 2rem;
-    }
-
-    .card {
-      padding: 1.4rem 1.3rem;
-      border-radius: 1.1rem;
-      background: radial-gradient(circle at top left, rgba(56,189,248,.23), transparent 55%),
-                  rgba(15,23,42,.96);
-      border: 1px solid rgba(148,163,184,.35);
-      box-shadow: 0 14px 40px rgba(15,23,42,.9);
-    }
-
-    .card-label {
-      font-size: .85rem;
-      color: #9ca3af;
-      margin-bottom: .2rem;
-    }
-
-    .card-value {
-      font-size: 1.7rem;
-      font-weight: 700;
-      color: #f9fafb;
-    }
-
-    .card-sub {
-      margin-top: .2rem;
-      font-size: .8rem;
-      color: #a5b4fc;
-    }
-
-    h3 {
-      margin: 0 0 .8rem 0;
-      font-size: 1rem;
-      color: #e5e7eb;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .9rem;
-    }
-
-    th, td {
-      padding: .6rem .5rem;
-      border-bottom: 1px solid rgba(55,65,81,.6);
-      text-align: left;
-    }
-
-    th {
-      font-weight: 500;
-      color: #93c5fd;
-      font-size: .85rem;
-    }
-
-    .status-open {
-      color: #4ade80;
-      font-weight: 600;
-    }
-
-    .status-closed {
-      color: #f97316;
-      font-weight: 600;
-    }
-
-    .top-actions {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: .8rem;
-    }
-
-    .btn-primary {
-      padding: .55rem 1rem;
-      border-radius: .8rem;
-      border: none;
-      cursor: pointer;
-      font-size: .9rem;
-      font-weight: 600;
-      background: linear-gradient(135deg,#4f46e5,#22c55e);
+    .btn-main{
+      background:linear-gradient(135deg,#4f46e5,#6366f1);
       color:white;
-      box-shadow: 0 12px 28px rgba(34,197,94,.45);
+      box-shadow:0 16px 40px rgba(79,70,229,.7);
+    }
+    .btn-main:hover{
+      transform:translateY(-1px);
+      box-shadow:0 18px 46px rgba(79,70,229,.8);
+    }
+    .btn-outline{
+      border:1px solid rgba(148,163,184,.7);
+      background:rgba(15,23,42,.8);
+      color:#e5e7eb;
+    }
+    .btn-outline:hover{
+      background:rgba(148,163,184,.16);
     }
 
-    .empty {
-      text-align: center;
-      padding: 1.2rem 0;
-      color: #9ca3af;
-      font-size: .9rem;
+    /* TABLE CARD */
+    .table-card{
+      max-width:1100px;
+      margin:0 auto 2.4rem;
+      padding:1.3rem 1.2rem 1.5rem;
+      border-radius:1.4rem;
+      background:
+        radial-gradient(circle at 0 0, rgba(59,130,246,.35), transparent 55%),
+        radial-gradient(circle at 100% 0, rgba(16,185,129,.18), transparent 55%),
+        rgba(15,23,42,.98);
+      border:1px solid rgba(148,163,184,.5);
+      box-shadow:0 24px 60px rgba(15,23,42,.95);
+    }
+    .table-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:1rem;
+      margin-bottom:.8rem;
+    }
+    .table-header h3{
+      margin:0;
+      font-size:1rem;
+    }
+    .filter-group{
+      font-size:.8rem;
+      color:#9ca3af;
+      display:flex;
+      align-items:center;
+      gap:.4rem;
+    }
+    #subjectFilter{
+      padding:.4rem .7rem;
+      border-radius:.7rem;
+      border:1px solid rgba(148,163,184,.75);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.8rem;
+      min-width:140px;
+    }
+
+    .subject-chips{
+      margin:.3rem 0 1rem;
+      display:flex;
+      flex-wrap:wrap;
+      gap:.35rem;
+    }
+    .chip{
+      border-radius:999px;
+      padding:.25rem .6rem;
+      font-size:.7rem;
+      background:rgba(15,23,42,.9);
+      border:1px solid rgba(148,163,184,.5);
+      color:#cbd5f5;
+    }
+    .chip span.highlight{
+      color:#4ade80;
+      font-weight:600;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:.85rem;
+    }
+    thead{
+      background:linear-gradient(90deg,#020617,#1e3a8a);
+    }
+    th,td{
+      padding:.6rem .55rem;
+      border-bottom:1px solid rgba(31,41,55,.85);
+      text-align:left;
+    }
+    th{
+      font-size:.75rem;
+      letter-spacing:.06em;
+      color:#c7d2fe;
+    }
+    tbody tr:nth-child(even){
+      background:rgba(15,23,42,.96);
+    }
+    tbody tr:hover{
+      background:rgba(59,130,246,.15);
+    }
+
+    .session-subject{font-weight:600;}
+    .session-room{font-size:.75rem;color:#9ca3af;}
+
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      padding:.18rem .6rem;
+      border-radius:999px;
+      font-size:.72rem;
+      font-weight:600;
+    }
+    .status-open{
+      background:rgba(22,163,74,.18);
+      color:#4ade80;
+      border:1px solid rgba(34,197,94,.6);
+    }
+    .status-closed{
+      background:rgba(239,68,68,.18);
+      color:#fecaca;
+      border:1px solid rgba(248,113,113,.65);
+    }
+
+    .btn-small{
+      padding:.35rem .7rem;
+      border-radius:.7rem;
+      border:none;
+      font-size:.78rem;
+      cursor:pointer;
+      background:linear-gradient(135deg,#06b6d4,#6366f1);
+      color:#f9fafb;
+    }
+    .btn-small:hover{
+      box-shadow:0 10px 24px rgba(56,189,248,.5);
+    }
+
+    .empty{
+      text-align:center;
+      padding:1rem 0;
+      color:#9ca3af;
+    }
+
+    #msg{
+      max-width:1100px;
+      margin:0 auto 1.4rem;
+      padding:0 1.4rem;
+      font-size:.85rem;
+      text-align:center;
+      color:#f97373;
+    }
+
+    /* MODAL */
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.85);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:60;
+    }
+    .modal-backdrop.open{display:flex;}
+
+    .modal{
+      width:100%;
+      max-width:780px;
+      max-height:80vh;
+      background:#020617;
+      border-radius:1.2rem;
+      border:1px solid rgba(148,163,184,.6);
+      box-shadow:0 30px 80px rgba(0,0,0,.95);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .modal-header{
+      padding:.9rem 1.2rem;
+      border-bottom:1px solid rgba(31,41,55,.9);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.5rem;
+    }
+    .modal-title{
+      font-size:.95rem;
+      font-weight:600;
+    }
+    .modal-header small{
+      font-size:.75rem;
+      color:#9ca3af;
+    }
+    .modal-body{
+      padding:.9rem 1.2rem 1rem;
+      overflow:auto;
+    }
+    .modal-footer{
+      padding:.75rem 1.2rem;
+      border-top:1px solid rgba(31,41,55,.9);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.6rem;
+    }
+    .badge-group{
+      display:flex;
+      flex-wrap:wrap;
+      gap:.4rem;
+      font-size:.75rem;
+    }
+    .badge{
+      padding:.2rem .6rem;
+      border-radius:999px;
+      background:#020617;
+      border:1px solid rgba(55,65,81,.9);
+    }
+    .badge.ok{color:#4ade80;border-color:rgba(34,197,94,.7);}
+    .badge.late{color:#fb923c;border-color:rgba(249,115,22,.7);}
+    .badge.absent{color:#fecaca;border-color:rgba(248,113,113,.8);}
+
+    .btn-close{
+      border:none;
+      background:transparent;
+      color:#9ca3af;
+      cursor:pointer;
+      font-size:1.1rem;
+    }
+    .modal-table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:.8rem;
+    }
+    .modal-table th,.modal-table td{
+      padding:.4rem .4rem;
+      border-bottom:1px solid rgba(31,41,55,.85);
+    }
+    .modal-table th{
+      font-size:.72rem;
+      color:#a5b4fc;
+    }
+
+    @media(max-width:768px){
+      header{padding-inline:1.2rem;}
+      .stats,.action-bar{padding-inline:1.2rem;}
+      .table-card{margin-inline:1.2rem;}
     }
   </style>
 </head>
 
 <body>
+<header>
+  <div>
+    <h2>Dashboard ครู</h2>
+    <div style="font-size:.8rem;color:#9ca3af;">ภาพรวมคาบเรียนและการเช็คชื่อ</div>
+  </div>
+  <div class="userbox">
+    <span id="teacherName">-</span>
+    <span id="teacherEmail" class="email">-</span>
+  </div>
+</header>
 
-  <div class="nav">
-    <div>
-      <div class="nav-title">สรุปข้อมูลครู</div>
-      <div class="nav-sub">ภาพรวมคาบเรียนและการเช็คชื่อ</div>
-    </div>
-    <div class="nav-user">
-      👩‍🏫 <span id="teacherName">-</span><br>
-      <span id="teacherEmail" style="font-size:.8rem;"></span>
+<section class="stats">
+  <div class="stat">
+    <div class="stat-label">คาบทั้งหมดของคุณ</div>
+    <div class="stat-value" id="totalSessions">0</div>
+    <div class="stat-footer">จำนวนคาบที่เคยเปิดในระบบ</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">คาบที่ยังเปิดอยู่</div>
+    <div class="stat-value" id="openSessions">0</div>
+    <div class="stat-footer">STATUS = OPEN</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">จำนวนการเช็คชื่อทั้งหมด</div>
+    <div class="stat-value" id="totalAttendance">0</div>
+    <div class="stat-footer">แถวใน ATTENDANCE ของคุณ</div>
+  </div>
+</section>
+
+<section class="action-bar">
+  <div>
+    <a href="open-session.html" class="btn-main">+ เปิดคาบใหม่</a>
+  </div>
+  <div>
+    <button class="btn-outline" id="exportAllBtn">⬇ Export การเช็คชื่อทั้งหมด (CSV)</button>
+  </div>
+</section>
+
+<div id="msg"></div>
+
+<section class="table-card">
+  <div class="table-header">
+    <h3>คาบล่าสุดของคุณ</h3>
+    <div class="filter-group">
+      กรองรายวิชา:
+      <select id="subjectFilter">
+        <option value="">ทั้งหมด</option>
+      </select>
     </div>
   </div>
 
-  <div class="container">
+  <div id="subjectSummaryChips" class="subject-chips"></div>
 
-    <div class="grid">
-      <div class="card">
-        <div class="card-label">คาบทั้งหมดของครู</div>
-        <div class="card-value" id="totalSessions">0</div>
-        <div class="card-sub">จำนวนคาบที่เคยเปิดในระบบ</div>
+  <table>
+    <thead>
+      <tr>
+        <th>รายวิชา / ห้อง</th>
+        <th>TOKEN</th>
+        <th>วันที่เริ่ม</th>
+        <th>สถานะ</th>
+        <th>รายละเอียด</th>
+      </tr>
+    </thead>
+    <tbody id="sessionTable">
+      <tr><td colspan="5" class="empty">ยังไม่มีข้อมูลคาบ</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- MODAL แสดงรายชื่อ มา/สาย/ขาด -->
+<div id="sessionModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle">รายละเอียดคาบเรียน</div>
+        <small id="modalSubtitle"></small>
       </div>
-      <div class="card">
-        <div class="card-label">คาบที่ยังเปิดอยู่</div>
-        <div class="card-value" id="openSessions">0</div>
-        <div class="card-sub">จำนวนคาบที่ยังเปิดสอนอยู่</div>
-      </div>
-      <div class="card">
-        <div class="card-label">จำนวนการเช็คชื่อทั้งหมด</div>
-        <div class="card-value" id="totalAttendance">0</div>
-        <div class="card-sub">จำนวนการเช็คชื่อทั้งหมดของนักเรียน</div>
-      </div>
+      <button class="btn-close" id="modalCloseBtn">&times;</button>
     </div>
 
-    <div class="top-actions">
-      <button class="btn-primary" onclick="window.location.href='open-session.html'">
-        + เปิดคาบใหม่
-      </button>
-      <button class="btn-primary" id="exportBtn" style="margin-left:0.6rem;background:linear-gradient(135deg,#22c55e,#16a34a);">
-         ⬇ Export การเช็คชื่อ
-      </button>
-      </div>
+    <div class="modal-body">
+      <div class="badge-group" id="modalStats"></div>
 
-
-    <div class="card" style="margin-top:.8rem;">
-      <h3>คาบล่าสุดของคุณ</h3>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>รายวิชา</th>
-              <th>รหัสของห้องเรียน</th>
-              <th>วันที่สร้าง</th>
-              <th>สถานะ</th>
-            </tr>
-          </thead>
-          <tbody id="sessionTable">
-            <tr><td colspan="4" class="empty">ยังไม่มีข้อมูลคาบ</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <table class="modal-table" id="modalTable">
+        <thead>
+          <tr>
+            <th>รหัสนักเรียน</th>
+            <th>ชื่อนักเรียน</th>
+            <th>เวลาเช็คชื่อ</th>
+            <th>สถานะ</th>
+          </tr>
+        </thead>
+        <tbody id="modalTableBody">
+          <tr><td colspan="4" style="text-align:center;color:#9ca3af;">กำลังโหลด...</td></tr>
+        </tbody>
+      </table>
     </div>
 
-    <div id="msg" style="margin-top:1rem;text-align:center;font-size:.9rem;"></div>
-
+    <div class="modal-footer">
+      <div class="badge-group" id="modalFooterInfo"></div>
+      <button class="btn-outline" id="exportSessionBtn">⬇ Export คาบนี้ (CSV)</button>
+    </div>
   </div>
+</div>
 
+<script type="module" src="../js/teacher-dashboard.js"></script>
 </body>
 </html>
