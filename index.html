@@ -71,8 +71,14 @@
     .nav-actions {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.8rem;
       font-size: 0.9rem;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
     }
 
     .nav-link {
@@ -87,21 +93,23 @@
       background: rgba(148,163,184,0.25);
     }
 
-    .nav-pill {
-      padding: 0.5rem 1rem;
+    .admin-btn {
+      padding: 0.4rem 0.9rem;
       border-radius: 999px;
-      border: 1px solid rgba(129,140,248,0.9);
-      background: rgba(15,23,42,0.9);
-      color: #e5e7eb;
+      border: 1px solid rgba(236,72,153,0.9);
+      background: rgba(236,72,153,0.18);
+      color: #f9fafb;
       text-decoration: none;
-      font-weight: 500;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
       cursor: pointer;
       transition: 0.18s;
     }
-    .nav-pill:hover {
-      background: linear-gradient(135deg,#4f46e5,#6366f1);
-      border-color: transparent;
-      box-shadow: 0 12px 28px rgba(79,70,229,0.6);
+    .admin-btn:hover {
+      background: linear-gradient(135deg,#ec4899,#f97316);
+      box-shadow: 0 10px 26px rgba(236,72,153,0.55);
     }
 
     /* ---------------- HERO ---------------- */
@@ -338,7 +346,8 @@
       .top-nav {
         padding-inline: 1rem;
       }
-      .nav-actions {
+      /* ซ่อนเฉพาะลิงก์เมนู ให้ปุ่ม Admin ยังอยู่ */
+      .nav-links {
         display: none;
       }
       .hero {
@@ -363,9 +372,12 @@
     </div>
 
     <div class="nav-actions">
-      <a href="#features" class="nav-link">ฟีเจอร์</a>
-      <a href="#roles" class="nav-link">รูปแบบการใช้งาน</a>
-      </button>
+      <div class="nav-links">
+        <a href="#features" class="nav-link">ฟีเจอร์</a>
+        <a href="#roles" class="nav-link">รูปแบบการใช้งาน</a>
+      </div>
+      <!-- ✅ ปุ่ม Admin -->
+      <a href="admin/login.html" class="admin-btn">ADMIN</a>
     </div>
   </header>
 
@@ -437,7 +449,7 @@
         </div>
 
         <div class="hero-card-footer">
-          <span>ข้อมูลจากชีต SESSIONS & ATTENDANCE</span>
+          <span>ข้อมูลจากชีต SESSIONS &amp; ATTENDANCE</span>
           <span style="font-size:.78rem;color:#a5b4fc;">เชื่อมต่อผ่าน Google Apps Script</span>
         </div>
       </aside>
@@ -499,6 +511,9 @@
             • ระบบกันการเช็คชื่อซ้ำให้โดยอัตโนมัติ<br>
           </p>
         </article>
+      </div>
+    </section>
+  </main>
 
   <footer>
     NexAttend · Smart Attendance System · Powered by Google Apps Script &amp; Google Sheets
