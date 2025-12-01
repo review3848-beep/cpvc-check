@@ -1,357 +1,512 @@
-// js/teacher-dashboard.js
-import { callApi } from "./api.js";
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>เช็คชื่อเข้าเรียน | CPVC-Check</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-document.addEventListener("DOMContentLoaded", () => {
-  const nameEl = document.getElementById("teacherName");
-  const emailEl = document.getElementById("teacherEmail");
-  const totalSessionsEl = document.getElementById("totalSessions");
-  const openSessionsEl = document.getElementById("openSessions");
-  const totalAttendanceEl = document.getElementById("totalAttendance");
-  const sessionTableBody = document.getElementById("sessionTable");
-  const subjectFilterEl = document.getElementById("subjectFilter");
-  const chipsEl = document.getElementById("subjectSummaryChips");
-  const msgEl = document.getElementById("msg");
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-  const exportAllBtn = document.getElementById("exportAllBtn");
+  <!-- ถ้ามี styles.css อยู่แล้ว ใช้ต่อได้เลย -->
+  <!-- <link rel="stylesheet" href="../css/styles.css" /> -->
 
-  // modal
-  const modalBackdrop = document.getElementById("sessionModal");
-  const modalCloseBtn = document.getElementById("modalCloseBtn");
-  const modalTitle = document.getElementById("modalTitle");
-  const modalSubtitle = document.getElementById("modalSubtitle");
-  const modalStats = document.getElementById("modalStats");
-  const modalTableBody = document.getElementById("modalTableBody");
-  const modalFooterInfo = document.getElementById("modalFooterInfo");
-  const exportSessionBtn = document.getElementById("exportSessionBtn");
+  <script type="module" src="../js/student-scan.js" defer></script>
 
-  let currentTeacher = null;
-  let allSessions = [];
-  let currentSessionToken = null;
-
-  const setMsg = (text, ok = false) => {
-    msgEl.textContent = text || "";
-    if (!text) return;
-    msgEl.style.color = ok ? "#4ade80" : "#f97373";
-  };
-
-  // ดึงข้อมูลครูจาก sessionStorage
-  try {
-    const raw = sessionStorage.getItem("teacher");
-    if (!raw) throw new Error();
-    const t = JSON.parse(raw);
-    if (!t || !t.email) throw new Error();
-    currentTeacher = t;
-  } catch {
-    window.location.href = "login.html";
-    return;
-  }
-
-  nameEl.textContent = currentTeacher.name || "-";
-  emailEl.textContent = currentTeacher.email || "-";
-
-  // โหลด Dashboard
-  (async () => {
-    await loadDashboard();
-    await loadSubjectSummary();
-  })();
-
-  async function loadDashboard() {
-    setMsg("กำลังโหลดข้อมูลแดชบอร์ด...");
-    try {
-      const res = await callApi("getTeacherDashboard", {
-        teacherEmail: currentTeacher.email,
-      });
-
-      const summary = res.summary || {};
-      totalSessionsEl.textContent = summary.totalSessions || 0;
-      openSessionsEl.textContent = summary.openSessions || 0;
-      totalAttendanceEl.textContent = summary.totalAttendance || 0;
-
-      allSessions = res.sessions || [];
-      buildSubjectFilter(allSessions);
-      renderSessionTable();
-
-      setMsg("");
-    } catch (err) {
-      console.error(err);
-      setMsg(err.message || "โหลดข้อมูลไม่สำเร็จ");
-    }
-  }
-
-  async function loadSubjectSummary() {
-    try {
-      const res = await callApi("getSubjectSummary", {
-        teacherEmail: currentTeacher.email,
-      });
-
-      const list = res.subjects || [];
-      chipsEl.innerHTML = "";
-
-      if (!list.length) {
-        chipsEl.innerHTML =
-          '<span class="chip">ยังไม่มีข้อมูลสรุปเปอร์เซ็นต์รายวิชา</span>';
-        return;
-      }
-
-      list.forEach((it) => {
-        const chip = document.createElement("div");
-        chip.className = "chip";
-        chip.innerHTML = `
-          <span>${it.subject || "-"}</span>
-          &nbsp;•&nbsp;
-          <span class="highlight">${it.presentPercent || 0}%</span>
-          มาเรียน
-          <span style="color:#9ca3af;">(มา ${it.ok || 0} / ทั้งหมด ${it.total || 0})</span>
-        `;
-        chipsEl.appendChild(chip);
-      });
-    } catch (err) {
-      console.error("subject summary error:", err);
-    }
-  }
-
-  function buildSubjectFilter(sessions) {
-    const subjects = Array.from(
-      new Set(
-        sessions
-          .map((s) => String(s[1] || "").trim())
-          .filter((s) => s && s !== "-")
-      )
-    ).sort();
-
-    subjectFilterEl.innerHTML = '<option value="">ทั้งหมด</option>';
-    subjects.forEach((subj) => {
-      const opt = document.createElement("option");
-      opt.value = subj;
-      opt.textContent = subj;
-      subjectFilterEl.appendChild(opt);
-    });
-  }
-
-  function renderSessionTable() {
-    sessionTableBody.innerHTML = "";
-
-    const selectedSubject = subjectFilterEl.value || "";
-
-    let filtered = allSessions.slice();
-    if (selectedSubject) {
-      filtered = filtered.filter((row) => {
-        const subj = String(row[1] || "").trim();
-        return subj === selectedSubject;
-      });
+  <style>
+    :root {
+      --bg-main: #020617;
+      --card-bg: rgba(15, 23, 42, 0.96);
+      --card-border: rgba(148, 163, 184, 0.3);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --blue-soft: #38bdf8;
+      --blue-strong: #2563eb;
+      --green: #22c55e;
+      --red: #f97373;
     }
 
-    if (!filtered.length) {
-      sessionTableBody.innerHTML =
-        '<tr><td colspan="5" class="empty">ยังไม่มีข้อมูลคาบ</td></tr>';
-      return;
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Prompt", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 0% 0%, #0f172a, transparent 55%),
+        radial-gradient(circle at 100% 100%, #020617, #020617 70%);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem;
     }
 
-    filtered.forEach((row) => {
-      const teacherEmail = row[0];
-      const subject = String(row[1] || "").trim();
-      const room = String(row[2] || "").trim();
-      const token = String(row[3] || "").trim();
-      const status = String(row[4] || "").trim();
-      const createdAt = row[5] ? new Date(row[5]) : null;
-
-      const tr = document.createElement("tr");
-
-      const subjectCell = document.createElement("td");
-      subjectCell.innerHTML = `
-        <div class="session-subject">${subject || "-"}</div>
-        <div class="session-room">${room || ""}</div>
-      `;
-      tr.appendChild(subjectCell);
-
-      const tokenCell = document.createElement("td");
-      tokenCell.textContent = token || "-";
-      tr.appendChild(tokenCell);
-
-      const dateCell = document.createElement("td");
-      if (createdAt) {
-        dateCell.textContent = createdAt.toLocaleString("th-TH", {
-          dateStyle: "short",
-          timeStyle: "short",
-        });
-      } else {
-        dateCell.textContent = "-";
-      }
-      tr.appendChild(dateCell);
-
-      const statusCell = document.createElement("td");
-      const span = document.createElement("span");
-      span.className =
-        "status-pill " +
-        (status === "OPEN" ? "status-open" : "status-closed");
-      span.textContent = status || "-";
-      statusCell.appendChild(span);
-      tr.appendChild(statusCell);
-
-      const actionCell = document.createElement("td");
-      const btn = document.createElement("button");
-      btn.className = "btn-small";
-      btn.textContent = "ดูรายชื่อ มา / สาย / ขาด";
-      btn.addEventListener("click", () => openSessionModal(token));
-      actionCell.appendChild(btn);
-      tr.appendChild(actionCell);
-
-      sessionTableBody.appendChild(tr);
-    });
-  }
-
-  subjectFilterEl.addEventListener("change", () => {
-    renderSessionTable();
-  });
-
-  // Export ทุกคาบของครู
-  exportAllBtn.addEventListener("click", async () => {
-    exportAllBtn.disabled = true;
-    exportAllBtn.textContent = "กำลังสร้างไฟล์ CSV...";
-    try {
-      const res = await callApi("exportTeacherAttendance", {
-        teacherEmail: currentTeacher.email,
-      });
-      downloadCsv(res.csv, res.fileName || "attendance_all.csv");
-      setMsg("สร้างไฟล์ CSV สำเร็จ", true);
-    } catch (err) {
-      console.error(err);
-      setMsg(err.message || "ไม่สามารถสร้างไฟล์ CSV ได้");
-    } finally {
-      exportAllBtn.disabled = false;
-      exportAllBtn.textContent = "⬇ Export การเช็คชื่อทั้งหมด (CSV)";
+    .scan-page {
+      width: 100%;
+      max-width: 520px;
     }
-  });
 
-  function downloadCsv(csvText, fileName) {
-    const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  // ---------- MODAL ----------
-  function openModal() {
-    modalBackdrop.classList.add("open");
-  }
-  function closeModal() {
-    modalBackdrop.classList.remove("open");
-    currentSessionToken = null;
-  }
-
-  modalCloseBtn.addEventListener("click", closeModal);
-  modalBackdrop.addEventListener("click", (e) => {
-    if (e.target === modalBackdrop) closeModal();
-  });
-
-  async function openSessionModal(token) {
-    currentSessionToken = token;
-    openModal();
-
-    modalTitle.textContent = "รายละเอียดคาบ – TOKEN " + token;
-    modalSubtitle.textContent = "กำลังโหลดข้อมูล...";
-    modalStats.innerHTML = "";
-    modalFooterInfo.innerHTML = "";
-    modalTableBody.innerHTML =
-      '<tr><td colspan="4" style="text-align:center;color:#9ca3af;">กำลังโหลด...</td></tr>';
-
-    try {
-      const res = await callApi("getSessionAttendance", {
-        teacherEmail: currentTeacher.email,
-        token,
-      });
-
-      const info = res.session || {};
-      const rows = res.rows || [];
-      const st = res.stats || {};
-
-      modalTitle.textContent =
-        (info.subject || "-") + " · ห้อง " + (info.room || "-");
-      modalSubtitle.textContent =
-        "TOKEN " +
-        (info.token || token) +
-        " • " +
-        (info.startAt || "-") +
-        " • สถานะ " +
-        (info.status || "-");
-
-      // stats badges
-      modalStats.innerHTML = "";
-      const makeBadge = (cls, label, value) => {
-        const b = document.createElement("div");
-        b.className = "badge " + cls;
-        b.textContent = `${label}: ${value || 0}`;
-        modalStats.appendChild(b);
-      };
-      makeBadge("ok", "มา (OK)", st.ok);
-      makeBadge("late", "สาย (LATE)", st.late);
-      makeBadge("absent", "ขาด (ABSENT)", st.absent);
-      const total = st.total || 0;
-      const come = (st.ok || 0) + (st.late || 0);
-      const percent = total ? Math.round((come * 100) / total) : 0;
-
-      modalFooterInfo.innerHTML = "";
-      const infoBadge = document.createElement("div");
-      infoBadge.className = "badge";
-      infoBadge.textContent = `รวม ${total} คน • มา/สาย ${come} คน (${percent}%)`;
-      modalFooterInfo.appendChild(infoBadge);
-
-      // table
-      modalTableBody.innerHTML = "";
-      if (!rows.length) {
-        modalTableBody.innerHTML =
-          '<tr><td colspan="4" style="text-align:center;color:#9ca3af;">ยังไม่มีข้อมูลการเช็คชื่อสำหรับคาบนี้</td></tr>';
-      } else {
-        rows.forEach((r) => {
-          const tr = document.createElement("tr");
-          const id = r.studentId || "";
-          const name = r.studentName || "";
-          const time = r.time || "";
-          const status = r.status || "";
-
-          tr.innerHTML = `
-            <td>${id}</td>
-            <td>${name}</td>
-            <td>${time}</td>
-            <td>${status}</td>
-          `;
-          modalTableBody.appendChild(tr);
-        });
-      }
-    } catch (err) {
-      console.error(err);
-      modalTableBody.innerHTML =
-        '<tr><td colspan="4" style="text-align:center;color:#fca5a5;">' +
-        (err.message || "โหลดข้อมูลไม่สำเร็จ") +
-        "</td></tr>";
+    .scan-shell {
+      background:
+        radial-gradient(circle at 0 0, rgba(56,189,248,0.25), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(37,99,235,0.3), transparent 60%),
+        linear-gradient(145deg, #020617, #020617);
+      border-radius: 24px;
+      padding: 18px 18px 16px;
+      border: 1px solid rgba(15,23,42,0.95);
+      box-shadow:
+        0 26px 80px rgba(0,0,0,0.9),
+        0 0 0 1px rgba(15,23,42,1);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
-  }
 
-  // Export เฉพาะคาบ
-  exportSessionBtn.addEventListener("click", async () => {
-    if (!currentSessionToken) return;
-    exportSessionBtn.disabled = true;
-    exportSessionBtn.textContent = "กำลังสร้าง CSV...";
-    try {
-      const res = await callApi("exportSessionAttendance", {
-        teacherEmail: currentTeacher.email,
-        token: currentSessionToken,
-      });
-      downloadCsv(
-        res.csv,
-        res.fileName || `attendance_${currentSessionToken}.csv`
-      );
-    } catch (err) {
-      console.error(err);
-      alert(err.message || "ไม่สามารถสร้างไฟล์คาบนี้ได้");
-    } finally {
-      exportSessionBtn.disabled = false;
-      exportSessionBtn.textContent = "⬇ Export คาบนี้ (CSV)";
+    /* HEADER */
+
+    .scan-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
     }
-  });
-});
+
+    .scan-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .scan-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at 30% 0%, #38bdf8, transparent 55%),
+        radial-gradient(circle at 100% 100%, #1d4ed8, transparent 55%);
+      box-shadow: 0 12px 32px rgba(59,130,246,0.95);
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .scan-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .scan-title-block h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      letter-spacing: 0.04em;
+    }
+
+    .scan-title-block p {
+      margin: 0;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .scan-user-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.98);
+      border: 1px solid rgba(148,163,184,0.45);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      box-shadow: 0 10px 26px rgba(15,23,42,1);
+      white-space: nowrap;
+    }
+
+    .scan-user-pill span {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    /* STATUS (เล็ก ๆ ใต้หัว) */
+
+    .scan-status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .scan-status-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 999px;
+      background: #64748b;
+      box-shadow: 0 0 0 3px rgba(148,163,184,0.35);
+      flex-shrink: 0;
+    }
+
+    .scan-status-dot.open {
+      background: var(--green);
+      box-shadow: 0 0 0 3px rgba(34,197,94,0.4);
+    }
+
+    .scan-status-dot.error {
+      background: var(--red);
+      box-shadow: 0 0 0 3px rgba(248,113,113,0.4);
+    }
+
+    /* CARD MAIN */
+
+    .scan-card {
+      border-radius: 18px;
+      background: rgba(15,23,42,0.97);
+      border: 1px solid var(--card-border);
+      padding: 14px 16px 14px;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .scan-card h2 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .scan-card p.sub {
+      margin: 2px 0 10px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      color: #bae6fd;
+      margin-bottom: 2px;
+    }
+
+    #tokenInput {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,0.85);
+      background: #020617;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      outline: none;
+      transition: border-color 0.16s, box-shadow 0.16s, transform 0.08s;
+    }
+
+    #tokenInput::placeholder {
+      letter-spacing: 0;
+      text-transform: none;
+      color: #6b7280;
+    }
+
+    #tokenInput:focus {
+      border-color: var(--blue-soft);
+      box-shadow: 0 0 0 1px rgba(56,189,248,0.75);
+      transform: translateY(-1px);
+    }
+
+    #submitTokenBtn {
+      margin-top: 10px;
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      color: #f9fafb;
+      background: linear-gradient(135deg, var(--blue-soft), var(--blue-strong));
+      box-shadow: 0 14px 40px rgba(59,130,246,0.9);
+      transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, filter 0.1s;
+    }
+
+    #submitTokenBtn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      box-shadow: 0 18px 48px rgba(59,130,246,0.95);
+    }
+
+    #submitTokenBtn.is-loading {
+      opacity: 0.9;
+      cursor: default;
+    }
+
+    #submitTokenBtn.is-loading::after {
+      content: "";
+      position: relative;
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      margin-left: 8px;
+      border-radius: 999px;
+      border: 2px solid rgba(248,250,252,0.7);
+      border-top-color: #f9fafb;
+      animation: spin 0.75s linear infinite;
+      vertical-align: middle;
+    }
+
+    #scanMsg {
+      margin-top: 6px;
+      min-height: 0.9rem;
+      font-size: 0.78rem;
+      color: var(--red);
+    }
+
+    .scanMsg-success {
+      color: var(--green) !important;
+    }
+
+    #lastStatus {
+      margin-top: 8px;
+      border-radius: 12px;
+      border: 1px dashed rgba(56,189,248,0.7);
+      background: rgba(15,23,42,0.98);
+      padding: 8px 10px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    #lastStatus span {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    /* HISTORY CARD */
+
+    .scan-history {
+      border-radius: 16px;
+      background: rgba(15,23,42,0.97);
+      border: 1px solid rgba(30,64,175,0.9);
+      padding: 10px 14px 10px;
+      font-size: 0.75rem;
+      box-shadow: 0 12px 34px rgba(15,23,42,0.95);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .scan-history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .scan-history-title {
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    #historyCount {
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.8);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+    }
+
+    #historyList {
+      list-style: none;
+      margin: 4px 0 0;
+      padding: 0;
+      max-height: 130px;
+      overflow-y: auto;
+    }
+
+    #historyList li {
+      padding: 4px 0;
+      border-top: 1px solid rgba(30,64,175,0.7);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    #historyList li:first-child {
+      border-top: none;
+    }
+
+    .hist-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .hist-token {
+      font-size: 0.78rem;
+    }
+
+    .hist-time {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .hist-chip {
+      align-self: center;
+      padding: 1px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(55,65,81,0.95);
+      font-size: 0.7rem;
+    }
+
+    .chip-ok {
+      border-color: rgba(34,197,94,0.8);
+      color: #bbf7d0;
+      background: rgba(22,163,74,0.22);
+    }
+    .chip-late {
+      border-color: rgba(234,179,8,0.85);
+      color: #facc15;
+      background: rgba(202,138,4,0.22);
+    }
+    .chip-absent {
+      border-color: rgba(239,68,68,0.85);
+      color: #fecaca;
+      background: rgba(185,28,28,0.25);
+    }
+
+    /* FOOTER */
+
+    .scan-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    #logoutBtn {
+      border: none;
+      background: transparent;
+      padding: 0;
+      font-size: 0.74rem;
+      color: #bfdbfe;
+      cursor: pointer;
+    }
+
+    #logoutBtn:hover {
+      text-decoration: underline;
+    }
+
+    /* TOAST */
+
+    #toastContainer {
+      position: fixed;
+      right: 1rem;
+      bottom: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      max-width: 90vw;
+      z-index: 9999;
+    }
+
+    .toast {
+      padding: 0.45rem 0.75rem;
+      border-radius: 0.85rem;
+      border: 1px solid rgba(55,65,81,0.95);
+      background: rgba(15,23,42,0.98);
+      color: #e5e7eb;
+      font-size: 0.76rem;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.95);
+      animation: toast-in 0.18s ease-out;
+    }
+
+    .toast-success {
+      border-color: rgba(34,197,94,0.8);
+    }
+
+    .toast-error {
+      border-color: rgba(248,113,113,0.9);
+    }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(6px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 0.5rem; }
+      .scan-shell { padding: 14px 14px 12px; border-radius: 20px; }
+      .scan-header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="scan-page">
+    <main class="scan-shell">
+      <!-- HEADER -->
+      <header class="scan-header">
+        <div class="scan-header-left">
+          <div class="scan-icon">🎓</div>
+          <div class="scan-title-block">
+            <h1>เช็คชื่อเข้าเรียน</h1>
+            <p>กรอกรหัส TOKEN ที่ครูให้ เพื่อบันทึกเวลาเข้าเรียน</p>
+          </div>
+        </div>
+        <div class="scan-user-pill">
+          👤 <span id="pillUserName">นักเรียน</span>
+        </div>
+      </header>
+
+      <div class="scan-status-row">
+        <span id="sessionStatusDot" class="scan-status-dot"></span>
+        <span id="sessionStatusText">รอกรอก TOKEN เพื่อเช็คชื่อ</span>
+      </div>
+
+      <!-- MAIN TOKEN CARD -->
+      <section class="scan-card">
+        <h2>รหัส TOKEN</h2>
+        <p class="sub">นำรหัส TOKEN จากครูผู้สอนมากรอก จากนั้นกด “ยืนยันเช็คชื่อ”</p>
+
+        <label for="tokenInput">TOKEN คาบเรียน</label>
+        <input id="tokenInput" type="text" placeholder="เช่น AK2GAE" />
+
+        <button id="submitTokenBtn">ยืนยันเช็คชื่อ</button>
+
+        <div id="scanMsg"></div>
+
+        <div id="lastStatus" style="display:none;">
+          สถานะล่าสุด: <span id="lastStatusText"></span>
+        </div>
+      </section>
+
+      <!-- HISTORY -->
+      <section id="historyCard" class="scan-history">
+        <div class="scan-history-header">
+          <div class="scan-history-title">ประวัติการเช็คชื่อ</div>
+          <div id="historyCount">–</div>
+        </div>
+        <ul id="historyList"></ul>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="scan-footer">
+        <span>CPVC-Check · ระบบเช็คชื่อออนไลน์</span>
+        <button id="logoutBtn">ออกจากระบบ</button>
+      </footer>
+    </main>
+  </div>
+
+  <div id="toastContainer"></div>
+</body>
+</html>
