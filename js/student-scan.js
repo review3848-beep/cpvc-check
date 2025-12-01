@@ -1,175 +1,233 @@
 // js/student-scan.js
-import { callApi } from "./api.js";
+import { API_BASE } from "./api.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const nameEl      = document.getElementById("studentName");
-  const idEl        = document.getElementById("studentId");
-  const tokenInput  = document.getElementById("tokenInput");
-  const checkBtn    = document.getElementById("scanBtn");
-  const msgEl       = document.getElementById("msg");
-  const readerEl    = document.getElementById("reader");
+// ====== SESSION GUARD ======
+const studentId = sessionStorage.getItem("studentId");
+const studentName = sessionStorage.getItem("studentName");
 
-  let student = null;
-  let html5QrCode = null;
-  let cameras = [];
-  let currentCameraId = null;
+if (!studentId || !studentName) {
+  window.location.href = "login.html";
+}
 
-  const setMsg = (text, ok = false) => {
-    msgEl.textContent = text || "";
-    msgEl.style.color = ok ? "#4ade80" : "#f97373";
-  };
+// DOM
+const pillUserName   = document.getElementById("pillUserName");
+const tokenInput     = document.getElementById("tokenInput");
+const submitTokenBtn = document.getElementById("submitTokenBtn");
+const scanMsg        = document.getElementById("scanMsg");
+const logoutBtn      = document.getElementById("logoutBtn");
+const startScanBtn   = document.getElementById("startScanBtn");
+const lastStatusBox  = document.getElementById("lastStatus");
+const lastStatusText = document.getElementById("lastStatusText");
 
-  // ---------------- ดึงข้อมูลนักเรียนจาก sessionStorage ----------------
-  try {
-    const raw = sessionStorage.getItem("student");
-    if (raw) student = JSON.parse(raw);
-  } catch (e) {
-    student = null;
+const btnModeQr    = document.getElementById("btnModeQr");
+const btnModeToken = document.getElementById("btnModeToken");
+const cardQr       = document.getElementById("cardQr");
+const cardToken    = document.getElementById("cardToken");
+
+let html5QrcodeInstance = null;
+let currentMode = "qr"; // "qr" | "token"
+
+// แสดงชื่อบน pill
+if (pillUserName) {
+  pillUserName.textContent = `${studentName} (${studentId})`;
+}
+
+function setScanMessage(text, type = "error") {
+  if (!scanMsg) return;
+  scanMsg.textContent = text || "";
+  scanMsg.classList.remove("scanMsg-success");
+  if (type === "success") {
+    scanMsg.classList.add("scanMsg-success");
   }
+}
 
-  if (!student || !student.id) {
+// ====== LOGOUT ======
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    sessionStorage.removeItem("studentId");
+    sessionStorage.removeItem("studentName");
     window.location.href = "login.html";
+  });
+}
+
+// ====== markAttendance ======
+async function submitToken(rawToken) {
+  const token = (rawToken || "").trim();
+  if (!token) {
+    setScanMessage("กรุณากรอกรหัส TOKEN", "error");
     return;
   }
 
-  nameEl.textContent = student.name || "-";
-  idEl.textContent   = student.id || "-";
-
-  // ---------------- อ่าน token จาก URL ถ้ามี (จาก QR ลิงก์โดยตรง) ----------------
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const urlToken = params.get("token");
-    if (urlToken) {
-      tokenInput.value = urlToken;
-    }
-  } catch (e) {
-    // เงียบไป ไม่เป็นไร
+  if (submitTokenBtn) {
+    submitTokenBtn.disabled = true;
+    submitTokenBtn.textContent = "กำลังเช็คชื่อ...";
   }
 
-  // ---------------- ฟังก์ชันเริ่มกล้อง (บังคับกล้องหลัง / main camera) ----------------
-  const startScanner = async () => {
-    if (!readerEl) return;
-
-    try {
-      if (!html5QrCode) {
-        html5QrCode = new Html5Qrcode("reader");
-      }
-
-      // ดึงลิสต์กล้องทั้งหมด
-      cameras = await Html5Qrcode.getCameras();
-
-      let configCamera;
-
-      if (cameras && cameras.length > 0) {
-        // พยายามหาเลนส์หลักจาก label (back / rear / main)
-        const preferred = cameras.find(c =>
-          /back|rear|main/i.test(c.label || "")
-        );
-
-        const chosen = preferred || cameras[0];
-        currentCameraId = chosen.id;
-        configCamera = currentCameraId;
-      } else {
-        // fallback ใช้ facingMode (มือถือส่วนใหญ่จะเป็นกล้องหลัง)
-        configCamera = { facingMode: "environment" };
-      }
-
-      await html5QrCode.start(
-        configCamera,
-        {
-          fps: 10,
-          qrbox: 250
-        },
-        onScanSuccess,
-        onScanFailure
-      );
-
-    } catch (err) {
-      console.error("startScanner error", err);
-      setMsg("เปิดกล้องไม่สำเร็จ ลองอนุญาตสิทธิ์กล้อง หรือเปลี่ยนเบราว์เซอร์", false);
-    }
-  };
-
-  // ---------------- callback ตอนสแกนได้ ----------------
-  const onScanSuccess = async (decodedText/*, decodedResult*/) => {
-    try {
-      let tokenFromQr = decodedText;
-
-      // ถ้า QR เป็นลิงก์ ให้ดึง token จาก query string
-      try {
-        const url = new URL(decodedText);
-        const t = url.searchParams.get("token");
-        if (t) tokenFromQr = t;
-      } catch (e) {
-        // ไม่ใช่ URL ก็ไม่เป็นไร ใช้ตัว decoded ตรง ๆ
-      }
-
-      tokenInput.value = tokenFromQr || "";
-      setMsg(`อ่าน TOKEN จาก QR ได้แล้ว: ${tokenFromQr}`, true);
-
-      // กันยิงซ้ำรัว ๆ ปิดกล้องหลังจากอ่านได้ 1 ครั้ง
-      try {
-        if (html5QrCode) {
-          await html5QrCode.stop();
-        }
-      } catch (e) {
-        console.warn("stop camera error", e);
-      }
-    } catch (e) {
-      console.error("onScanSuccess error", e);
-    }
-  };
-
-  const onScanFailure = (err) => {
-    // ไม่ต้องแสดง error ทุกเฟรม เดี๋ยวแชทแตก
-    // console.warn(err);
-  };
-
-  // ---------------- เริ่มกล้องทันทีเมื่อเข้าหน้า ----------------
-  startScanner();
-
-  // ---------------- กดปุ่ม "เช็คชื่อ" ----------------
-  checkBtn.addEventListener("click", async () => {
-    const token = (tokenInput.value || "").trim();
-    if (!token) {
-      setMsg("กรุณาสแกน QR หรือกรอก TOKEN ก่อนเช็คชื่อ");
-      return;
-    }
-
-    checkBtn.disabled = true;
-    checkBtn.textContent = "กำลังเช็คชื่อ...";
-    setMsg("");
-
-    try {
-      const res = await callApi("markAttendance", {
-        studentId:   student.id,
-        studentName: student.name,
+  try {
+    const res = await fetch(API_BASE, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "markAttendance",
+        studentId,
+        studentName,
         token,
-      });
+      }),
+    });
 
-      if (res.success) {
-        const statusText =
-          res.status === "OK"   ? "เช็คชื่อสำเร็จ (มาเรียน)" :
-          res.status === "LATE" ? "เช็คชื่อสำเร็จ (มาสาย)" :
-                                  "เช็คชื่อสำเร็จ";
+    const data = await res.json();
+    console.log("markAttendance >", data);
 
-        setMsg(statusText, true);
-      } else {
-        setMsg(res.message || "เช็คชื่อไม่สำเร็จ", false);
+    if (data.success) {
+      const statusText =
+        data.status === "OK"
+          ? "มาเรียน (ON TIME)"
+          : data.status === "LATE"
+          ? "มาเรียนสาย (LATE)"
+          : data.status || "-";
+
+      setScanMessage(`เช็คชื่อสำเร็จ: ${statusText}`, "success");
+
+      if (lastStatusBox && lastStatusText) {
+        lastStatusText.textContent = `${statusText} / TOKEN: ${token}`;
+        lastStatusBox.style.display = "block";
       }
-    } catch (err) {
-      console.error(err);
-      setMsg(err.message || "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้", false);
-    } finally {
-      checkBtn.disabled = false;
-      checkBtn.textContent = "เช็คชื่อ";
+    } else {
+      setScanMessage(data.message || "เช็คชื่อไม่สำเร็จ", "error");
     }
-  });
+  } catch (err) {
+    console.error(err);
+    setScanMessage("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", "error");
+  }
 
-  // ---------------- กด Enter ในช่อง TOKEN ให้ทำงานเหมือนกดปุ่ม ----------------
+  if (submitTokenBtn) {
+    submitTokenBtn.disabled = false;
+    submitTokenBtn.textContent = "ยืนยันเช็คชื่อ";
+  }
+}
+
+// ปุ่มยืนยัน TOKEN
+if (submitTokenBtn) {
+  submitTokenBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    submitToken(tokenInput.value);
+  });
+}
+
+// กด Enter ในช่อง token
+if (tokenInput) {
   tokenInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
-      checkBtn.click();
+      e.preventDefault();
+      submitToken(tokenInput.value);
     }
   });
+}
+
+// ====== QR SCANNER ======
+function stopScanner() {
+  if (html5QrcodeInstance) {
+    html5QrcodeInstance
+      .stop()
+      .then(() => {
+        html5QrcodeInstance.clear();
+        html5QrcodeInstance = null;
+      })
+      .catch((err) => {
+        console.error("Stop scanner error:", err);
+      });
+  }
+}
+
+function startScanner() {
+  const scannerId = "qrScanner";
+  const el = document.getElementById(scannerId);
+  if (!el) return;
+
+  const initScanner = () => {
+    try {
+      html5QrcodeInstance = new Html5Qrcode(scannerId);
+      html5QrcodeInstance
+        .start(
+          { facingMode: "environment" },       // กล้องหลัง
+          { fps: 10, qrbox: 230 },
+          (decodedText) => {
+            console.log("QR decoded:", decodedText);
+            const token = decodedText.trim();
+            if (tokenInput) tokenInput.value = token;
+            submitToken(token);
+          },
+          () => { /* ignore per-frame error */ }
+        )
+        .catch((err) => {
+          console.error("Start scanner error:", err);
+          setScanMessage("ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้กล้อง", "error");
+        });
+    } catch (e) {
+      console.error(e);
+      setScanMessage("ไม่พบตัวสแกน QR (html5-qrcode)", "error");
+    }
+  };
+
+  if (html5QrcodeInstance) {
+    html5QrcodeInstance
+      .stop()
+      .then(() => {
+        html5QrcodeInstance.clear();
+        html5QrcodeInstance = null;
+        initScanner();
+      })
+      .catch((err) => {
+        console.error("Stop scanner error:", err);
+        initScanner();
+      });
+  } else {
+    initScanner();
+  }
+}
+
+if (startScanBtn) {
+  startScanBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (currentMode !== "qr") {
+      setMode("qr");
+    } else {
+      startScanner();
+    }
+  });
+}
+
+// ====== MODE SWITCH (QR / TOKEN) ======
+function setMode(mode) {
+  currentMode = mode;
+
+  if (mode === "qr") {
+    cardQr?.classList.remove("hidden");
+    cardToken?.classList.add("hidden");
+
+    btnModeQr?.classList.add("active");
+    btnModeToken?.classList.remove("active");
+
+    startScanner();          // เปิดกล้องอัตโนมัติเมื่อเลือกโหมดสแกน
+  } else {
+    cardQr?.classList.add("hidden");
+    cardToken?.classList.remove("hidden");
+
+    btnModeQr?.classList.remove("active");
+    btnModeToken?.classList.add("active");
+
+    stopScanner();           // ปิดกล้องเมื่อเปลี่ยนไปโหมดกรอก token
+  }
+}
+
+if (btnModeQr) {
+  btnModeQr.addEventListener("click", () => setMode("qr"));
+}
+if (btnModeToken) {
+  btnModeToken.addEventListener("click", () => setMode("token"));
+}
+
+// default: เปิดด้วยโหมดสแกน
+window.addEventListener("load", () => {
+  setMode("qr");
 });
