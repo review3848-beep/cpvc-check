@@ -11,7 +11,7 @@
 
   <link rel="stylesheet" href="../css/styles.css" />
 
-  <script src="https://unpkg.com/html5-qrcode" defer></script>
+  <!-- ไม่ต้องใช้ QR แล้ว เหลือแค่ student-scan.js -->
   <script type="module" src="../js/student-scan.js" defer></script>
 
   <style>
@@ -46,22 +46,25 @@
 
     .page {
       width: 100%;
-      max-width: 520px; /* เล็กลงจากเดิม */
+      max-width: 520px;
     }
 
     .shell {
       background:
-        radial-gradient(circle at 0 0, rgba(148, 163, 184, 0.25), transparent 60%),
-        radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.2), transparent 60%),
-        linear-gradient(145deg, rgba(15, 23, 42, 0.97), rgba(15, 23, 42, 1));
+        radial-gradient(circle at 0 0, rgba(148,163,184,0.25), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(56,189,248,0.2), transparent 60%),
+        linear-gradient(145deg, rgba(15,23,42,0.97), rgba(15,23,42,1));
       border-radius: 1.6rem;
-      padding: 1.1rem 1.1rem 0.9rem; /* ลด padding */
-      border: 1px solid rgba(15, 23, 42, 0.95);
+      padding: 1.1rem 1.1rem 0.9rem;
+      border: 1px solid rgba(15,23,42,0.95);
       box-shadow:
-        0 24px 70px rgba(0, 0, 0, 0.9),
-        0 0 0 1px rgba(15, 23, 42, 1);
+        0 24px 70px rgba(0,0,0,0.9),
+        0 0 0 1px rgba(15,23,42,1);
       position: relative;
       overflow: hidden;
+      max-height: calc(100vh - 1.5rem);
+      display: flex;
+      flex-direction: column;
     }
 
     .shell::before {
@@ -69,8 +72,8 @@
       position: absolute;
       inset: -50%;
       background:
-        radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.32), transparent 55%),
-        radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.28), transparent 55%);
+        radial-gradient(circle at 0 0, rgba(129,140,248,0.32), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(236,72,153,0.28), transparent 55%);
       opacity: 0.7;
       pointer-events: none;
       z-index: -1;
@@ -79,28 +82,27 @@
     /* HEADER */
 
     .header-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 999px;
-  margin: 0 auto 0.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* พาร์ทที่เปลี่ยนคือ background + shadow */
-  background:
-    radial-gradient(circle at 30% 0%, #e879f9, transparent 60%),
-    radial-gradient(circle at 100% 100%, #6366f1, transparent 55%);
-  box-shadow: 0 10px 30px rgba(168, 85, 247, 0.9);
-  font-size: 1.6rem;
-  flex-shrink: 0;
-}
-
+      width: 60px;
+      height: 60px;
+      border-radius: 999px;
+      margin: 0 auto 0.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at 30% 0%, #e879f9, transparent 60%),
+        radial-gradient(circle at 100% 100%, #6366f1, transparent 55%);
+      box-shadow: 0 10px 30px rgba(168, 85, 247, 0.9);
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
 
     .title {
       margin: 0;
       text-align: center;
       font-size: 1.4rem;
       letter-spacing: 0.04em;
+      flex-shrink: 0;
     }
 
     .subtitle {
@@ -108,12 +110,14 @@
       text-align: center;
       font-size: 0.8rem;
       color: var(--text-muted);
+      flex-shrink: 0;
     }
 
     .user-row {
       display: flex;
       justify-content: center;
       margin-bottom: 0.35rem;
+      flex-shrink: 0;
     }
 
     .user-pill {
@@ -122,11 +126,11 @@
       gap: 0.35rem;
       padding: 0.3rem 0.8rem;
       border-radius: 999px;
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 1));
-      border: 1px solid rgba(148, 163, 184, 0.45);
+      background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(15,23,42,1));
+      border: 1px solid rgba(148,163,184,0.45);
       font-size: 0.78rem;
       color: var(--text-muted);
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.9);
+      box-shadow: 0 8px 24px rgba(15,23,42,0.9);
     }
 
     .user-pill span {
@@ -138,6 +142,7 @@
       display: flex;
       justify-content: center;
       margin-bottom: 0.55rem;
+      flex-shrink: 0;
     }
 
     .status-pill {
@@ -146,11 +151,11 @@
       gap: 0.35rem;
       padding: 0.3rem 0.8rem;
       border-radius: 999px;
-      background: rgba(15, 23, 42, 0.96);
-      border: 1px solid rgba(51, 65, 85, 0.9);
+      background: rgba(15,23,42,0.96);
+      border: 1px solid rgba(51,65,85,0.9);
       font-size: 0.76rem;
       color: var(--text-muted);
-      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.95);
+      box-shadow: 0 10px 26px rgba(15,23,42,0.95);
     }
 
     .status-dot {
@@ -158,72 +163,29 @@
       height: 0.5rem;
       border-radius: 999px;
       background: #64748b;
-      box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.35);
+      box-shadow: 0 0 0 3px rgba(148,163,184,0.35);
     }
     .status-open   { background: var(--status-open);   box-shadow: 0 0 0 3px rgba(34,197,94,0.3); }
     .status-closed { background: var(--status-closed); box-shadow: 0 0 0 3px rgba(249,115,22,0.3); }
     .status-error  { background: var(--status-error);  box-shadow: 0 0 0 3px rgba(248,113,113,0.3); }
 
-    /* TOGGLE */
-
-    .toggle-label {
-      font-size: 0.76rem;
-      color: var(--text-muted);
-      text-align: center;
-      margin-bottom: 0.35rem;
-    }
-
-    .toggle-wrap {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 0.6rem;
-    }
-
-    .mode-toggle {
-      display: inline-flex;
-      padding: 0.16rem;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.98);
-      border: 1px solid rgba(55, 65, 81, 0.95);
-      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.9);
-    }
-
-    .mode-btn {
-      border: none;
-      background: transparent;
-      color: #c7d2fe;
-      font-size: 0.78rem;
-      padding: 0.28rem 0.95rem;
-      border-radius: 999px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      transition: background 0.15s, color 0.15s, transform 0.08s, box-shadow 0.15s;
-    }
-    .mode-btn .icon { font-size: 0.9rem; }
-
-    .mode-btn.active {
-      background: linear-gradient(135deg, var(--accent-purple), var(--accent-purple-2));
-      color: #f9fafb;
-      box-shadow: 0 12px 30px rgba(129, 140, 248, 1);
-      transform: translateY(-0.5px);
-    }
-
-    /* BODY */
+    /* MAIN SECTION */
 
     .section {
       display: flex;
       flex-direction: column;
-      gap: 0.6rem; /* ลดช่องไฟระหว่างการ์ด */
+      gap: 0.6rem;
+      flex: 1 1 auto;
+      overflow-y: auto;
+      padding-bottom: 0.1rem;
     }
 
     .card {
       border-radius: 1rem;
       padding: 0.8rem 0.85rem 0.75rem;
-      background: rgba(15, 23, 42, 0.96);
-      border: 1px solid rgba(51, 65, 85, 0.9);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.9);
+      background: rgba(15,23,42,0.96);
+      border: 1px solid rgba(51,65,85,0.9);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.9);
     }
 
     .card h2 {
@@ -234,51 +196,6 @@
     .card p.sub {
       margin: 0 0 0.6rem;
       font-size: 0.76rem;
-      color: var(--text-muted);
-    }
-
-    .qr-box {
-      border-radius: 0.85rem;
-      border: 1px solid rgba(148, 163, 184, 0.55);
-      background: radial-gradient(circle at 50% 0%, rgba(148, 163, 184, 0.2), #020617);
-      padding: 0.55rem;
-      margin-bottom: 0.6rem;
-    }
-
-    #qrScanner {
-      width: 100%;
-      min-height: 170px;  /* ย่อความสูงกล้องลง */
-      border-radius: 0.75rem;
-      overflow: hidden;
-      background: #020617;
-    }
-
-    .btn-secondary {
-      width: 100%;
-      padding: 0.6rem 0.8rem;
-      border-radius: 0.85rem;
-      border: 1px solid rgba(148, 163, 184, 0.8);
-      background: rgba(15, 23, 42, 0.98);
-      color: #e5e7eb;
-      font-size: 0.8rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.3rem;
-      transition: background 0.15s, border-color 0.15s, transform 0.08s, box-shadow 0.15s;
-    }
-
-    .btn-secondary:hover {
-      background: #020617;
-      border-color: var(--accent-purple);
-      transform: translateY(-1px);
-      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.95);
-    }
-
-    .hint {
-      margin-top: 0.45rem;
-      font-size: 0.72rem;
       color: var(--text-muted);
     }
 
@@ -293,7 +210,7 @@
       width: 100%;
       padding: 0.65rem 0.8rem;
       border-radius: 0.85rem;
-      border: 1px solid rgba(148, 163, 184, 0.9);
+      border: 1px solid rgba(148,163,184,0.9);
       background: #020617;
       color: var(--text-main);
       font-size: 0.86rem;
@@ -311,7 +228,7 @@
 
     input[type="text"]:focus {
       border-color: var(--accent-purple);
-      box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.7);
+      box-shadow: 0 0 0 1px rgba(168,85,247,0.7);
       transform: translateY(-1px);
     }
 
@@ -327,7 +244,7 @@
       letter-spacing: 0.03em;
       color: #f9fafb;
       background: linear-gradient(135deg, var(--accent-purple), var(--accent-purple-2));
-      box-shadow: 0 14px 38px rgba(129, 140, 248, 1);
+      box-shadow: 0 14px 38px rgba(129,140,248,1);
       transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, filter 0.1s;
       position: relative;
       overflow: hidden;
@@ -344,7 +261,7 @@
       width: 14px;
       height: 14px;
       border-radius: 999px;
-      border: 2px solid rgba(249, 250, 251, 0.6);
+      border: 2px solid rgba(249,250,251,0.6);
       border-top-color: #f9fafb;
       right: 14px;
       top: 50%;
@@ -355,7 +272,7 @@
     .btn-primary:hover:not(.is-loading) {
       transform: translateY(-1px);
       filter: brightness(1.06);
-      box-shadow: 0 18px 46px rgba(129, 140, 248, 1);
+      box-shadow: 0 18px 46px rgba(129,140,248,1);
     }
 
     #scanMsg {
@@ -370,8 +287,8 @@
       margin-top: 0.6rem;
       padding: 0.6rem 0.7rem;
       border-radius: 0.8rem;
-      background: rgba(15, 23, 42, 0.98);
-      border: 1px dashed rgba(168, 85, 247, 0.7);
+      background: rgba(15,23,42,0.98);
+      border: 1px dashed rgba(168,85,247,0.7);
       font-size: 0.74rem;
       color: var(--text-muted);
     }
@@ -381,12 +298,12 @@
 
     .history-card {
       border-radius: 0.95rem;
-      border: 1px solid rgba(51, 65, 85, 0.95);
-      background: rgba(15, 23, 42, 0.98);
-      padding: 0.7rem 0.8rem 0.6rem;
+      border: 1px solid rgba(51,65,85,0.95);
+      background: rgba(15,23,42,0.98);
+      padding: 0.7rem 0.8rem 0.55rem;
       font-size: 0.76rem;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.9);
-      max-height: 130px;           /* จำกัดความสูง */
+      box-shadow: 0 12px 32px rgba(0,0,0,0.9);
+      max-height: 130px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -405,7 +322,7 @@
     .history-badge {
       padding: 0.15rem 0.5rem;
       border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.75);
+      border: 1px solid rgba(148,163,184,0.75);
       font-size: 0.7rem;
       color: var(--text-muted);
     }
@@ -414,7 +331,7 @@
       list-style: none;
       margin: 0;
       padding: 0;
-      overflow-y: auto;      /* เลื่อนเฉพาะในกล่อง */
+      overflow-y: auto;
     }
 
     .history-item {
@@ -422,7 +339,7 @@
       justify-content: space-between;
       gap: 0.5rem;
       padding: 0.4rem 0;
-      border-top: 1px solid rgba(31, 41, 55, 0.9);
+      border-top: 1px solid rgba(31,41,55,0.9);
     }
 
     .history-item:first-child {
@@ -450,23 +367,23 @@
       align-items: center;
       padding: 0.08rem 0.45rem;
       border-radius: 999px;
-      border: 1px solid rgba(55, 65, 81, 0.95);
+      border: 1px solid rgba(55,65,81,0.95);
       font-size: 0.7rem;
     }
     .chip-ok {
-      border-color: rgba(34, 197, 94, 0.75);
+      border-color: rgba(34,197,94,0.75);
       color: #bbf7d0;
-      background: rgba(22, 163, 74, 0.22);
+      background: rgba(22,163,74,0.22);
     }
     .chip-late {
-      border-color: rgba(234, 179, 8, 0.8);
+      border-color: rgba(234,179,8,0.8);
       color: #facc15;
-      background: rgba(202, 138, 4, 0.22);
+      background: rgba(202,138,4,0.22);
     }
     .chip-absent {
-      border-color: rgba(239, 68, 68, 0.8);
+      border-color: rgba(239,68,68,0.8);
       color: #fecaca;
-      background: rgba(185, 28, 28, 0.25);
+      background: rgba(185,28,28,0.25);
     }
 
     /* FOOTER */
@@ -480,6 +397,7 @@
       font-size: 0.72rem;
       color: var(--text-muted);
       flex-wrap: wrap;
+      flex-shrink: 0;
     }
 
     .logout-btn {
@@ -494,7 +412,7 @@
     }
 
     .logout-btn:hover {
-      background: rgba(127, 29, 132, 0.75);
+      background: rgba(127,29,132,0.75);
       color: #fdf2ff;
       transform: translateY(-1px);
     }
@@ -514,16 +432,6 @@
       max-width: 90vw;
     }
 
-    @media (max-width: 640px) {
-      body { padding: 0.5rem; }
-      .shell { padding: 1rem 1rem 0.8rem; }
-      .toast-container {
-        right: 50%;
-        transform: translateX(50%);
-        bottom: 0.6rem;
-      }
-    }
-
     .toast {
       padding: 0.45rem 0.75rem;
       border-radius: 0.85rem;
@@ -531,14 +439,14 @@
       display: flex;
       align-items: flex-start;
       gap: 0.5rem;
-      border: 1px solid rgba(55, 65, 81, 0.95);
-      background: rgba(15, 23, 42, 0.98);
+      border: 1px solid rgba(55,65,81,0.95);
+      background: rgba(15,23,42,0.98);
       color: #e5e7eb;
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.95);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.95);
       animation: toast-in 0.18s ease-out;
     }
-    .toast-success { border-color: rgba(34, 197, 94, 0.75); }
-    .toast-error   { border-color: rgba(248, 113, 113, 0.9); }
+    .toast-success { border-color: rgba(34,197,94,0.75); }
+    .toast-error   { border-color: rgba(248,113,113,0.9); }
 
     @keyframes toast-in {
       from { opacity: 0; transform: translateY(6px) scale(0.98); }
@@ -546,6 +454,22 @@
     }
     @keyframes spin {
       to { transform: translateY(-50%) rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 0.4rem; }
+      .shell {
+        padding: 0.9rem 0.8rem 0.7rem;
+        max-height: 100vh;
+      }
+      .header-icon {
+        width: 52px;
+        height: 52px;
+        font-size: 1.4rem;
+      }
+      .title { font-size: 1.25rem; }
+      .subtitle { font-size: 0.75rem; }
+      .history-card { max-height: 22vh; }
     }
   </style>
 </head>
@@ -555,7 +479,7 @@
     <main class="shell">
       <div class="header-icon">🎓</div>
       <h1 class="title">เช็คชื่อเข้าเรียน</h1>
-      <p class="subtitle">ใช้ QR CODE หรือรหัส TOKEN เพื่อบันทึกเวลาเข้าเรียน</p>
+      <p class="subtitle">ใช้รหัส TOKEN เพื่อบันทึกเวลาเข้าเรียน</p>
 
       <div class="user-row">
         <div class="user-pill">
@@ -566,40 +490,15 @@
       <div class="status-row">
         <div class="status-pill">
           <span id="sessionStatusDot" class="status-dot"></span>
-          <span id="sessionStatusText">รอสแกนหรือกรอกรหัสเพื่อเช็คชื่อ</span>
-        </div>
-      </div>
-
-      <div class="toggle-label">เลือกรูปแบบการเช็คชื่อที่ต้องการ</div>
-      <div class="toggle-wrap">
-        <div class="mode-toggle">
-          <button id="btnModeQr" class="mode-btn active">
-            <span class="icon">📷</span><span>สแกน QR</span>
-          </button>
-          <button id="btnModeToken" class="mode-btn">
-            <span class="icon">⌨️</span><span>กรอกรหัส TOKEN</span>
-          </button>
+          <span id="sessionStatusText">รอกรอก TOKEN เพื่อเช็คชื่อ</span>
         </div>
       </div>
 
       <section class="section">
-        <!-- QR MODE -->
-        <div class="card" id="cardQr">
-          <h2>สแกน QR CODE</h2>
-          <p class="sub">ใช้กล้องจากโทรศัพท์สแกน QR ที่ครูเปิดคาบ ระบบจะบันทึกเวลาเข้าเรียนให้อัตโนมัติ</p>
-          <div class="qr-box">
-            <div id="qrScanner"></div>
-          </div>
-          <button id="startScanBtn" class="btn-secondary">
-            🔁 เริ่มสแกน / รีเฟรชกล้อง
-          </button>
-          <div class="hint">หากกล้องไม่ขึ้น ให้รีเฟรชหน้า ใช้เบราว์เซอร์ Chrome / Edge และอนุญาตสิทธิ์การใช้กล้อง</div>
-        </div>
-
-        <!-- TOKEN MODE -->
-        <div class="card hidden" id="cardToken">
+        <!-- TOKEN ONLY -->
+        <div class="card" id="cardToken">
           <h2>กรอกรหัส TOKEN</h2>
-          <p class="sub">กรณีสแกนไม่ได้ ให้นำรหัสตัวอักษรที่ครูประกาศมากรอกด้านล่างเพื่อเช็คชื่อ</p>
+          <p class="sub">นำรหัส TOKEN ที่ครูประกาศมากรอกเพื่อเช็คชื่อในคาบเรียน</p>
           <label for="tokenInput">รหัส TOKEN คาบเรียน</label>
           <input id="tokenInput" type="text" placeholder="เช่น AK2GAE" />
           <button id="submitTokenBtn" class="btn-primary">ยืนยันเช็คชื่อ</button>
@@ -615,9 +514,7 @@
             <div class="history-title">ประวัติเช็คชื่อล่าสุด</div>
             <div class="history-badge" id="historyCount">–</div>
           </div>
-          <ul class="history-list" id="historyList">
-            <!-- เติมด้วย JS -->
-          </ul>
+          <ul class="history-list" id="historyList"></ul>
         </div>
       </section>
 

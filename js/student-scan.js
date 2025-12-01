@@ -1,233 +1,276 @@
-// js/student-scan.js
+// student-scan.js
+// หน้านักเรียนเช็คชื่อด้วย TOKEN (ไม่ใช้ QR แล้ว)
+
 import { API_BASE } from "./api.js";
 
-// ====== SESSION GUARD ======
-const studentId = sessionStorage.getItem("studentId");
-const studentName = sessionStorage.getItem("studentName");
+// --------- DOM ELEMENTS ---------
+const pillUserName      = document.getElementById("pillUserName");
+const sessionStatusDot  = document.getElementById("sessionStatusDot");
+const sessionStatusText = document.getElementById("sessionStatusText");
 
-if (!studentId || !studentName) {
-  window.location.href = "login.html";
-}
-
-// DOM
-const pillUserName   = document.getElementById("pillUserName");
 const tokenInput     = document.getElementById("tokenInput");
 const submitTokenBtn = document.getElementById("submitTokenBtn");
 const scanMsg        = document.getElementById("scanMsg");
-const logoutBtn      = document.getElementById("logoutBtn");
-const startScanBtn   = document.getElementById("startScanBtn");
 const lastStatusBox  = document.getElementById("lastStatus");
 const lastStatusText = document.getElementById("lastStatusText");
 
-const btnModeQr    = document.getElementById("btnModeQr");
-const btnModeToken = document.getElementById("btnModeToken");
-const cardQr       = document.getElementById("cardQr");
-const cardToken    = document.getElementById("cardToken");
+const historyCard  = document.getElementById("historyCard");
+const historyList  = document.getElementById("historyList");
+const historyCount = document.getElementById("historyCount");
 
-let html5QrcodeInstance = null;
-let currentMode = "qr"; // "qr" | "token"
+const logoutBtn      = document.getElementById("logoutBtn");
+const toastContainer = document.getElementById("toastContainer");
 
-// แสดงชื่อบน pill
-if (pillUserName) {
-  pillUserName.textContent = `${studentName} (${studentId})`;
-}
+const STORAGE_KEY_STUDENT = "nexStudent"; // ต้องตรงกับตอน login ใช้เก็บ
 
-function setScanMessage(text, type = "error") {
-  if (!scanMsg) return;
-  scanMsg.textContent = text || "";
-  scanMsg.classList.remove("scanMsg-success");
-  if (type === "success") {
-    scanMsg.classList.add("scanMsg-success");
+// ================== helpers ==================
+
+function loadStudent() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_STUDENT);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error("loadStudent error", e);
+    return null;
   }
 }
 
-// ====== LOGOUT ======
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", () => {
-    sessionStorage.removeItem("studentId");
-    sessionStorage.removeItem("studentName");
-    window.location.href = "login.html";
-  });
+function setStudentPill() {
+  const s = loadStudent();
+  if (!s) {
+    if (pillUserName) pillUserName.textContent = "-";
+    return;
+  }
+  pillUserName.textContent = s.name || s.id || "-";
 }
 
-// ====== markAttendance ======
-async function submitToken(rawToken) {
-  const token = (rawToken || "").trim();
-  if (!token) {
-    setScanMessage("กรุณากรอกรหัส TOKEN", "error");
+function setStatus(text, mode = "idle") {
+  if (sessionStatusText) sessionStatusText.textContent = text;
+  if (!sessionStatusDot) return;
+
+  // reset class
+  sessionStatusDot.className = "status-dot";
+  if (mode === "open") sessionStatusDot.classList.add("status-open");
+  else if (mode === "closed") sessionStatusDot.classList.add("status-closed");
+  else if (mode === "error") sessionStatusDot.classList.add("status-error");
+}
+
+function setScanMsg(text, type = "error") {
+  if (!scanMsg) return;
+  scanMsg.textContent = text;
+  scanMsg.classList.remove("scanMsg-success");
+  if (type === "success") scanMsg.classList.add("scanMsg-success");
+}
+
+function showToast(message, type = "error") {
+  if (!toastContainer) {
+    // fallback
+    console.log(message);
+    return;
+  }
+  const div = document.createElement("div");
+  div.className = "toast " + (type === "success" ? "toast-success" : "toast-error");
+  div.textContent = message;
+  toastContainer.appendChild(div);
+  setTimeout(() => div.remove(), 2500);
+}
+
+function setButtonLoading(btn, isLoading) {
+  if (!btn) return;
+  btn.disabled = !!isLoading;
+  btn.classList.toggle("is-loading", !!isLoading);
+}
+
+// call GAS backend
+async function postToApi(body) {
+  const res = await fetch(API_BASE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    throw new Error("HTTP " + res.status);
+  }
+  return await res.json();
+}
+
+// ================== handle token ==================
+
+async function handleTokenSubmit() {
+  const raw = tokenInput?.value || "";
+  const token = String(raw).trim().toUpperCase();
+
+  const student = loadStudent();
+  if (!student || !student.id) {
+    setScanMsg("ไม่พบนักเรียนในเครื่องนี้ กรุณาเข้าสู่ระบบใหม่");
+    showToast("ไม่พบนักเรียน กรุณาเข้าสู่ระบบใหม่", "error");
     return;
   }
 
-  if (submitTokenBtn) {
-    submitTokenBtn.disabled = true;
-    submitTokenBtn.textContent = "กำลังเช็คชื่อ...";
+  if (!token) {
+    setScanMsg("กรุณากรอกรหัส TOKEN");
+    return;
+  }
+
+  setButtonLoading(submitTokenBtn, true);
+  setScanMsg("กำลังเช็คชื่อ...");
+  setStatus("กำลังส่งข้อมูลเช็คชื่อ...", "idle");
+
+  try {
+    const data = await postToApi({
+      action: "markAttendance",
+      studentId: student.id,
+      studentName: student.name || "",
+      token: token,
+    });
+
+    if (!data.success) {
+      const msg = data.message || "เช็คชื่อไม่สำเร็จ";
+      setScanMsg(msg);
+      setStatus("เช็คชื่อไม่สำเร็จ", "error");
+      showToast(msg, "error");
+      return;
+    }
+
+    // status จาก backend: OK / LATE / ABSENT
+    const st = String(data.status || "OK").toUpperCase();
+    let textStatus = "";
+    if (st === "OK") textStatus = "มาเรียน (ตรงเวลา)";
+    else if (st === "LATE") textStatus = "มาเรียนสาย";
+    else if (st === "ABSENT") textStatus = "ขาด";
+    else textStatus = st;
+
+    setScanMsg("เช็คชื่อสำเร็จ: " + textStatus, "success");
+    setStatus("เช็คชื่อสำเร็จ", "open");
+    showToast("เช็คชื่อสำเร็จ", "success");
+
+    if (lastStatusBox && lastStatusText) {
+      lastStatusText.textContent = textStatus + " | TOKEN: " + token;
+      lastStatusBox.style.display = "block";
+    }
+
+    // โหลดประวัติใหม่
+    await loadHistory();
+  } catch (e) {
+    console.error(e);
+    setScanMsg("เช็คชื่อผิดพลาด: " + e.message);
+    setStatus("เช็คชื่อผิดพลาด", "error");
+    showToast("เช็คชื่อผิดพลาด", "error");
+  } finally {
+    setButtonLoading(submitTokenBtn, false);
+  }
+}
+
+// ================== history ==================
+
+async function loadHistory() {
+  const student = loadStudent();
+  if (!student || !student.id) {
+    historyCard?.classList.add("hidden");
+    return;
   }
 
   try {
-    const res = await fetch(API_BASE, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        action: "markAttendance",
-        studentId,
-        studentName,
-        token,
-      }),
+    const data = await postToApi({
+      action: "getStudentHistory",
+      studentId: student.id,
     });
 
-    const data = await res.json();
-    console.log("markAttendance >", data);
-
-    if (data.success) {
-      const statusText =
-        data.status === "OK"
-          ? "มาเรียน (ON TIME)"
-          : data.status === "LATE"
-          ? "มาเรียนสาย (LATE)"
-          : data.status || "-";
-
-      setScanMessage(`เช็คชื่อสำเร็จ: ${statusText}`, "success");
-
-      if (lastStatusBox && lastStatusText) {
-        lastStatusText.textContent = `${statusText} / TOKEN: ${token}`;
-        lastStatusBox.style.display = "block";
-      }
-    } else {
-      setScanMessage(data.message || "เช็คชื่อไม่สำเร็จ", "error");
+    if (!data.success) {
+      historyCard?.classList.add("hidden");
+      return;
     }
-  } catch (err) {
-    console.error(err);
-    setScanMessage("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", "error");
-  }
 
-  if (submitTokenBtn) {
-    submitTokenBtn.disabled = false;
-    submitTokenBtn.textContent = "ยืนยันเช็คชื่อ";
+    const rows = data.history || [];
+    if (!historyList || !historyCount) return;
+
+    historyList.innerHTML = "";
+    historyCount.textContent = rows.length
+      ? rows.length + " รายการ"
+      : "ยังไม่มีข้อมูล";
+
+    // เอาแค่ 5 รายการล่าสุด
+    rows.slice(-5).reverse().forEach((r) => {
+      // r = [ TEACHER_EMAIL, STUDENT_ID, STUDENT_NAME, DATETIME, TOKEN, STATUS ]
+      const dt     = r[3] || "";
+      const token  = r[4] || "";
+      const status = String(r[5] || "").toUpperCase();
+
+      const li = document.createElement("li");
+      li.className = "history-item";
+
+      const left = document.createElement("div");
+      left.className = "hist-main";
+
+      const subj = document.createElement("div");
+      subj.className = "hist-subject";
+      subj.textContent = "TOKEN: " + token;
+
+      const room = document.createElement("div");
+      room.className = "hist-room";
+      room.textContent = dt;
+
+      left.appendChild(subj);
+      left.appendChild(room);
+
+      const right = document.createElement("div");
+      right.className = "hist-meta";
+
+      const chip = document.createElement("span");
+      chip.className = "status-chip";
+
+      if (status === "OK") chip.classList.add("chip-ok");
+      else if (status === "LATE") chip.classList.add("chip-late");
+      else if (status === "ABSENT") chip.classList.add("chip-absent");
+
+      chip.textContent =
+        status === "OK" ? "มา" :
+        status === "LATE" ? "สาย" :
+        status === "ABSENT" ? "ขาด" : status;
+
+      right.appendChild(chip);
+
+      li.appendChild(left);
+      li.appendChild(right);
+      historyList.appendChild(li);
+    });
+
+    historyCard?.classList.remove("hidden");
+  } catch (e) {
+    console.error("loadHistory error", e);
   }
 }
 
-// ปุ่มยืนยัน TOKEN
-if (submitTokenBtn) {
-  submitTokenBtn.addEventListener("click", (e) => {
+// ================== logout ==================
+
+logoutBtn?.addEventListener("click", () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY_STUDENT);
+  } catch (e) {
+    console.error(e);
+  }
+  window.location.href = "login.html";
+});
+
+// ================== events ==================
+
+submitTokenBtn?.addEventListener("click", (e) => {
+  e.preventDefault();
+  handleTokenSubmit();
+});
+
+tokenInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
     e.preventDefault();
-    submitToken(tokenInput.value);
-  });
-}
-
-// กด Enter ในช่อง token
-if (tokenInput) {
-  tokenInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      submitToken(tokenInput.value);
-    }
-  });
-}
-
-// ====== QR SCANNER ======
-function stopScanner() {
-  if (html5QrcodeInstance) {
-    html5QrcodeInstance
-      .stop()
-      .then(() => {
-        html5QrcodeInstance.clear();
-        html5QrcodeInstance = null;
-      })
-      .catch((err) => {
-        console.error("Stop scanner error:", err);
-      });
+    handleTokenSubmit();
   }
-}
+});
 
-function startScanner() {
-  const scannerId = "qrScanner";
-  const el = document.getElementById(scannerId);
-  if (!el) return;
+// ================== init ==================
 
-  const initScanner = () => {
-    try {
-      html5QrcodeInstance = new Html5Qrcode(scannerId);
-      html5QrcodeInstance
-        .start(
-          { facingMode: "environment" },       // กล้องหลัง
-          { fps: 10, qrbox: 230 },
-          (decodedText) => {
-            console.log("QR decoded:", decodedText);
-            const token = decodedText.trim();
-            if (tokenInput) tokenInput.value = token;
-            submitToken(token);
-          },
-          () => { /* ignore per-frame error */ }
-        )
-        .catch((err) => {
-          console.error("Start scanner error:", err);
-          setScanMessage("ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้กล้อง", "error");
-        });
-    } catch (e) {
-      console.error(e);
-      setScanMessage("ไม่พบตัวสแกน QR (html5-qrcode)", "error");
-    }
-  };
-
-  if (html5QrcodeInstance) {
-    html5QrcodeInstance
-      .stop()
-      .then(() => {
-        html5QrcodeInstance.clear();
-        html5QrcodeInstance = null;
-        initScanner();
-      })
-      .catch((err) => {
-        console.error("Stop scanner error:", err);
-        initScanner();
-      });
-  } else {
-    initScanner();
-  }
-}
-
-if (startScanBtn) {
-  startScanBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    if (currentMode !== "qr") {
-      setMode("qr");
-    } else {
-      startScanner();
-    }
-  });
-}
-
-// ====== MODE SWITCH (QR / TOKEN) ======
-function setMode(mode) {
-  currentMode = mode;
-
-  if (mode === "qr") {
-    cardQr?.classList.remove("hidden");
-    cardToken?.classList.add("hidden");
-
-    btnModeQr?.classList.add("active");
-    btnModeToken?.classList.remove("active");
-
-    startScanner();          // เปิดกล้องอัตโนมัติเมื่อเลือกโหมดสแกน
-  } else {
-    cardQr?.classList.add("hidden");
-    cardToken?.classList.remove("hidden");
-
-    btnModeQr?.classList.remove("active");
-    btnModeToken?.classList.add("active");
-
-    stopScanner();           // ปิดกล้องเมื่อเปลี่ยนไปโหมดกรอก token
-  }
-}
-
-if (btnModeQr) {
-  btnModeQr.addEventListener("click", () => setMode("qr"));
-}
-if (btnModeToken) {
-  btnModeToken.addEventListener("click", () => setMode("token"));
-}
-
-// default: เปิดด้วยโหมดสแกน
-window.addEventListener("load", () => {
-  setMode("qr");
+window.addEventListener("DOMContentLoaded", () => {
+  setStudentPill();
+  setStatus("รอกรอก TOKEN เพื่อเช็คชื่อ", "idle");
+  loadHistory().catch((e) => console.error(e));
 });
