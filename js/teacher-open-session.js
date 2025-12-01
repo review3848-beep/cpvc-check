@@ -86,10 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tokenBox.style.display = "block";
 
       statusEl.textContent = "สถานะคาบ: เปิดคาบแล้ว (OPEN)";
-      setMsg("เปิดคาบสำเร็จ – TOKEN และ QR พร้อมใช้งาน", true);
-
-      // ✅ สร้าง QR ทันทีเมื่อเปิดคาบสำเร็จ
-      renderQR(currentToken);
+      setMsg("เปิดคาบสำเร็จ ", true);
 
       // เปิดสิทธิ์ให้ปิดคาบได้
       closeBtn.disabled = false;
