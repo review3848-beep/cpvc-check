@@ -1,9 +1,9 @@
 // js/student-scan.js
 import { API_BASE } from "./api.js";
 
-/* --------------------------
-   DOM ELEMENTS
--------------------------- */
+/* =========================================
+ * DOM ELEMENTS
+ * =======================================*/
 const tokenInput       = document.getElementById("tokenInput");
 const submitTokenBtn   = document.getElementById("submitTokenBtn");
 const scanMsg          = document.getElementById("scanMsg");
@@ -19,16 +19,15 @@ const historyList      = document.getElementById("historyList");
 const historyCount     = document.getElementById("historyCount");
 
 const logoutBtn        = document.getElementById("logoutBtn");
+const toastContainer   = document.getElementById("toastContainer");
 
-/* --------------------------
-   HELPER: หา student จาก localStorage
-   (ลองหลาย key เผื่อไฟล์ login ใช้อันใดอันหนึ่ง)
--------------------------- */
+/* =========================================
+ * อ่าน student จาก localStorage (พยายามหลาย key)
+ * =======================================*/
 function getStoredStudent() {
   const keys = [
     "nexattend_student",
     "nexAttend_student",
-    "nexAttendStudent",
     "cpvc_student",
     "cpvc_student_info",
     "studentInfo"
@@ -40,10 +39,10 @@ function getStoredStudent() {
     try {
       const obj = JSON.parse(raw);
       if (obj && obj.id) {
-        return { ...obj, _key: k };
+        return obj;
       }
     } catch (e) {
-      // ignore
+      // ข้ามตัวที่ parse ไม่ได้
     }
   }
   return null;
@@ -51,112 +50,15 @@ function getStoredStudent() {
 
 const student = getStoredStudent();
 
-/* --------------------------
-   POPUP (สร้างด้วย JS)
--------------------------- */
-let popupEl = null;
-let popupTitleEl = null;
-let popupBodyEl = null;
-let popupCloseBtn = null;
-
-function ensurePopup() {
-  if (popupEl) return;
-
-  popupEl = document.createElement("div");
-  popupEl.id = "scanPopup";
-  popupEl.style.position = "fixed";
-  popupEl.style.inset = "0";
-  popupEl.style.display = "flex";
-  popupEl.style.alignItems = "center";
-  popupEl.style.justifyContent = "center";
-  popupEl.style.background = "rgba(15,23,42,0.78)";
-  popupEl.style.zIndex = "9999";
-  popupEl.style.backdropFilter = "blur(4px)";
-  popupEl.style.opacity = "0";
-  popupEl.style.pointerEvents = "none";
-  popupEl.style.transition = "opacity 0.15s ease-out";
-
-  const box = document.createElement("div");
-  box.style.minWidth = "260px";
-  box.style.maxWidth = "320px";
-  box.style.borderRadius = "18px";
-  box.style.padding = "16px 18px 14px";
-  box.style.background = "linear-gradient(145deg,#020617,#020617)";
-  box.style.border = "1px solid rgba(56,189,248,0.6)";
-  box.style.boxShadow = "0 22px 60px rgba(0,0,0,0.9)";
-  box.style.color = "#e5e7eb";
-  box.style.fontFamily = '"Prompt",system-ui,sans-serif';
-  box.style.fontSize = "0.9rem";
-  box.style.display = "flex";
-  box.style.flexDirection = "column";
-  box.style.gap = "6px";
-
-  popupTitleEl = document.createElement("div");
-  popupTitleEl.style.display = "flex";
-  popupTitleEl.style.alignItems = "center";
-  popupTitleEl.style.gap = "8px";
-  popupTitleEl.innerHTML = `<span style="font-size:1.1rem;">✅</span><span>เช็คชื่อสำเร็จ</span>`;
-
-  popupBodyEl = document.createElement("div");
-  popupBodyEl.style.fontSize = "0.8rem";
-  popupBodyEl.style.color = "#cbd5f5";
-
-  const btnRow = document.createElement("div");
-  btnRow.style.display = "flex";
-  btnRow.style.justifyContent = "flex-end";
-  btnRow.style.marginTop = "6px";
-
-  popupCloseBtn = document.createElement("button");
-  popupCloseBtn.textContent = "ปิด";
-  popupCloseBtn.style.border = "none";
-  popupCloseBtn.style.borderRadius = "999px";
-  popupCloseBtn.style.padding = "6px 14px";
-  popupCloseBtn.style.fontSize = "0.78rem";
-  popupCloseBtn.style.cursor = "pointer";
-  popupCloseBtn.style.background =
-    "linear-gradient(135deg, #38bdf8, #2563eb)";
-  popupCloseBtn.style.color = "#f9fafb";
-  popupCloseBtn.addEventListener("click", hidePopup);
-
-  btnRow.appendChild(popupCloseBtn);
-
-  box.appendChild(popupTitleEl);
-  box.appendChild(popupBodyEl);
-  box.appendChild(btnRow);
-
-  popupEl.appendChild(box);
-  popupEl.addEventListener("click", (e) => {
-    if (e.target === popupEl) hidePopup();
-  });
-
-  document.body.appendChild(popupEl);
+/* =========================================
+ * Helper UI
+ * =======================================*/
+function setMsg(text, ok = false) {
+  if (!scanMsg) return;
+  scanMsg.textContent = text || "";
+  scanMsg.classList.toggle("scanMsg-success", !!ok);
 }
 
-function showPopup({ token, statusLabel }) {
-  ensurePopup();
-  if (!popupEl || !popupBodyEl) return;
-
-  popupBodyEl.innerHTML = `
-    <div>รหัส TOKEN: <strong>${token}</strong></div>
-    <div>สถานะ: <strong>${statusLabel}</strong></div>
-    <div style="margin-top:4px;font-size:0.75rem;color:#9ca3af">
-      ระบบบันทึกเวลาเข้าเรียนเรียบร้อยแล้ว
-    </div>
-  `;
-
-  popupEl.style.opacity = "1";
-  popupEl.style.pointerEvents = "auto";
-}
-
-function hidePopup() {
-  if (!popupEl) return;
-  popupEl.style.opacity = "0";
-  popupEl.style.pointerEvents = "none";
-}
-
-/* --------------------------
-   STATUS BAR
--------------------------- */
 function setStatusNeutral() {
   if (!sessionStatusDot || !sessionStatusTxt) return;
   sessionStatusDot.classList.remove("open", "error");
@@ -177,28 +79,134 @@ function setStatusError(text) {
   sessionStatusTxt.textContent = text || "ไม่สามารถเช็คชื่อได้";
 }
 
-/* --------------------------
-   SMALL HELPERS
--------------------------- */
-function setMsg(text, ok = false) {
-  if (!scanMsg) return;
-  scanMsg.textContent = text || "";
-  scanMsg.classList.toggle("scanMsg-success", !!ok);
-}
-
 function statusLabelFromCode(code) {
-  if (code === "OK") return "มาเรียน";
-  if (code === "LATE") return "มาสาย";
-  if (code === "ABSENT") return "ขาดเรียน";
+  const upper = (code || "").toUpperCase();
+  if (upper === "OK") return "มาเรียน";
+  if (upper === "LATE") return "มาสาย";
+  if (upper === "ABSENT") return "ขาดเรียน";
   return code || "-";
 }
 
-/* --------------------------
-   LOAD HISTORY (ใช้ getStudentHistory เดิม)
-   EXPECT: history = [ [teacherEmail, studentId, studentName, datetime, token, status], ... ]
--------------------------- */
+/* =========================================
+ * Toast เล็ก ๆ (เผื่ออยากใช้)
+ * =======================================*/
+function showToast(message, type = "success") {
+  if (!toastContainer) return;
+  const div = document.createElement("div");
+  div.className = "toast " + (type === "error" ? "toast-error" : "toast-success");
+  div.textContent = message;
+  toastContainer.appendChild(div);
+  setTimeout(() => {
+    div.style.opacity = "0";
+    setTimeout(() => div.remove(), 200);
+  }, 2200);
+}
+
+/* =========================================
+ * Popup เช็คชื่อสำเร็จ
+ * =======================================*/
+let popupEl, popupBodyEl;
+
+function ensurePopup() {
+  if (popupEl) return;
+
+  popupEl = document.createElement("div");
+  popupEl.style.position = "fixed";
+  popupEl.style.inset = "0";
+  popupEl.style.display = "flex";
+  popupEl.style.alignItems = "center";
+  popupEl.style.justifyContent = "center";
+  popupEl.style.background = "rgba(15,23,42,0.78)";
+  popupEl.style.backdropFilter = "blur(4px)";
+  popupEl.style.zIndex = "9999";
+  popupEl.style.opacity = "0";
+  popupEl.style.pointerEvents = "none";
+  popupEl.style.transition = "opacity 0.15s ease-out";
+
+  const box = document.createElement("div");
+  box.style.minWidth = "260px";
+  box.style.maxWidth = "320px";
+  box.style.borderRadius = "18px";
+  box.style.padding = "16px 18px 14px";
+  box.style.background = "linear-gradient(145deg,#020617,#020617)";
+  box.style.border = "1px solid rgba(56,189,248,0.6)";
+  box.style.boxShadow = "0 22px 60px rgba(0,0,0,0.9)";
+  box.style.color = "#e5e7eb";
+  box.style.fontFamily = '"Prompt",system-ui,sans-serif';
+  box.style.fontSize = "0.9rem";
+  box.style.display = "flex";
+  box.style.flexDirection = "column";
+  box.style.gap = "6px";
+
+  const titleRow = document.createElement("div");
+  titleRow.style.display = "flex";
+  titleRow.style.alignItems = "center";
+  titleRow.style.gap = "8px";
+  titleRow.innerHTML = `<span style="font-size:1.1rem;">✅</span><span>เช็คชื่อสำเร็จ</span>`;
+
+  popupBodyEl = document.createElement("div");
+  popupBodyEl.style.fontSize = "0.8rem";
+  popupBodyEl.style.color = "#cbd5f5";
+
+  const btnRow = document.createElement("div");
+  btnRow.style.display = "flex";
+  btnRow.style.justifyContent = "flex-end";
+  btnRow.style.marginTop = "6px";
+
+  const btn = document.createElement("button");
+  btn.textContent = "ปิด";
+  btn.style.border = "none";
+  btn.style.borderRadius = "999px";
+  btn.style.padding = "6px 14px";
+  btn.style.fontSize = "0.78rem";
+  btn.style.cursor = "pointer";
+  btn.style.background = "linear-gradient(135deg,#38bdf8,#2563eb)";
+  btn.style.color = "#f9fafb";
+  btn.onclick = hidePopup;
+
+  btnRow.appendChild(btn);
+  box.appendChild(titleRow);
+  box.appendChild(popupBodyEl);
+  box.appendChild(btnRow);
+
+  popupEl.appendChild(box);
+  popupEl.addEventListener("click", (e) => {
+    if (e.target === popupEl) hidePopup();
+  });
+
+  document.body.appendChild(popupEl);
+}
+
+function showPopup(info) {
+  ensurePopup();
+  if (!popupEl || !popupBodyEl) return;
+  const { token, statusLabel } = info;
+  popupBodyEl.innerHTML = `
+    <div>รหัส TOKEN: <strong>${token}</strong></div>
+    <div>สถานะ: <strong>${statusLabel}</strong></div>
+    <div style="margin-top:4px;font-size:0.75rem;color:#9ca3af">
+      ระบบบันทึกเวลาเข้าเรียนเรียบร้อยแล้ว
+    </div>
+  `;
+  popupEl.style.opacity = "1";
+  popupEl.style.pointerEvents = "auto";
+}
+
+function hidePopup() {
+  if (!popupEl) return;
+  popupEl.style.opacity = "0";
+  popupEl.style.pointerEvents = "none";
+}
+
+/* =========================================
+ * โหลดประวัติการเช็คชื่อ (ถ้ามี student)
+ * =======================================*/
 async function loadHistory() {
-  if (!student || !historyList) return;
+  if (!student || !historyList) {
+    // ถ้าไม่มี student ให้ซ่อนการ์ดประวัติไปเลย (จะได้ไม่งง)
+    if (historyCard) historyCard.style.display = "none";
+    return;
+  }
 
   try {
     const res = await fetch(API_BASE, {
@@ -209,29 +217,30 @@ async function loadHistory() {
         studentId: student.id,
       }),
     });
-    const data = await res.json();
 
+    const data = await res.json();
     if (!data.success || !Array.isArray(data.history)) {
       historyList.innerHTML = "";
       if (historyCount) historyCount.textContent = "–";
       return;
     }
 
-    const rows = data.history.slice().reverse(); // เอาอันล่าสุดขึ้นก่อน
+    // ล่าสุดอยู่บน
+    const rows = data.history.slice().reverse();
     historyList.innerHTML = "";
 
-    rows.forEach((r) => {
-      // รองรับทั้งแบบ array ดิบ และ object (เผื่ออนาคตคุณไป join วิชาใน GAS)
+    rows.forEach((row) => {
+      // รองรับทั้ง array [teacherEmail, studentId, studentName, datetime, token, status]
+      // หรือ object { datetime, token, status }
       let dt, token, status;
-
-      if (Array.isArray(r)) {
-        dt     = r[3] || "";
-        token  = r[4] || "";
-        status = r[5] || "";
-      } else if (typeof r === "object" && r !== null) {
-        dt     = r.datetime || r.time || "";
-        token  = r.token || "";
-        status = r.status || "";
+      if (Array.isArray(row)) {
+        dt     = row[3] || "";
+        token  = row[4] || "";
+        status = row[5] || "";
+      } else {
+        dt     = row.datetime || row.time || "";
+        token  = row.token || "";
+        status = row.status || "";
       }
 
       const li = document.createElement("li");
@@ -239,24 +248,23 @@ async function loadHistory() {
       const main = document.createElement("div");
       main.className = "hist-main";
 
-      const line1 = document.createElement("div");
-      line1.className = "hist-token";
-      line1.textContent = token || "-";
+      const tokenLine = document.createElement("div");
+      tokenLine.className = "hist-token";
+      tokenLine.textContent = token || "-";
 
-      const line2 = document.createElement("div");
-      line2.className = "hist-time";
-      line2.textContent = dt || "";
+      const timeLine = document.createElement("div");
+      timeLine.className = "hist-time";
+      timeLine.textContent = dt || "";
 
-      main.appendChild(line1);
-      main.appendChild(line2);
+      main.appendChild(tokenLine);
+      main.appendChild(timeLine);
 
       const chip = document.createElement("div");
       chip.className = "hist-chip";
-
       const label = statusLabelFromCode(status);
-      chip.textContent = label;
 
-      const upper = status.toUpperCase();
+      chip.textContent = label;
+      const upper = (status || "").toUpperCase();
       if (upper === "OK") chip.classList.add("chip-ok");
       else if (upper === "LATE") chip.classList.add("chip-late");
       else if (upper === "ABSENT") chip.classList.add("chip-absent");
@@ -267,26 +275,32 @@ async function loadHistory() {
     });
 
     if (historyCount) {
-      historyCount.textContent =
-        rows.length ? `${rows.length} รายการ` : "ไม่มีประวัติ";
+      historyCount.textContent = rows.length
+        ? `${rows.length} รายการ`
+        : "ไม่มีประวัติ";
     }
   } catch (err) {
     console.error("loadHistory error:", err);
   }
 }
 
-/* --------------------------
-   HANDLE MARK ATTENDANCE
--------------------------- */
+/* =========================================
+ * markAttendance (เช็คชื่อ)
+ * =======================================*/
 async function handleSubmitToken() {
-  if (!student) return;
-
   const raw = (tokenInput?.value || "").trim();
   const token = raw.toUpperCase();
 
   if (!token) {
-    setMsg("กรุณากรอกรหัส TOKEN", false);
-    setStatusError("กรอกรหัส TOKEN ก่อนเช็คชื่อ");
+    setMsg("กรุณากรอกรหัส TOKEN ก่อนเช็คชื่อ", false);
+    setStatusError("กรอกรหัส TOKEN ก่อน");
+    return;
+  }
+
+  if (!student) {
+    setMsg("ไม่พบข้อมูลนักเรียน กรุณาเข้าสู่ระบบใหม่", false);
+    setStatusError("กรุณาเข้าสู่ระบบนักเรียนก่อนเช็คชื่อ");
+    showToast("กรุณาเข้าสู่ระบบก่อนเช็คชื่อ", "error");
     return;
   }
 
@@ -294,8 +308,8 @@ async function handleSubmitToken() {
   setStatusNeutral();
 
   if (submitTokenBtn) {
-    submitTokenBtn.classList.add("is-loading");
     submitTokenBtn.disabled = true;
+    submitTokenBtn.classList.add("is-loading");
   }
 
   try {
@@ -316,22 +330,24 @@ async function handleSubmitToken() {
       const msg = data.message || "เช็คชื่อไม่สำเร็จ";
       setMsg(msg, false);
       setStatusError(msg);
+      showToast(msg, "error");
       return;
     }
 
-    const statusCode = (data.status || "").toUpperCase();
-    const label = statusLabelFromCode(statusCode);
+    const statusCode  = (data.status || "").toUpperCase();
+    const statusLabel = statusLabelFromCode(statusCode);
 
-    setMsg(`เช็คชื่อสำเร็จ: ${label}`, true);
-    setStatusOpen(`เช็คชื่อสำเร็จ (${label})`);
+    setMsg(`เช็คชื่อสำเร็จ: ${statusLabel}`, true);
+    setStatusOpen(`เช็คชื่อสำเร็จ (${statusLabel})`);
+    showToast(`เช็คชื่อสำเร็จ (${statusLabel})`, "success");
 
     if (lastStatusBox && lastStatusText) {
       lastStatusBox.style.display = "block";
-      lastStatusText.textContent = `${label} · TOKEN ${token}`;
+      lastStatusText.textContent = `${statusLabel} · TOKEN ${token}`;
     }
 
-    // แสดง popup หลังเช็คชื่อเสร็จ
-    showPopup({ token, statusLabel: label });
+    // popup กลางจอ
+    showPopup({ token, statusLabel });
 
     // โหลดประวัติใหม่
     await loadHistory();
@@ -339,30 +355,27 @@ async function handleSubmitToken() {
     console.error("markAttendance error:", err);
     setMsg("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", false);
     setStatusError("เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ");
+    showToast("เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ", "error");
   } finally {
     if (submitTokenBtn) {
-      submitTokenBtn.classList.remove("is-loading");
       submitTokenBtn.disabled = false;
+      submitTokenBtn.classList.remove("is-loading");
     }
   }
 }
 
-/* --------------------------
-   INIT
--------------------------- */
+/* =========================================
+ * INIT
+ * =======================================*/
 function init() {
-  if (!student) {
-    // ถ้าไม่มีข้อมูล login ให้เด้งกลับหน้า login ของนักเรียน
-    window.location.href = "login.html";
-    return;
-  }
-
-  if (pillUserName) {
-    // แสดงชื่อ + รหัส
-    const raw = `${student.name || "นักเรียน"}${
+  // ชื่อบนหัว
+  if (student && pillUserName) {
+    const label = `${student.name || "นักเรียน"}${
       student.id ? ` (${student.id})` : ""
     }`;
-    pillUserName.textContent = raw;
+    pillUserName.textContent = label;
+  } else if (pillUserName) {
+    pillUserName.textContent = "นักเรียน";
   }
 
   setStatusNeutral();
@@ -385,10 +398,10 @@ function init() {
 
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
-      // ล้างทุก key ที่อาจใช้เก็บ student
-      ["nexattend_student","nexAttend_student","nexAttendStudent","cpvc_student","cpvc_student_info","studentInfo"].forEach(
+      ["nexattend_student","nexAttend_student","cpvc_student","cpvc_student_info","studentInfo"].forEach(
         (k) => localStorage.removeItem(k)
       );
+      // เสร็จแล้วค่อยเด้งกลับหน้า login
       window.location.href = "login.html";
     });
   }
@@ -396,5 +409,5 @@ function init() {
   loadHistory();
 }
 
-// รอ DOM พร้อม
+/* start */
 document.addEventListener("DOMContentLoaded", init);
