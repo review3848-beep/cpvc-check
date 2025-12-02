@@ -1,79 +1,86 @@
 // js/student-login.js
 import { API_BASE } from "./api.js";
 
-const idInput = document.getElementById("studentId");
+const idInput   = document.getElementById("studentId");
 const passInput = document.getElementById("password");
-const loginBtn = document.getElementById("loginBtn");
-const msg = document.getElementById("msg");
+const loginBtn  = document.getElementById("loginBtn");
+const msgEl     = document.getElementById("msg");
 
-function show(text, type = "error") {
-  if (!msg) return;
-  msg.textContent = text;
-  msg.style.color = type === "success" ? "#4ade80" : "#fb7185";
+function showMessage(text, type = "error") {
+  if (!msgEl) return;
+  msgEl.textContent = text || "";
+  msgEl.style.color = type === "success" ? "#4ade80" : "#fb7185";
 }
 
 async function handleLogin() {
-  const studentId = idInput.value.trim();
-  const password = passInput.value.trim();
+  const id   = (idInput?.value || "").trim();
+  const pass = (passInput?.value || "").trim();
 
-  if (!studentId || !password) {
-    return show("กรุณากรอกรหัสนักเรียนและรหัสผ่านให้ครบ");
+  if (!id || !pass) {
+    showMessage("กรุณากรอกรหัสนักเรียนและรหัสผ่านให้ครบ");
+    return;
   }
 
-  loginBtn.disabled = true;
-  loginBtn.textContent = "กำลังเข้าสู่ระบบ...";
+  showMessage("");
+
+  if (loginBtn) {
+    loginBtn.disabled = true;
+  }
 
   try {
     const res = await fetch(API_BASE, {
-    method: "POST",
-    // บรรทัดนี้สำคัญมาก! ต้องเปลี่ยนเป็น text/plain
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({
-        action: "loginStudent", // หรือ action ที่ไฟล์นั้นใช้
-        id: studentId,
-        password: password
-    })
-});
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "loginStudent",
+        id: id,
+        password: pass
+      })
+    });
 
     const data = await res.json();
-    console.log("loginStudent >", data);
 
-    if (data.success) {
-      show("เข้าสู่ระบบสำเร็จ", "success");
-      // เก็บ session ไว้ให้หน้าอื่นใช้
-      sessionStorage.setItem("studentId", data.id);
-      sessionStorage.setItem("studentName", data.name);
-
-      setTimeout(() => {
-        window.location.href = "scan.html"; // หน้าเช็คชื่อ
-      }, 800);
-    } else {
-      show(data.message || "เข้าสู่ระบบไม่สำเร็จ");
+    if (!data.success) {
+      showMessage(data.message || "เข้าสู่ระบบไม่สำเร็จ");
+      return;
     }
+
+    // เก็บข้อมูลนักเรียนลง localStorage ใช้ key กลาง cpvc_student
+    const studentInfo = {
+      id:   data.id,
+      name: data.name
+    };
+    localStorage.setItem("cpvc_student", JSON.stringify(studentInfo));
+
+    showMessage("เข้าสู่ระบบสำเร็จ กำลังนำไปหน้าเช็คชื่อ...", "success");
+    window.location.href = "scan.html";
   } catch (err) {
-    console.error(err);
-    show("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์");
+    console.error("loginStudent error:", err);
+    showMessage("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้");
+  } finally {
+    if (loginBtn) {
+      loginBtn.disabled = false;
+    }
   }
-
-  loginBtn.disabled = false;
-  loginBtn.textContent = "เข้าสู่ระบบ";
 }
 
-// รองรับกดปุ่ม
-if (loginBtn) {
-  loginBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    handleLogin();
-  });
-}
-
-// รองรับกด Enter
-[idInput, passInput].forEach((el) => {
-  if (!el) return;
-  el.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
+function init() {
+  if (loginBtn) {
+    loginBtn.addEventListener("click", (e) => {
       e.preventDefault();
       handleLogin();
-    }
+    });
+  }
+
+  [idInput, passInput].forEach((el) => {
+    if (!el) return;
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleLogin();
+      }
+    });
   });
-});
+}
+
+document.addEventListener("DOMContentLoaded", init);

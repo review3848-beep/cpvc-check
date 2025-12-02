@@ -1,9 +1,9 @@
 // js/student-scan.js
 import { API_BASE } from "./api.js";
 
-/* =========================================
- * DOM ELEMENTS
- * =======================================*/
+/* ---------------------------------
+ * DOM
+ * --------------------------------*/
 const tokenInput       = document.getElementById("tokenInput");
 const submitTokenBtn   = document.getElementById("submitTokenBtn");
 const scanMsg          = document.getElementById("scanMsg");
@@ -21,38 +21,27 @@ const historyCount     = document.getElementById("historyCount");
 const logoutBtn        = document.getElementById("logoutBtn");
 const toastContainer   = document.getElementById("toastContainer");
 
-/* =========================================
- * อ่าน student จาก localStorage (พยายามหลาย key)
- * =======================================*/
-function getStoredStudent() {
-  const keys = [
-    "nexattend_student",
-    "nexAttend_student",
-    "cpvc_student",
-    "cpvc_student_info",
-    "studentInfo"
-  ];
-
-  for (const k of keys) {
-    const raw = localStorage.getItem(k);
-    if (!raw) continue;
-    try {
-      const obj = JSON.parse(raw);
-      if (obj && obj.id) {
-        return obj;
-      }
-    } catch (e) {
-      // ข้ามตัวที่ parse ไม่ได้
-    }
+/* ---------------------------------
+ * STATE: student from localStorage
+ * ใช้ key กลาง "cpvc_student"
+ * --------------------------------*/
+function getStudentFromStorage() {
+  try {
+    const raw = localStorage.getItem("cpvc_student");
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || !obj.id) return null;
+    return obj;
+  } catch (e) {
+    console.error("parse student error", e);
+    return null;
   }
-  return null;
 }
+const student = getStudentFromStorage();
 
-const student = getStoredStudent();
-
-/* =========================================
- * Helper UI
- * =======================================*/
+/* ---------------------------------
+ * UI Helpers
+ * --------------------------------*/
 function setMsg(text, ok = false) {
   if (!scanMsg) return;
   scanMsg.textContent = text || "";
@@ -87,9 +76,7 @@ function statusLabelFromCode(code) {
   return code || "-";
 }
 
-/* =========================================
- * Toast เล็ก ๆ (เผื่ออยากใช้)
- * =======================================*/
+/* Toast เล็ก ๆ */
 function showToast(message, type = "success") {
   if (!toastContainer) return;
   const div = document.createElement("div");
@@ -102,11 +89,8 @@ function showToast(message, type = "success") {
   }, 2200);
 }
 
-/* =========================================
- * Popup เช็คชื่อสำเร็จ
- * =======================================*/
+/* Popup กลางจอ */
 let popupEl, popupBodyEl;
-
 function ensurePopup() {
   if (popupEl) return;
 
@@ -198,12 +182,11 @@ function hidePopup() {
   popupEl.style.pointerEvents = "none";
 }
 
-/* =========================================
+/* ---------------------------------
  * โหลดประวัติการเช็คชื่อ (ถ้ามี student)
- * =======================================*/
+ * --------------------------------*/
 async function loadHistory() {
   if (!student || !historyList) {
-    // ถ้าไม่มี student ให้ซ่อนการ์ดประวัติไปเลย (จะได้ไม่งง)
     if (historyCard) historyCard.style.display = "none";
     return;
   }
@@ -214,24 +197,21 @@ async function loadHistory() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "getStudentHistory",
-        studentId: student.id,
-      }),
+        studentId: student.id
+      })
     });
-
     const data = await res.json();
+
     if (!data.success || !Array.isArray(data.history)) {
       historyList.innerHTML = "";
       if (historyCount) historyCount.textContent = "–";
       return;
     }
 
-    // ล่าสุดอยู่บน
-    const rows = data.history.slice().reverse();
+    const rows = data.history.slice().reverse(); // ล่าสุดอยู่บน
     historyList.innerHTML = "";
 
     rows.forEach((row) => {
-      // รองรับทั้ง array [teacherEmail, studentId, studentName, datetime, token, status]
-      // หรือ object { datetime, token, status }
       let dt, token, status;
       if (Array.isArray(row)) {
         dt     = row[3] || "";
@@ -262,8 +242,8 @@ async function loadHistory() {
       const chip = document.createElement("div");
       chip.className = "hist-chip";
       const label = statusLabelFromCode(status);
-
       chip.textContent = label;
+
       const upper = (status || "").toUpperCase();
       if (upper === "OK") chip.classList.add("chip-ok");
       else if (upper === "LATE") chip.classList.add("chip-late");
@@ -284,11 +264,11 @@ async function loadHistory() {
   }
 }
 
-/* =========================================
- * markAttendance (เช็คชื่อ)
- * =======================================*/
+/* ---------------------------------
+ * เช็คชื่อ markAttendance
+ * --------------------------------*/
 async function handleSubmitToken() {
-  const raw = (tokenInput?.value || "").trim();
+  const raw   = (tokenInput?.value || "").trim();
   const token = raw.toUpperCase();
 
   if (!token) {
@@ -320,8 +300,8 @@ async function handleSubmitToken() {
         action: "markAttendance",
         studentId: student.id,
         studentName: student.name,
-        token: token,
-      }),
+        token: token
+      })
     });
 
     const data = await res.json();
@@ -346,10 +326,7 @@ async function handleSubmitToken() {
       lastStatusText.textContent = `${statusLabel} · TOKEN ${token}`;
     }
 
-    // popup กลางจอ
     showPopup({ token, statusLabel });
-
-    // โหลดประวัติใหม่
     await loadHistory();
   } catch (err) {
     console.error("markAttendance error:", err);
@@ -364,15 +341,13 @@ async function handleSubmitToken() {
   }
 }
 
-/* =========================================
+/* ---------------------------------
  * INIT
- * =======================================*/
+ * --------------------------------*/
 function init() {
-  // ชื่อบนหัว
+  // ตั้งชื่อบน pill จาก student
   if (student && pillUserName) {
-    const label = `${student.name || "นักเรียน"}${
-      student.id ? ` (${student.id})` : ""
-    }`;
+    const label = `${student.name || "นักเรียน"}${student.id ? ` (${student.id})` : ""}`;
     pillUserName.textContent = label;
   } else if (pillUserName) {
     pillUserName.textContent = "นักเรียน";
@@ -398,10 +373,7 @@ function init() {
 
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
-      ["nexattend_student","nexAttend_student","cpvc_student","cpvc_student_info","studentInfo"].forEach(
-        (k) => localStorage.removeItem(k)
-      );
-      // เสร็จแล้วค่อยเด้งกลับหน้า login
+      localStorage.removeItem("cpvc_student");
       window.location.href = "login.html";
     });
   }
@@ -409,5 +381,4 @@ function init() {
   loadHistory();
 }
 
-/* start */
 document.addEventListener("DOMContentLoaded", init);
