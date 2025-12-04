@@ -3,52 +3,54 @@ import { apiPost } from "./api.js";
 const stuNameEl = document.getElementById("stuName");
 const stuIdEl   = document.getElementById("stuId");
 
-const totalRecordsEl = document.getElementById("totalRecords");
-const okCountEl      = document.getElementById("okCount");
-const lateCountEl    = document.getElementById("lateCount");
+const totalRecordsEl      = document.getElementById("totalRecords");
+const okCountEl           = document.getElementById("okCount");
+const lateCountEl         = document.getElementById("lateCount");
 const attendancePercentEl = document.getElementById("attendancePercent");
 
 const okPercentTextEl   = document.getElementById("okPercentText");
 const latePercentTextEl = document.getElementById("latePercentText");
 const msgEl             = document.getElementById("msg");
 
-const studentName = sessionStorage.getItem("studentName");
 const studentId   = sessionStorage.getItem("studentId");
+const studentName = sessionStorage.getItem("studentName");
 
-// ถ้าไม่มี session ให้เด้งกลับไปหน้า login
+// ถ้าไม่มี session → เด้งไปหน้า login
 if (!studentId) {
   window.location.href = "login.html";
 }
 
-stuNameEl.textContent = studentName || "-";
-stuIdEl.textContent   = studentId || "-";
+// ใส่ชื่อบนหัว
+if (stuNameEl) stuNameEl.textContent = studentName || "นักเรียน";
+if (stuIdEl)   stuIdEl.textContent   = studentId || "-";
 
-// helper คำนวณ %
+// helper: แปลงเป็น %
 function toPercent(part, total) {
   if (!total || total <= 0) return 0;
   return Math.round((part * 1000) / total) / 10; // ปัดทศนิยม 1 ตำแหน่ง
 }
 
 async function loadDashboard() {
-  msgEl.textContent = "กำลังโหลดข้อมูล...";
+  msgEl.textContent = "กำลังโหลดข้อมูลการเข้าเรียน...";
 
   try {
     const res = await apiPost("getStudentHistory", { studentId });
 
     if (!res.success) {
-      msgEl.textContent = res.message || "ไม่สามารถโหลดข้อมูลได้";
+      msgEl.textContent = res.message || "โหลดข้อมูลไม่สำเร็จ";
+      renderChart(0, 0, 0);
       return;
     }
 
     const history = res.history || [];
-    const total = history.length;
+    const total   = history.length;
 
     if (total === 0) {
       totalRecordsEl.textContent = "0";
-      okCountEl.textContent = "0";
-      lateCountEl.textContent = "0";
+      okCountEl.textContent      = "0";
+      lateCountEl.textContent    = "0";
       attendancePercentEl.textContent = "0%";
-      okPercentTextEl.textContent = "0% ของการเช็คชื่อ";
+      okPercentTextEl.textContent   = "0% ของการเช็คชื่อ";
       latePercentTextEl.textContent = "0% ของการเช็คชื่อ";
       msgEl.textContent = "ยังไม่มีประวัติการเช็คชื่อในระบบ";
       renderChart(0, 0, 0);
@@ -77,9 +79,9 @@ async function loadDashboard() {
     const latePercent   = toPercent(late, total);
     const attendPercent = toPercent(attended, total);
 
-    okPercentTextEl.textContent   = `${okPercent}% ของการเช็คชื่อ`;
-    latePercentTextEl.textContent = `${latePercent}% ของการเช็คชื่อ`;
-    attendancePercentEl.textContent = `${attendPercent}%`;
+    okPercentTextEl.textContent      = `${okPercent}% ของการเช็คชื่อ`;
+    latePercentTextEl.textContent    = `${latePercent}% ของการเช็คชื่อ`;
+    attendancePercentEl.textContent  = `${attendPercent}%`;
 
     msgEl.textContent = "";
 
@@ -92,11 +94,12 @@ async function loadDashboard() {
   }
 }
 
-// ใช้ Chart.js วาดกราฟแท่ง
+// ----- วาดกราฟด้วย Chart.js -----
 let chartInstance = null;
+
 function renderChart(ok, late, absent) {
-  const ctx = document.getElementById("statusChart");
-  if (!ctx || typeof Chart === "undefined") {
+  const canvas = document.getElementById("statusChart");
+  if (!canvas || typeof Chart === "undefined") {
     console.warn("Chart.js ยังไม่พร้อมหรือ canvas ไม่มี");
     return;
   }
@@ -107,17 +110,17 @@ function renderChart(ok, late, absent) {
       label: "จำนวนครั้ง",
       data: [ok, late, absent],
       backgroundColor: [
-        "rgba(34,197,94,0.85)",   // OK
-        "rgba(234,179,8,0.85)",   // LATE
-        "rgba(248,113,113,0.85)"  // ABSENT
+        "rgba(34,197,94,0.85)",
+        "rgba(234,179,8,0.85)",
+        "rgba(239,68,68,0.85)"
       ],
       borderColor: [
         "rgba(22,163,74,1)",
         "rgba(202,138,4,1)",
-        "rgba(220,38,38,1)"
+        "rgba(185,28,28,1)"
       ],
       borderWidth: 1.5,
-      borderRadius: 9,
+      borderRadius: 10,
       maxBarThickness: 60
     }]
   };
@@ -133,22 +136,16 @@ function renderChart(ok, late, absent) {
           color: "#9ca3af"
         },
         grid: {
-          color: "rgba(55,65,81,0.7)"
+          color: "rgba(55,65,81,0.6)"
         }
       },
       x: {
-        ticks: {
-          color: "#e5e7eb"
-        },
-        grid: {
-          display: false
-        }
+        ticks: { color: "#e5e7eb" },
+        grid: { display: false }
       }
     },
     plugins: {
-      legend: {
-        display: false
-      },
+      legend: { display: false },
       tooltip: {
         callbacks: {
           label: ctx => ` ${ctx.parsed.y} ครั้ง`
@@ -160,12 +157,12 @@ function renderChart(ok, late, absent) {
   if (chartInstance) {
     chartInstance.destroy();
   }
-  chartInstance = new Chart(ctx, {
+  chartInstance = new Chart(canvas, {
     type: "bar",
     data,
     options
   });
 }
 
-// เริ่มโหลดเมื่อหน้า ready
+// init
 document.addEventListener("DOMContentLoaded", loadDashboard);
