@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard นักเรียน | CPVC-Check</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="../css/styles.css">
+
+  <!-- Chart.js สำหรับกราฟ -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <!-- สคริปต์หลักของหน้า Dashboard -->
+  <script type="module" src="../js/student-dashboard.js" defer></script>
+
+  <style>
+    body {
+      margin:0;
+      min-height:100vh;
+      background:#020617;
+      color:#e5e7eb;
+      font-family:"Inter",system-ui,sans-serif;
+    }
+
+    .nav {
+      padding:1rem 1.6rem;
+      background:rgba(15,23,42,.96);
+      border-bottom:1px solid rgba(148,163,184,.3);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      position:sticky;
+      top:0;
+      z-index:20;
+      backdrop-filter:blur(14px);
+    }
+
+    .nav-left-title {
+      font-size:1.25rem;
+      font-weight:600;
+      color:#f9fafb;
+    }
+    .nav-left-sub {
+      font-size:.85rem;
+      color:#94a3b8;
+    }
+
+    .nav-right {
+      text-align:right;
+      font-size:.85rem;
+      color:#cbd5f5;
+    }
+
+    .nav-right a {
+      display:inline-block;
+      margin-top:.2rem;
+      font-size:.8rem;
+      color:#93c5fd;
+      text-decoration:none;
+    }
+
+    .container {
+      max-width:1100px;
+      margin:1.8rem auto 2.4rem;
+      padding:0 1.4rem;
+    }
+
+    .grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+      gap:1.1rem;
+      margin-bottom:1.8rem;
+    }
+
+    .card {
+      padding:1.4rem 1.3rem;
+      border-radius:1.2rem;
+      background:radial-gradient(circle at top left,rgba(56,189,248,.18),transparent 55%),
+                  rgba(15,23,42,.96);
+      border:1px solid rgba(148,163,184,.35);
+      box-shadow:0 16px 42px rgba(15,23,42,.9);
+    }
+
+    .card-title {
+      font-size:.85rem;
+      color:#9ca3af;
+      margin-bottom:.15rem;
+    }
+    .card-value {
+      font-size:1.7rem;
+      font-weight:700;
+      color:#f9fafb;
+    }
+    .card-sub {
+      font-size:.8rem;
+      color:#a5b4fc;
+      margin-top:.15rem;
+    }
+
+    .card-highlight {
+      background:radial-gradient(circle at top,#22c55e33,transparent 55%),
+                 rgba(15,23,42,.96);
+      border-color:rgba(34,197,94,.65);
+    }
+
+    .section-card {
+      padding:1.5rem 1.4rem 1.6rem;
+      border-radius:1.2rem;
+      background:rgba(15,23,42,.96);
+      border:1px solid rgba(148,163,184,.35);
+      box-shadow:0 16px 42px rgba(15,23,42,.9);
+      margin-bottom:1.4rem;
+    }
+
+    .section-title {
+      margin:0 0 .7rem 0;
+      font-size:1.05rem;
+      font-weight:500;
+      color:#e5e7eb;
+    }
+
+    .legend {
+      display:flex;
+      gap:.7rem;
+      flex-wrap:wrap;
+      margin-top:.6rem;
+      font-size:.8rem;
+    }
+    .legend-item {
+      display:flex;
+      align-items:center;
+      gap:.35rem;
+    }
+    .dot-ok,
+    .dot-late,
+    .dot-absent {
+      width:10px;
+      height:10px;
+      border-radius:999px;
+      display:inline-block;
+    }
+    .dot-ok { background:#22c55e; }
+    .dot-late { background:#eab308; }
+    .dot-absent { background:#ef4444; }
+
+    .summary-list {
+      list-style:none;
+      padding:0;
+      margin:.5rem 0 0;
+      font-size:.85rem;
+      color:#9ca3af;
+    }
+    .summary-list li {
+      margin-bottom:.15rem;
+    }
+
+    #msg {
+      margin-top:.5rem;
+      font-size:.85rem;
+      text-align:center;
+      color:#9ca3af;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="nav">
+    <div>
+      <div class="nav-left-title">Dashboard นักเรียน</div>
+      <div class="nav-left-sub">สรุปการเข้าเรียนของคุณในระบบ CPVC-Check</div>
+    </div>
+    <div class="nav-right">
+      👤 <span id="stuName">-</span><br>
+      🆔 <span id="stuId">-</span><br>
+      <a href="scan.html">‹ กลับไปหน้าเช็คชื่อ</a>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- แถวสรุปเลข -->
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">จำนวนรายการเช็คชื่อทั้งหมด</div>
+        <div class="card-value" id="totalRecords">0</div>
+        <div class="card-sub">รวมทุกคาบที่มีการบันทึกในระบบ</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">มาทันเวลา (OK)</div>
+        <div class="card-value" id="okCount">0</div>
+        <div class="card-sub" id="okPercentText">0% ของการเช็คชื่อ</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">มาสาย (LATE)</div>
+        <div class="card-value" id="lateCount">0</div>
+        <div class="card-sub" id="latePercentText">0% ของการเช็คชื่อ</div>
+      </div>
+
+      <div class="card card-highlight">
+        <div class="card-title">อัตราการเข้าเรียน (มา + สาย)</div>
+        <div class="card-value" id="attendancePercent">0%</div>
+        <div class="card-sub">คิดจากจำนวนครั้งที่มาเรียนเทียบกับทั้งหมด</div>
+      </div>
+    </div>
+
+    <!-- กราฟ -->
+    <div class="section-card">
+      <h2 class="section-title">กราฟสรุป มา / สาย / ขาด</h2>
+      <canvas id="statusChart" height="140"></canvas>
+
+      <div class="legend">
+        <div class="legend-item"><span class="dot-ok"></span> มาเรียน (OK)</div>
+        <div class="legend-item"><span class="dot-late"></span> มาสาย (LATE)</div>
+        <div class="legend-item"><span class="dot-absent"></span> ขาดเรียน (ABSENT)</div>
+      </div>
+
+      <ul class="summary-list">
+        <li>• ระบบใช้ข้อมูลจาก ATTENDANCE ทั้งหมดของนักเรียนคนนี้</li>
+        <li>• สถานะ OK = มาในเวลาที่กำหนด</li>
+        <li>• สถานะ LATE = เข้าหลังเวลาเริ่มคาบเกิน 10 นาที</li>
+        <li>• สถานะ ABSENT = ไม่พบการเช็คชื่อในคาบนั้นเมื่อครูปิดคาบ</li>
+      </ul>
+
+      <div id="msg"></div>
+    </div>
+
+  </div>
+
+</body>
+</html>
