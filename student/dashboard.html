@@ -5,26 +5,31 @@
   <title>Dashboard นักเรียน | CPVC-Check</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <!-- ฟอนต์ -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
+  <!-- ถ้ามีไฟล์รวมดีไซน์ของโปรเจ็กต์อยู่แล้ว -->
+  <link rel="stylesheet" href="../css/styles.css" />
+
   <!-- Chart.js สำหรับกราฟ -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+
+  <!-- logic ดึงประวัติ + คำนวณ % (ไฟล์ที่เราเขียนไว้ก่อนหน้า) -->
   <script type="module" src="../js/student-dashboard.js" defer></script>
 
   <style>
     :root {
       --bg-main: #020617;
-      --card-bg: rgba(15, 23, 42, 0.97);
-      --card-border: rgba(148, 163, 184, 0.35);
+      --panel: #020617;
+      --card: #020617;
+      --card-border: rgba(148, 163, 184, 0.25);
       --text-main: #e5e7eb;
       --text-muted: #9ca3af;
       --blue-soft: #38bdf8;
       --blue-strong: #2563eb;
       --green: #22c55e;
-      --yellow: #eab308;
-      --red: #ef4444;
     }
 
     * { box-sizing: border-box; }
@@ -39,263 +44,302 @@
       color: var(--text-main);
     }
 
-    .nav {
-      padding: 0.9rem 1.4rem;
-      background: rgba(15,23,42,0.96);
-      border-bottom: 1px solid rgba(148,163,184,0.3);
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* TOP NAV */
+
+    .top-nav {
+      padding: 1.1rem 1.8rem;
+      border-bottom: 1px solid rgba(15,23,42,.9);
+      background: radial-gradient(circle at 0 0, rgba(56,189,248,.25), transparent 55%),
+                  radial-gradient(circle at 100% 0, rgba(37,99,235,.35), transparent 55%),
+                  #020617;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      backdrop-filter: blur(14px);
     }
 
-    .nav-left-title {
-      font-size: 1.2rem;
+    .top-left {
+      display: flex;
+      flex-direction: column;
+      gap: .15rem;
+    }
+
+    .top-title {
+      font-size: 1.3rem;
       font-weight: 600;
-      letter-spacing: 0.04em;
     }
 
-    .nav-left-sub {
-      font-size: 0.78rem;
+    .top-sub {
+      font-size: .8rem;
       color: var(--text-muted);
     }
 
-    .nav-right {
+    .top-right {
       text-align: right;
-      font-size: 0.78rem;
+      font-size: .8rem;
       color: var(--text-muted);
     }
 
-    .nav-right span.name {
+    .top-right strong {
       display: block;
-      font-size: 0.9rem;
       color: #e5e7eb;
-      font-weight: 500;
+      font-size: .9rem;
     }
 
-    .nav-right span.id {
-      display: block;
-      font-size: 0.78rem;
+    /* NAV ปุ่มลิงก์ */
+
+    .dash-nav {
+      display: flex;
+      gap: .6rem;
+      margin-top: .35rem;
+      flex-wrap: wrap;
     }
 
-    .nav-right a {
-      margin-top: 0.2rem;
-      display: inline-block;
-      font-size: 0.76rem;
-      color: #93c5fd;
-      text-decoration: none;
+    .dash-nav button {
+      background: linear-gradient(135deg,#2563eb,#38bdf8);
+      border: none;
+      padding: .35rem .8rem;
+      border-radius: 999px;
+      color: #f9fafb;
+      font-size: .75rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      box-shadow: 0 10px 26px rgba(37,99,235,.7);
+      transition: 0.15s;
     }
 
-    .container {
+    .dash-nav button:nth-child(2) {
+      background: linear-gradient(135deg,#0ea5e9,#22c55e);
+      box-shadow: 0 10px 26px rgba(34,197,94,.6);
+    }
+
+    .dash-nav button:nth-child(3) {
+      background: linear-gradient(135deg,#64748b,#020617);
+      box-shadow: 0 10px 26px rgba(15,23,42,.9);
+    }
+
+    .dash-nav button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    /* MAIN */
+
+    .main {
+      flex: 1;
       max-width: 1100px;
-      margin: 1.4rem auto 2.2rem;
+      margin: 1.6rem auto 2.2rem;
       padding: 0 1.4rem;
     }
 
-    .grid {
+    .stat-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
       gap: 1rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.6rem;
     }
 
-    .card {
-      border-radius: 18px;
-      background: var(--card-bg);
+    .stat-card {
+      background: radial-gradient(circle at 0 0, rgba(56,189,248,.22), transparent 60%),
+                  #020617;
+      border-radius: 1.1rem;
+      padding: 1.1rem 1.2rem;
       border: 1px solid var(--card-border);
-      padding: 1.1rem 1.1rem 1.2rem;
-      box-shadow: 0 16px 42px rgba(0,0,0,0.9);
+      box-shadow: 0 16px 46px rgba(0,0,0,.9);
     }
 
-    .card-title {
-      font-size: 0.8rem;
+    .stat-card:nth-child(4) {
+      background: radial-gradient(circle at 100% 0, rgba(34,197,94,.18), transparent 65%),
+                  #020617;
+      border-color: rgba(34,197,94,.6);
+    }
+
+    .stat-label {
+      font-size: .82rem;
       color: var(--text-muted);
-      margin-bottom: 0.15rem;
+      margin-bottom: .25rem;
     }
 
-    .card-value {
-      font-size: 1.6rem;
+    .stat-value {
+      font-size: 1.8rem;
       font-weight: 700;
-      color: #f9fafb;
     }
 
-    .card-sub {
-      margin-top: 0.1rem;
-      font-size: 0.76rem;
+    .stat-note {
+      font-size: .78rem;
       color: #a5b4fc;
+      margin-top: .2rem;
     }
 
-    .card-highlight {
-      background:
-        radial-gradient(circle at 0 0, rgba(34,197,94,0.2), transparent 65%),
-        var(--card-bg);
-      border-color: rgba(34,197,94,0.8);
+    /* CHART */
+
+    .chart-card {
+      margin-top: .8rem;
+      background: #020617;
+      border-radius: 1.2rem;
+      border: 1px solid rgba(30,64,175,.7);
+      box-shadow: 0 18px 50px rgba(15,23,42,.95);
+      padding: 1.1rem 1.2rem 1.4rem;
     }
 
-    .section-card {
-      border-radius: 18px;
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      padding: 1.2rem 1.2rem 1.3rem;
-      box-shadow: 0 16px 42px rgba(0,0,0,0.9);
-      margin-bottom: 1.1rem;
+    .chart-title {
+      font-size: .95rem;
+      margin-bottom: .15rem;
     }
 
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 0.4rem;
-    }
-
-    .section-title {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 500;
-    }
-
-    .section-sub {
-      margin: 0;
-      font-size: 0.75rem;
+    .chart-sub {
+      font-size: .78rem;
       color: var(--text-muted);
+      margin-bottom: .7rem;
     }
 
     .chart-wrap {
-      height: 220px;
-      margin-top: 0.4rem;
+      position: relative;
+      min-height: 260px;
     }
 
-    .legend {
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* FOOTER */
+
+    .footer {
+      max-width: 1100px;
+      margin: 0 auto 1.6rem;
+      padding: 0 1.4rem;
+      font-size: .72rem;
+      color: var(--text-muted);
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-      margin-top: 0.6rem;
-      font-size: 0.76rem;
-      color: var(--text-muted);
+      justify-content: space-between;
+      gap: .5rem;
     }
 
-    .legend-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-
-    .legend-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-    }
-
-    .dot-ok { background: var(--green); }
-    .dot-late { background: var(--yellow); }
-    .dot-absent { background: var(--red); }
-
-    .summary-list {
-      list-style: none;
-      padding: 0;
-      margin: 0.4rem 0 0;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .summary-list li {
-      margin-bottom: 0.15rem;
-    }
-
-    #msg {
-      margin-top: 0.4rem;
-      text-align: center;
-      font-size: 0.78rem;
-      color: var(--text-muted);
+    .footer span:last-child {
+      text-align: right;
     }
 
     @media (max-width: 640px) {
-      .nav {
+      .top-nav {
         flex-direction: column;
         align-items: flex-start;
+        gap: .6rem;
       }
-      .nav-right {
-        text-align: left;
-      }
+      .top-right { text-align: left; }
     }
   </style>
 </head>
 
 <body>
-  <header class="nav">
-    <div>
-      <div class="nav-left-title">Dashboard นักเรียน</div>
-      <div class="nav-left-sub">สรุปภาพรวมการเข้าเรียนของคุณในระบบ CPVC-Check</div>
-    </div>
-    <div class="nav-right">
-      <span class="name" id="stuName">นักเรียน</span>
-      <span class="id" id="stuId">–</span>
-      <a href="scan.html">‹ กลับไปหน้าเช็คชื่อ</a>
-    </div>
-  </header>
+  <div class="page">
+    <!-- TOP NAV -->
+    <header class="top-nav">
+      <div class="top-left">
+        <div class="top-title">Dashboard นักเรียน</div>
+        <div class="top-sub">สรุปภาพรวมการเข้าเรียนของคุณในระบบ CPVC-Check</div>
 
-  <main class="container">
-
-    <!-- แถวสรุปเลข -->
-    <section class="grid">
-      <article class="card">
-        <div class="card-title">จำนวนรายการเช็คชื่อทั้งหมด</div>
-        <div class="card-value" id="totalRecords">0</div>
-        <div class="card-sub">รวมทุกคาบที่มีการบันทึกในระบบ</div>
-      </article>
-
-      <article class="card">
-        <div class="card-title">มาเรียนตรงเวลา (OK)</div>
-        <div class="card-value" id="okCount">0</div>
-        <div class="card-sub" id="okPercentText">0% ของการเช็คชื่อ</div>
-      </article>
-
-      <article class="card">
-        <div class="card-title">มาสาย (LATE)</div>
-        <div class="card-value" id="lateCount">0</div>
-        <div class="card-sub" id="latePercentText">0% ของการเช็คชื่อ</div>
-      </article>
-
-      <article class="card card-highlight">
-        <div class="card-title">อัตราการเข้าเรียน (มา + สาย)</div>
-        <div class="card-value" id="attendancePercent">0%</div>
-        <div class="card-sub">คิดจากจำนวนครั้งที่มาเรียนเทียบกับทั้งหมด</div>
-      </article>
-    </section>
-
-    <!-- กราฟ -->
-    <section class="section-card">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">กราฟ มา / สาย / ขาด</h2>
-          <p class="section-sub">แสดงจำนวนครั้งในแต่ละสถานะ จากข้อมูล ATTENDANCE ของคุณ</p>
+        <!-- ปุ่มเชื่อมหน้าอื่น -->
+        <div class="dash-nav">
+          <button type="button" onclick="goScan()">📸 ไปหน้าเช็คชื่อ</button>
+          <button type="button" onclick="goHistory()">🕘 ดูประวัติการเช็คชื่อ</button>
+          <button type="button" onclick="logout()">🚪 ออกจากระบบ</button>
         </div>
       </div>
 
-      <div class="chart-wrap">
-        <canvas id="statusChart"></canvas>
+      <div class="top-right">
+        <strong id="studentNameDisplay">นักเรียน</strong>
+        ID : <span id="studentIdDisplay">-</span>
       </div>
+    </header>
 
-      <div class="legend">
-        <div class="legend-item"><span class="legend-dot dot-ok"></span> มาเรียน (OK)</div>
-        <div class="legend-item"><span class="legend-dot dot-late"></span> มาสาย (LATE)</div>
-        <div class="legend-item"><span class="legend-dot dot-absent"></span> ขาด (ABSENT)</div>
-      </div>
+    <!-- MAIN CONTENT -->
+    <main class="main">
+      <!-- SUMMARY CARDS -->
+      <section class="stat-grid">
+        <article class="stat-card">
+          <div class="stat-label">จำนวนรายการเช็คชื่อทั้งหมด</div>
+          <div class="stat-value" id="totalRecords">0</div>
+          <div class="stat-note">รวมทุกครั้งที่มีการบันทึกในระบบ</div>
+        </article>
 
-      <ul class="summary-list">
-        <li>• ระบบใช้ข้อมูลจากชีต ATTENDANCE ของนักเรียนคนนี้เท่านั้น</li>
-        <li>• OK = มาในเวลาที่กำหนด, LATE = เข้าหลังเวลาเริ่มคาบเกิน 10 นาที</li>
-        <li>• ABSENT = ไม่พบการเช็คชื่อในคาบนั้นเมื่อครูปิดคาบ</li>
-      </ul>
+        <article class="stat-card">
+          <div class="stat-label">มาเรียนตรงเวลา (OK)</div>
+          <div class="stat-value" id="okCount">0</div>
+          <div class="stat-note"><span id="okPercent">0%</span> ของการเช็คชื่อทั้งหมด</div>
+        </article>
 
-      <div id="msg"></div>
-    </section>
+        <article class="stat-card">
+          <div class="stat-label">มาสาย (LATE)</div>
+          <div class="stat-value" id="lateCount">0</div>
+          <div class="stat-note"><span id="latePercent">0%</span> ของการเช็คชื่อทั้งหมด</div>
+        </article>
 
-  </main>
+        <article class="stat-card">
+          <div class="stat-label">อัตราการเข้าเรียน (มา + สาย)</div>
+          <div class="stat-value" id="ratePercent">0%</div>
+          <div class="stat-note">คิดจากจำนวนครั้งที่มาเรียนเปรียบเทียบกับทั้งหมด</div>
+        </article>
+      </section>
+
+      <!-- CHART BLOCK -->
+      <section class="chart-card">
+        <div class="chart-title">กราฟ มา / สาย / ขาด</div>
+        <div class="chart-sub">แสดงจำนวนครั้งในแต่ละสถานะ จากข้อมูล ATTENDANCE ของคุณ</div>
+
+        <div class="chart-wrap">
+          <canvas id="statusChart"></canvas>
+        </div>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <span>CPVC-Check · ระบบเช็คชื่อออนไลน์</span>
+      <span>เวอร์ชันนักเรียน • ดูได้เฉพาะข้อมูลของตนเอง</span>
+    </footer>
+  </div>
+
+  <!-- SCRIPT สำหรับเชื่อมปุ่ม + ดึงชื่อจาก sessionStorage -->
+  <script>
+    // ป้องกันคนเปิด Dashboard โดยไม่ล็อกอิน
+    (function () {
+      const id = sessionStorage.getItem("studentId");
+      const name = sessionStorage.getItem("studentName");
+
+      if (!id) {
+        // ถ้าไม่มี session → เด้งกลับหน้าล็อกอิน
+        window.location.href = "../login.html";
+        return;
+      }
+
+      const nameEl = document.getElementById("studentNameDisplay");
+      const idEl = document.getElementById("studentIdDisplay");
+
+      if (nameEl) nameEl.textContent = name || "นักเรียน";
+      if (idEl) idEl.textContent = id;
+    })();
+
+    function goScan() {
+      // dashboard.html อยู่ใน /student/ → หน้าเช็คชื่ออยู่ไฟล์เดียวกัน
+      window.location.href = "scan.html";
+    }
+
+    function goHistory() {
+      window.location.href = "history.html";
+    }
+
+    function logout() {
+      sessionStorage.clear();
+      window.location.href = "../login.html";
+    }
+  </script>
 </body>
 </html>
