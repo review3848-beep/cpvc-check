@@ -1,168 +1,224 @@
-import { apiPost } from "./api.js";
+// js/student-dashboard.js
 
-const stuNameEl = document.getElementById("stuName");
-const stuIdEl   = document.getElementById("stuId");
+// ================= CONFIG API =================
+// ถ้าใช้ไฟล์ api.js และมีตัวแปร API_BASE อยู่แล้ว จะใช้ API_BASE อัตโนมัติ
+// ถ้าไม่ได้ใช้ api.js ให้แก้ "YOUR_GAS_WEB_APP_EXEC_URL" เป็น URL /exec ของ Web App GAS
+const API_ENDPOINT =
+  typeof API_BASE !== "undefined"
+    ? API_BASE
+    : "YOUR_GAS_WEB_APP_EXEC_URL"; // แก้ตรงนี้ถ้าไม่ได้ใช้ api.js
 
-const totalRecordsEl      = document.getElementById("totalRecords");
-const okCountEl           = document.getElementById("okCount");
-const lateCountEl         = document.getElementById("lateCount");
-const attendancePercentEl = document.getElementById("attendancePercent");
-
-const okPercentTextEl   = document.getElementById("okPercentText");
-const latePercentTextEl = document.getElementById("latePercentText");
-const msgEl             = document.getElementById("msg");
-
-const studentId   = sessionStorage.getItem("studentId");
-const studentName = sessionStorage.getItem("studentName");
-
-// ถ้าไม่มี session → เด้งไปหน้า login
-if (!studentId) {
-  window.location.href = "login.html";
-}
-
-// ใส่ชื่อบนหัว
-if (stuNameEl) stuNameEl.textContent = studentName || "นักเรียน";
-if (stuIdEl)   stuIdEl.textContent   = studentId || "-";
-
-// helper: แปลงเป็น %
-function toPercent(part, total) {
-  if (!total || total <= 0) return 0;
-  return Math.round((part * 1000) / total) / 10; // ปัดทศนิยม 1 ตำแหน่ง
-}
-
-async function loadDashboard() {
-  msgEl.textContent = "กำลังโหลดข้อมูลการเข้าเรียน...";
+// helper เรียก API ฝั่ง GAS
+async function callStudentApi(action, payload) {
+  if (!API_ENDPOINT || API_ENDPOINT.startsWith("YOUR_GAS_WEB_APP")) {
+    console.error("ยังไม่ได้ตั้งค่า API_ENDPOINT ให้ถูกต้อง");
+    return { success: false, message: "API ยังไม่พร้อมใช้งาน (ยังไม่ได้ตั้งค่า URL)" };
+  }
 
   try {
-    const res = await apiPost("getStudentHistory", { studentId });
+    const res = await fetch(API_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, ...payload }),
+    });
 
-    if (!res.success) {
-      msgEl.textContent = res.message || "โหลดข้อมูลไม่สำเร็จ";
-      renderChart(0, 0, 0);
-      return;
-    }
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("callStudentApi error:", err);
+    return { success: false, message: "ติดต่อเซิร์ฟเวอร์ไม่สำเร็จ" };
+  }
+}
 
-    const history = res.history || [];
-    const total   = history.length;
+// ===== จัดการ session นักเรียน (ใช้ localStorage.cpvc_student) =====
+function getCurrentStudent() {
+  try {
+    const raw = localStorage.getItem("cpvc_student");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (err) {
+    console.warn("อ่าน cpvc_student จาก localStorage ไม่ได้:", err);
+    localStorage.removeItem("cpvc_student");
+    return null;
+  }
+}
 
-    if (total === 0) {
-      totalRecordsEl.textContent = "0";
-      okCountEl.textContent      = "0";
-      lateCountEl.textContent    = "0";
-      attendancePercentEl.textContent = "0%";
-      okPercentTextEl.textContent   = "0% ของการเช็คชื่อ";
-      latePercentTextEl.textContent = "0% ของการเช็คชื่อ";
-      msgEl.textContent = "ยังไม่มีประวัติการเช็คชื่อในระบบ";
-      renderChart(0, 0, 0);
-      return;
-    }
+function requireStudentLogin() {
+  const st = getCurrentStudent();
+  if (!st) {
+    window.location.href = "login.html";
+    return null;
+  }
+  return st;
+}
 
+// ===== ฟังก์ชัน global สำหรับปุ่มบน Dashboard =====
+window.goScan = function () {
+  window.location.href = "scan.html";
+};
+
+window.goHistory = function () {
+  window.location.href = "history.html";
+};
+
+window.logout = function () {
+  localStorage.removeItem("cpvc_student");
+  window.location.href = "login.html";
+};
+
+// ===== main logic =====
+document.addEventListener("DOMContentLoaded", () => {
+  const student = requireStudentLogin();
+  if (!student) return;
+
+  // DOM refs
+  const nameEl = document.getElementById("studentNameDisplay");
+  const idEl = document.getElementById("studentIdDisplay");
+
+  const totalRecordsEl = document.getElementById("totalRecords");
+  const okCountEl = document.getElementById("okCount");
+  const lateCountEl = document.getElementById("lateCount");
+  const ratePercentEl = document.getElementById("ratePercent");
+  const okPercentEl = document.getElementById("okPercent");
+  const latePercentEl = document.getElementById("latePercent");
+
+  const chartCanvas = document.getElementById("statusChart");
+
+  // ตั้งชื่อ + ID มุมบนขวา
+  if (nameEl) {
+    nameEl.textContent =
+      student.name || student.studentName || "นักเรียน";
+  }
+  if (idEl) {
+    idEl.textContent = student.studentId || "-";
+  }
+
+  function setStatText(el, value) {
+    if (el) el.textContent = value;
+  }
+
+  function computeStats(history) {
+    let total = 0;
     let ok = 0;
     let late = 0;
     let absent = 0;
 
-    history.forEach(row => {
-      // row = [ teacherEmail, studentId, studentName, datetime, token, status ]
-      const status = String(row[5] || "").toUpperCase();
-      if (status === "OK") ok++;
-      else if (status === "LATE") late++;
-      else if (status === "ABSENT") absent++;
+    (history || []).forEach((item) => {
+      total++;
+      const s = (item.status || item.attendanceStatus || "").toString().trim().toUpperCase();
+      if (s === "OK" || s === "PRESENT" || s === "P") {
+        ok++;
+      } else if (s === "LATE") {
+        late++;
+      } else if (s === "ABSENT" || s === "A") {
+        absent++;
+      }
     });
 
-    const attended = ok + late;
+    const totalPresentLate = ok + late;
 
-    totalRecordsEl.textContent = total;
-    okCountEl.textContent      = ok;
-    lateCountEl.textContent    = late;
-
-    const okPercent     = toPercent(ok, total);
-    const latePercent   = toPercent(late, total);
-    const attendPercent = toPercent(attended, total);
-
-    okPercentTextEl.textContent      = `${okPercent}% ของการเช็คชื่อ`;
-    latePercentTextEl.textContent    = `${latePercent}% ของการเช็คชื่อ`;
-    attendancePercentEl.textContent  = `${attendPercent}%`;
-
-    msgEl.textContent = "";
-
-    renderChart(ok, late, absent);
-
-  } catch (err) {
-    console.error(err);
-    msgEl.textContent = "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้";
-    renderChart(0, 0, 0);
-  }
-}
-
-// ----- วาดกราฟด้วย Chart.js -----
-let chartInstance = null;
-
-function renderChart(ok, late, absent) {
-  const canvas = document.getElementById("statusChart");
-  if (!canvas || typeof Chart === "undefined") {
-    console.warn("Chart.js ยังไม่พร้อมหรือ canvas ไม่มี");
-    return;
-  }
-
-  const data = {
-    labels: ["มาเรียน (OK)", "มาสาย (LATE)", "ขาด (ABSENT)"],
-    datasets: [{
-      label: "จำนวนครั้ง",
-      data: [ok, late, absent],
-      backgroundColor: [
-        "rgba(34,197,94,0.85)",
-        "rgba(234,179,8,0.85)",
-        "rgba(239,68,68,0.85)"
-      ],
-      borderColor: [
-        "rgba(22,163,74,1)",
-        "rgba(202,138,4,1)",
-        "rgba(185,28,28,1)"
-      ],
-      borderWidth: 1.5,
-      borderRadius: 10,
-      maxBarThickness: 60
-    }]
-  };
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          precision: 0,
-          color: "#9ca3af"
-        },
-        grid: {
-          color: "rgba(55,65,81,0.6)"
-        }
-      },
-      x: {
-        ticks: { color: "#e5e7eb" },
-        grid: { display: false }
-      }
-    },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: ctx => ` ${ctx.parsed.y} ครั้ง`
-        }
-      }
+    function toPercent(num, denom) {
+      if (!denom || denom === 0) return 0;
+      return Math.round((num / denom) * 100);
     }
-  };
 
-  if (chartInstance) {
-    chartInstance.destroy();
+    return {
+      total,
+      ok,
+      late,
+      absent,
+      okPercent: toPercent(ok, total),
+      latePercent: toPercent(late, total),
+      ratePercent: toPercent(totalPresentLate, total),
+    };
   }
-  chartInstance = new Chart(canvas, {
-    type: "bar",
-    data,
-    options
-  });
-}
 
-// init
-document.addEventListener("DOMContentLoaded", loadDashboard);
+  let statusChartInstance = null;
+
+  function renderChart(stats) {
+    if (!chartCanvas || typeof Chart === "undefined") {
+      console.warn("Chart.js ยังไม่พร้อมหรือไม่พบ canvas statusChart");
+      return;
+    }
+
+    const ctx = chartCanvas.getContext("2d");
+    if (!ctx) return;
+
+    const data = {
+      labels: ["มาเรียน (OK)", "มาสาย (LATE)", "ขาดเรียน (ABSENT)"],
+      datasets: [
+        {
+          data: [stats.ok, stats.late, stats.absent],
+          backgroundColor: ["#4ade80", "#eab308", "#f97316"],
+          borderWidth: 1,
+        },
+      ],
+    };
+
+    const options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            color: "#e5e7eb",
+            font: { size: 11 },
+          },
+        },
+      },
+      layout: {
+        padding: {
+          top: 10,
+          bottom: 10,
+          left: 0,
+          right: 0,
+        },
+      },
+    };
+
+    if (statusChartInstance) {
+      statusChartInstance.data = data;
+      statusChartInstance.options = options;
+      statusChartInstance.update();
+    } else {
+      statusChartInstance = new Chart(ctx, {
+        type: "doughnut",
+        data,
+        options,
+      });
+    }
+  }
+
+  async function loadDashboard() {
+    // ดึงประวัติทั้งหมดของนักเรียนจาก GAS
+    const resp = await callStudentApi("getStudentHistory", {
+      studentId: student.studentId,
+    });
+
+    if (!resp || !resp.success) {
+      console.error("โหลดประวัติเพื่อแสดง Dashboard ไม่สำเร็จ:", resp);
+      // ให้ default เป็น 0 ทั้งหมด
+      setStatText(totalRecordsEl, "0");
+      setStatText(okCountEl, "0");
+      setStatText(lateCountEl, "0");
+      setStatText(okPercentEl, "0%");
+      setStatText(latePercentEl, "0%");
+      setStatText(ratePercentEl, "0%");
+      return;
+    }
+
+    const history = resp.history || resp.data || [];
+    const stats = computeStats(history);
+
+    setStatText(totalRecordsEl, stats.total.toString());
+    setStatText(okCountEl, stats.ok.toString());
+    setStatText(lateCountEl, stats.late.toString());
+    setStatText(okPercentEl, stats.okPercent + "%");
+    setStatText(latePercentEl, stats.latePercent + "%");
+    setStatText(ratePercentEl, stats.ratePercent + "%");
+
+    renderChart(stats);
+  }
+
+  loadDashboard();
+});

@@ -5,31 +5,20 @@
   <title>Dashboard นักเรียน | CPVC-Check</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- ฟอนต์ -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-  <!-- ถ้ามีไฟล์รวมดีไซน์ของโปรเจ็กต์อยู่แล้ว -->
   <link rel="stylesheet" href="../css/styles.css" />
-
-  <!-- Chart.js สำหรับกราฟ -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-
-  <!-- logic ดึงประวัติ + คำนวณ % (ไฟล์ที่เราเขียนไว้ก่อนหน้า) -->
   <script type="module" src="../js/student-dashboard.js" defer></script>
 
   <style>
     :root {
       --bg-main: #020617;
-      --panel: #020617;
-      --card: #020617;
       --card-border: rgba(148, 163, 184, 0.25);
       --text-main: #e5e7eb;
       --text-muted: #9ca3af;
-      --blue-soft: #38bdf8;
-      --blue-strong: #2563eb;
-      --green: #22c55e;
     }
 
     * { box-sizing: border-box; }
@@ -44,13 +33,7 @@
       color: var(--text-main);
     }
 
-    .page {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* TOP NAV */
+    .page { min-height: 100vh; display: flex; flex-direction: column; }
 
     .top-nav {
       padding: 1.1rem 1.8rem;
@@ -63,35 +46,10 @@
       justify-content: space-between;
     }
 
-    .top-left {
-      display: flex;
-      flex-direction: column;
-      gap: .15rem;
-    }
+    .top-left { display:flex; flex-direction:column; gap:.15rem; }
 
-    .top-title {
-      font-size: 1.3rem;
-      font-weight: 600;
-    }
-
-    .top-sub {
-      font-size: .8rem;
-      color: var(--text-muted);
-    }
-
-    .top-right {
-      text-align: right;
-      font-size: .8rem;
-      color: var(--text-muted);
-    }
-
-    .top-right strong {
-      display: block;
-      color: #e5e7eb;
-      font-size: .9rem;
-    }
-
-    /* NAV ปุ่มลิงก์ */
+    .top-title { font-size: 1.3rem; font-weight: 600; }
+    .top-sub { font-size: .8rem; color: var(--text-muted); }
 
     .dash-nav {
       display: flex;
@@ -130,7 +88,17 @@
       filter: brightness(1.05);
     }
 
-    /* MAIN */
+    .top-right {
+      text-align: right;
+      font-size: .8rem;
+      color: var(--text-muted);
+    }
+
+    .top-right strong {
+      display:block;
+      color:#e5e7eb;
+      font-size:.9rem;
+    }
 
     .main {
       flex: 1;
@@ -161,56 +129,24 @@
       border-color: rgba(34,197,94,.6);
     }
 
-    .stat-label {
-      font-size: .82rem;
-      color: var(--text-muted);
-      margin-bottom: .25rem;
-    }
-
-    .stat-value {
-      font-size: 1.8rem;
-      font-weight: 700;
-    }
-
-    .stat-note {
-      font-size: .78rem;
-      color: #a5b4fc;
-      margin-top: .2rem;
-    }
-
-    /* CHART */
+    .stat-label { font-size:.82rem; color:var(--text-muted); margin-bottom:.25rem; }
+    .stat-value { font-size:1.8rem; font-weight:700; }
+    .stat-note  { font-size:.78rem; color:#a5b4fc; margin-top:.2rem; }
 
     .chart-card {
-      margin-top: .8rem;
-      background: #020617;
-      border-radius: 1.2rem;
-      border: 1px solid rgba(30,64,175,.7);
-      box-shadow: 0 18px 50px rgba(15,23,42,.95);
-      padding: 1.1rem 1.2rem 1.4rem;
+      margin-top:.8rem;
+      background:#020617;
+      border-radius:1.2rem;
+      border:1px solid rgba(30,64,175,.7);
+      box-shadow:0 18px 50px rgba(15,23,42,.95);
+      padding:1.1rem 1.2rem 1.4rem;
     }
 
-    .chart-title {
-      font-size: .95rem;
-      margin-bottom: .15rem;
-    }
+    .chart-title { font-size:.95rem; margin-bottom:.15rem; }
+    .chart-sub   { font-size:.78rem; color:var(--text-muted); margin-bottom:.7rem; }
 
-    .chart-sub {
-      font-size: .78rem;
-      color: var(--text-muted);
-      margin-bottom: .7rem;
-    }
-
-    .chart-wrap {
-      position: relative;
-      min-height: 260px;
-    }
-
-    canvas {
-      width: 100% !important;
-      height: 100% !important;
-    }
-
-    /* FOOTER */
+    .chart-wrap { position:relative; min-height:260px;}
+    canvas { width:100% !important; height:100% !important; }
 
     .footer {
       max-width: 1100px;
@@ -218,35 +154,30 @@
       padding: 0 1.4rem;
       font-size: .72rem;
       color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-      gap: .5rem;
+      display:flex;
+      justify-content:space-between;
+      gap:.5rem;
     }
 
-    .footer span:last-child {
-      text-align: right;
-    }
-
-    @media (max-width: 640px) {
-      .top-nav {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: .6rem;
-      }
-      .top-right { text-align: left; }
+    @media (max-width:640px) {
+      .top-nav { flex-direction:column; align-items:flex-start; gap:.6rem; }
+      .top-right { text-align:left;}
     }
   </style>
 </head>
 
 <body>
+  <!-- ปุ่ม Dashboard มุมบนขวา (ให้กดแล้วอยู่หน้าเดิม) -->
+  <div class="student-global-nav">
+    <a href="dashboard.html">📊 Dashboard</a>
+  </div>
+
   <div class="page">
-    <!-- TOP NAV -->
     <header class="top-nav">
       <div class="top-left">
         <div class="top-title">Dashboard นักเรียน</div>
         <div class="top-sub">สรุปภาพรวมการเข้าเรียนของคุณในระบบ CPVC-Check</div>
 
-        <!-- ปุ่มเชื่อมหน้าอื่น -->
         <div class="dash-nav">
           <button type="button" onclick="goScan()">📸 ไปหน้าเช็คชื่อ</button>
           <button type="button" onclick="goHistory()">🕘 ดูประวัติการเช็คชื่อ</button>
@@ -260,9 +191,7 @@
       </div>
     </header>
 
-    <!-- MAIN CONTENT -->
     <main class="main">
-      <!-- SUMMARY CARDS -->
       <section class="stat-grid">
         <article class="stat-card">
           <div class="stat-label">จำนวนรายการเช็คชื่อทั้งหมด</div>
@@ -289,7 +218,6 @@
         </article>
       </section>
 
-      <!-- CHART BLOCK -->
       <section class="chart-card">
         <div class="chart-title">กราฟ มา / สาย / ขาด</div>
         <div class="chart-sub">แสดงจำนวนครั้งในแต่ละสถานะ จากข้อมูล ATTENDANCE ของคุณ</div>
@@ -300,22 +228,18 @@
       </section>
     </main>
 
-    <!-- FOOTER -->
     <footer class="footer">
       <span>CPVC-Check · ระบบเช็คชื่อออนไลน์</span>
-      <span>เวอร์ชันนักเรียน • ดูได้เฉพาะข้อมูลของตนเอง</span>
+      <span>เวอร์ชันนักเรียน • ดูเฉพาะข้อมูลของตนเอง</span>
     </footer>
   </div>
 
-  <!-- SCRIPT สำหรับเชื่อมปุ่ม + ดึงชื่อจาก sessionStorage -->
   <script>
-    // ป้องกันคนเปิด Dashboard โดยไม่ล็อกอิน
     (function () {
       const id = sessionStorage.getItem("studentId");
       const name = sessionStorage.getItem("studentName");
 
       if (!id) {
-        // ถ้าไม่มี session → เด้งกลับหน้าล็อกอิน
         window.location.href = "../login.html";
         return;
       }
@@ -328,7 +252,6 @@
     })();
 
     function goScan() {
-      // dashboard.html อยู่ใน /student/ → หน้าเช็คชื่ออยู่ไฟล์เดียวกัน
       window.location.href = "scan.html";
     }
 

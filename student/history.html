@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>ประวัติการเข้าเรียน | NexAttend</title>
+  <title>ประวัติการเข้าเรียน | CPVC-Check</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="stylesheet" href="../css/styles.css">
@@ -54,14 +54,26 @@
     th { color:#93c5fd; font-weight:500; }
 
     .status-ok { color:#4ade80; font-weight:600; }
+    .status-late { color:#eab308; font-weight:600; }
+    .status-absent { color:#f97316; font-weight:600; }
+
+    #msg {
+      margin-top:1rem;
+      text-align:center;
+      font-size:.9rem;
+      color:#cbd5f5;
+    }
   </style>
 </head>
 
 <body>
 
+
   <div class="nav">
-    <div class="nav-title"> NexAttend – ประวัติการเข้าเรียน</div>
-    <div class="nav-user">👤 <span id="histName"></span> • <span id="histId"></span></div>
+    <div class="nav-title">CPVC-Check – ประวัติการเข้าเรียน</div>
+    <div class="nav-user">
+      👤 <span id="histName"></span> • <span id="histId"></span>
+    </div>
   </div>
 
   <div class="wrap">
@@ -78,7 +90,7 @@
         <!-- JS เติม -->
       </tbody>
     </table>
+    <div id="msg"></div>
   </div>
-
 </body>
 </html>
