@@ -1,6 +1,6 @@
 // js/api.js
 // ⚠️ อย่าลืมตรวจสอบ URL นี้ว่าเป็นอันล่าสุดที่คุณ Deploy หรือยังนะครับ
-export const API_BASE = "https://script.google.com/macros/s/AKfycbz2mEhSL4UirZhXzXFd9ssXLwMGGS18whKBEiyJxrEr_O0ZJF47EOiqdEbOAKj4FQYnYw/exec";
+export const API_BASE = "https://script.google.com/macros/s/AKfycbynBRe0-p66Ijo3jk0WemGQTpRra2l2BkKLjAofVNVNeytOOYSO8sPNeCul-WPvOrZ-YA/exec";
 
 export async function callApi(action, payload = {}) {
   try {
