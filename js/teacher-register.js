@@ -28,7 +28,7 @@ async function handleRegister() {
   try {
     const res = await fetch(API_BASE, {
       method: "POST",
-      headers: { "Content-Type": "application/json;charset=utf-8" },
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
         action: "registerTeacher", // ต้องตรงกับ Code.gs
         name,
