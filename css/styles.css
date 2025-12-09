@@ -431,3 +431,103 @@ nav {
   filter: brightness(1.05);
   transform: translateY(-1px);
 }
+/* ================= FULLSCREEN & BALANCED PATCH ================= */
+
+/* ขยาย container ให้เต็มจอ */
+.main {
+  max-width: 100% !important;
+  margin: 1.2rem auto 2rem;
+  padding: 0 2rem;
+}
+
+/* Header ให้เต็มกว้างพอดี */
+.top-nav {
+  max-width: 100%;
+  border-radius: 0;
+}
+
+/* การ์ด 4 ใบ ขยายให้บาลานซ์ */
+.stat-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* จอเล็ก -> เรียง 2 ใบ */
+@media (max-width: 900px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* จอมือถือ -> 1 ใบ */
+@media (max-width: 540px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ยืดกราฟ + ตาราง ให้สูงเท่ากัน */
+.lower-grid {
+  grid-template-columns: 1.2fr 1fr;
+  align-items: stretch;
+}
+
+.card-base,
+.chart-card {
+  min-height: 360px;
+}
+
+/* กราฟโดนัทให้ใหญ่ขึ้น */
+.chart-wrap {
+  min-height: 290px;
+}
+
+/* ตารางอ่านง่าย */
+table.recent-table {
+  font-size: 0.82rem;
+}
+
+/* เพิ่มช่องไฟแถว */
+table.recent-table td {
+  padding: 0.55rem 0.5rem;
+}
+
+/* Navigation buttons ไม่ลอย */
+.dash-nav {
+  margin-top: 0.8rem;
+}
+
+/* ปรับ header ด้านขวา */
+.top-right strong {
+  font-size: 1.05rem;
+}
+.top-right {
+  font-size: .85rem;
+}
+
+/* Card Content จัดแนว */
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* เพิ่มเงาให้ดู "Dashboard SaaS" */
+.stat-card,
+.card-base {
+  box-shadow:
+    0 15px 45px rgba(2, 6, 23, 0.9),
+    inset 0 0 0 1px rgba(99,102,241,.12);
+}
+
+/* Card hover subtle */
+.stat-card:hover {
+  transform: translateY(-2px);
+  transition: .18s ease;
+}
+
+/* Footer ขยายตามจอ */
+.footer {
+  max-width: 100%;
+  padding: 0 2rem;
+}
+
