@@ -9,16 +9,29 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
+  <!-- CSS หลักของโปรเจกต์ -->
   <link rel="stylesheet" href="../css/styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" src="../js/student-dashboard.js"></script>
+
+  <!-- Chart.js สำหรับกราฟโดนัท -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <!-- JS ดึงข้อมูล / คำนวณสถิติ (ไฟล์ของคุณเอง) -->
+  <script src="../js/student-dashboard.js" type="module" defer></script>
 
   <style>
     :root {
       --bg-main: #020617;
-      --card-border: rgba(148, 163, 184, 0.3);
+      --panel: #02091a;
+      --nav-bg: radial-gradient(circle at 0 0, rgba(56,189,248,.22), transparent 55%),
+                radial-gradient(circle at 100% 0, rgba(37,99,235,.35), transparent 55%),
+                #020617;
+      --card-bg: radial-gradient(circle at 0 0, rgba(56,189,248,.18), transparent 70%),
+                 #020617;
+      --card-border: rgba(148,163,184,0.25);
       --text-main: #e5e7eb;
       --text-muted: #9ca3af;
+      --ok: #22c55e;
+      --late: #eab308;
+      --absent: #f97316;
     }
 
     * { box-sizing: border-box; }
@@ -28,277 +41,325 @@
       min-height: 100vh;
       font-family: "Prompt", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background:
-        radial-gradient(circle at 0% 0%, #0f172a, transparent 55%),
+        radial-gradient(circle at 0% 0%, #020617, transparent 55%),
         radial-gradient(circle at 100% 100%, #020617, #020617 70%);
       color: var(--text-main);
     }
 
-    .page { min-height: 100vh; display: flex; flex-direction: column; }
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-    /* NAVBAR ด้านบน */
+    /* ---------- NAVBAR ---------- */
     .top-nav {
-      padding: 1.2rem 1.8rem;
+      padding: 1.1rem 1.8rem;
+      background: var(--nav-bg);
       border-bottom: 1px solid rgba(15,23,42,.9);
-      background:
-        radial-gradient(circle at 0 0, rgba(56,189,248,.25), transparent 55%),
-        radial-gradient(circle at 100% 0, rgba(37,99,235,.35), transparent 55%),
-        #020617;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 1.5rem;
     }
 
-    .top-left { display:flex; flex-direction:column; gap:.25rem; }
-
-    .top-title { font-size: 1.4rem; font-weight: 600; }
-    .top-sub { font-size: .82rem; color: var(--text-muted); }
-
-    .dash-nav {
+    .top-left {
       display: flex;
-      gap: .6rem;
-      margin-top: .45rem;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 0.2rem;
     }
 
-    .dash-nav button {
-      background: linear-gradient(135deg,#2563eb,#38bdf8);
+    .top-title {
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+
+    .top-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .dash-actions {
+      margin-top: 0.55rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+
+    .pill-btn {
       border: none;
-      padding: .4rem .9rem;
       border-radius: 999px;
-      color: #f9fafb;
-      font-size: .75rem;
-      cursor: pointer;
+      padding: 0.4rem 0.95rem;
+      font-size: 0.78rem;
       display: inline-flex;
       align-items: center;
-      gap: .3rem;
-      box-shadow: 0 10px 26px rgba(37,99,235,.7);
-      transition: 0.15s;
+      gap: 0.35rem;
+      cursor: pointer;
+      color: #f9fafb;
+      background: linear-gradient(135deg,#2563eb,#38bdf8);
+      box-shadow: 0 12px 26px rgba(37,99,235,.7);
+      transition: transform .15s ease-out, box-shadow .15s ease-out, filter .12s;
+      white-space: nowrap;
     }
 
-    .dash-nav button:nth-child(2) {
+    .pill-btn.secondary {
       background: linear-gradient(135deg,#0ea5e9,#22c55e);
-      box-shadow: 0 10px 26px rgba(34,197,94,.6);
+      box-shadow: 0 12px 26px rgba(34,197,94,.65);
     }
 
-    .dash-nav button:nth-child(3) {
-      background: linear-gradient(135deg,#64748b,#020617);
-      box-shadow: 0 10px 26px rgba(15,23,42,.9);
+    .pill-btn.danger {
+      background: linear-gradient(135deg,#64748b,#0f172a);
+      box-shadow: 0 12px 26px rgba(15,23,42,.9);
     }
 
-    .dash-nav button:hover {
+    .pill-btn:hover {
       transform: translateY(-1px);
       filter: brightness(1.05);
+      box-shadow: 0 14px 32px rgba(37,99,235,.8);
     }
 
     .top-right {
       text-align: right;
-      font-size: .8rem;
+      font-size: 0.82rem;
       color: var(--text-muted);
     }
 
     .top-right strong {
-      display:block;
-      color:#e5e7eb;
-      font-size:.92rem;
+      display: block;
+      font-size: 0.95rem;
+      color: #e5e7eb;
     }
 
-    /* MAIN LAYOUT */
+    /* ---------- MAIN LAYOUT ---------- */
     .main {
       flex: 1;
-      max-width: 1100px;
-      margin: 1.7rem auto 2.3rem;
-      padding: 0 1.4rem;
-      display:flex;
-      flex-direction:column;
-      gap:1.5rem;
+      max-width: 1200px;
+      margin: 1.8rem auto 2.2rem;
+      padding: 0 1.5rem 0.4rem;
     }
 
-    /* SUMMARY 4 CARDS */
-    .stat-grid {
+    .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 1rem;
+      margin-bottom: 1.6rem;
     }
 
     .stat-card {
+      background: var(--card-bg);
+      border-radius: 1.1rem;
+      border: 1px solid var(--card-border);
+      padding: 1rem 1.1rem;
+      box-shadow: 0 18px 48px rgba(0,0,0,.85);
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
       position: relative;
       overflow: hidden;
-      border-radius: 1.1rem;
-      padding: 1rem 1.1rem;
-      border: 1px solid var(--card-border);
-      background:
-        radial-gradient(circle at 0 0, rgba(56,189,248,.2), transparent 60%),
-        radial-gradient(circle at 120% 0, rgba(37,99,235,.12), transparent 55%),
-        #020617;
-      box-shadow: 0 16px 46px rgba(0,0,0,.9);
-      display:flex;
-      gap:.8rem;
-      align-items:flex-start;
-    }
-
-    .stat-card:nth-child(4) {
-      background:
-        radial-gradient(circle at 0 0, rgba(34,197,94,.23), transparent 60%),
-        radial-gradient(circle at 120% 0, rgba(56,189,248,.16), transparent 55%),
-        #020617;
-      border-color: rgba(34,197,94,.6);
     }
 
     .stat-icon {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 999px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 1.1rem;
-      flex-shrink:0;
-      background:
-        radial-gradient(circle at 30% 0%, rgba(248,250,252,.9), transparent 60%),
-        rgba(15,23,42,0.9);
-      border:1px solid rgba(148,163,184,.6);
-      box-shadow:0 10px 26px rgba(15,23,42,1);
+      background: radial-gradient(circle at 0 0, rgba(56,189,248,.9), transparent 65%),
+                  radial-gradient(circle at 100% 100%, rgba(37,99,235,.8), transparent 60%);
+      box-shadow: 0 10px 26px rgba(37,99,235,.9);
+      flex-shrink: 0;
     }
 
-    .stat-content { flex:1; }
+    .stat-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.2rem;
+    }
 
     .stat-label {
-      font-size:.8rem;
-      color:var(--text-muted);
-      margin-bottom:.15rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
     }
 
     .stat-value {
-      font-size:1.85rem;
-      font-weight:700;
-      line-height:1.1;
+      font-size: 1.7rem;
+      font-weight: 700;
     }
 
-    .stat-note  {
-      font-size:.76rem;
-      color:#a5b4fc;
-      margin-top:.15rem;
-      white-space:nowrap;
+    .stat-note {
+      font-size: 0.76rem;
+      color: #a5b4fc;
     }
 
-    /* GRID: CHART + RECENT TABLE */
-    .lower-grid {
-      display:grid;
-      grid-template-columns: minmax(0,1.6fr) minmax(0,1.2fr);
-      gap:1rem;
-      align-items:stretch;
+    .stat-card.rate {
+      border-color: rgba(34,197,94,.7);
+      box-shadow: 0 20px 52px rgba(22,163,74,.4);
+      background: radial-gradient(circle at 0 0, rgba(34,197,94,.22), transparent 70%),
+                  #020617;
     }
 
-    .card-base {
-      background:#020617;
-      border-radius:1.2rem;
-      border:1px solid rgba(30,64,175,.7);
-      box-shadow:0 18px 50px rgba(15,23,42,.95);
-      padding:1.1rem 1.2rem 1.3rem;
+    /* ---------- BOTTOM GRID: CHART + TABLE ---------- */
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.25fr);
+      gap: 1.1rem;
+      align-items: flex-start;
     }
 
-    .chart-card { position:relative; }
-
-    .chart-header {
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:.8rem;
-      margin-bottom:.6rem;
+    .panel {
+      background: var(--panel);
+      border-radius: 1.1rem;
+      border: 1px solid rgba(30,64,175,.7);
+      box-shadow: 0 18px 54px rgba(15,23,42,.95);
+      padding: 1.1rem 1.2rem 1.2rem;
+      min-height: 260px;
     }
 
-    .chart-title { font-size:.96rem; font-weight:500; }
-    .chart-sub   { font-size:.78rem; color:var(--text-muted); margin-top:.1rem; }
-
-    .chart-badge {
-      padding:.2rem .65rem;
-      border-radius:999px;
-      font-size:.72rem;
-      background:rgba(15,23,42,.96);
-      border:1px solid rgba(148,163,184,.55);
-      color:#e5e7eb;
-      white-space:nowrap;
+    .panel.right {
+      border-color: rgba(148,163,184,.45);
     }
 
-    .chart-wrap { position:relative; min-height:260px;}
-    canvas { width:100% !important; height:100% !important; }
-
-    .dash-msg {
-      margin-top:.5rem;
-      font-size:.78rem;
-      color:#9ca3af;
-    }
-    .dash-msg.error { color:#fca5a5; }
-    .dash-msg.ok    { color:#bbf7d0; }
-
-    /* RECENT TABLE */
-    .recent-title { font-size:.94rem; font-weight:500; margin-bottom:.2rem; }
-    .recent-sub   { font-size:.78rem; color:var(--text-muted); margin-bottom:.55rem; }
-
-    table.recent-table {
-      width:100%;
-      border-collapse:collapse;
-      font-size:.8rem;
-    }
-    table.recent-table th,
-    table.recent-table td {
-      padding:.45rem .4rem;
-      border-bottom:1px solid rgba(30,64,175,.55);
-      text-align:left;
-      white-space:nowrap;
-    }
-    table.recent-table th {
-      color:#93c5fd;
-      font-weight:500;
-      font-size:.78rem;
-    }
-    table.recent-table td.status-ok   { color:#4ade80; font-weight:500; }
-    table.recent-table td.status-late { color:#facc15; font-weight:500; }
-    table.recent-table td.status-absent { color:#fb923c; font-weight:500; }
-
-    .recent-empty {
-      font-size:.78rem;
-      color:var(--text-muted);
-      margin-top:.35rem;
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.4rem;
     }
 
-    /* FOOTER */
-    .footer {
-      max-width: 1100px;
-      margin: 0 auto 1.6rem;
-      padding: 0 1.4rem;
-      font-size: .72rem;
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .panel-sub {
+      font-size: 0.78rem;
       color: var(--text-muted);
-      display:flex;
-      justify-content:space-between;
-      gap:.5rem;
+      margin-bottom: 0.6rem;
     }
 
-    @media (max-width:900px) {
-      .lower-grid {
-        grid-template-columns: minmax(0,1fr);
+    .badge-soft {
+      font-size: 0.72rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,.5);
+      color: #e5e7eb;
+      background: rgba(15,23,42,.9);
+      white-space: nowrap;
+    }
+
+    .chart-wrap {
+      position: relative;
+      min-height: 260px;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    th, td {
+      padding: 0.55rem 0.4rem;
+      border-bottom: 1px solid rgba(30,64,175,.5);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      font-weight: 500;
+      color: #bfdbfe;
+      font-size: 0.78rem;
+    }
+
+    td.time {
+      color: #e5e7eb;
+    }
+
+    td.status-ok { color: var(--ok); font-weight: 600; }
+    td.status-late { color: var(--late); font-weight: 600; }
+    td.status-absent { color: var(--absent); font-weight: 600; }
+
+    .table-empty {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding: 0.9rem 0.4rem;
+    }
+
+    #msg {
+      margin-top: 0.5rem;
+      font-size: 0.78rem;
+      color: #fca5a5;
+      text-align: right;
+    }
+
+    /* ---------- FOOTER ---------- */
+    .footer {
+      max-width: 1200px;
+      margin: 0 auto 1.6rem;
+      padding: 0 1.5rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    /* ---------- RESPONSIVE ---------- */
+    @media (max-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .bottom-grid {
+        grid-template-columns: minmax(0, 1fr);
       }
     }
 
-    @media (max-width:640px) {
-      .top-nav { flex-direction:column; align-items:flex-start; gap:.6rem; }
-      .top-right { text-align:left;}
-      .stat-card { padding: .9rem 1rem; }
+    @media (max-width: 640px) {
+      .top-nav {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .top-right {
+        text-align: left;
+      }
+      .stats-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .main {
+        padding: 0 1rem;
+      }
     }
   </style>
 </head>
 
 <body>
   <div class="page">
+    <!-- HEADER -->
     <header class="top-nav">
       <div class="top-left">
         <div class="top-title">Dashboard นักเรียน</div>
         <div class="top-sub">สรุปภาพรวมการเข้าเรียนของคุณในระบบ CPVC-Check</div>
 
-        <div class="dash-nav">
-          <button type="button" id="btnGoScan">📸 ไปหน้าเช็คชื่อ</button>
-          <button type="button" id="btnGoHistory">🕘 ดูประวัติการเช็คชื่อ</button>
-          <button type="button" id="btnLogout">🚪 ออกจากระบบ</button>
+        <div class="dash-actions">
+          <button class="pill-btn" type="button" onclick="window.location.href='scan.html'">
+            📸 ไปหน้าเช็คชื่อ
+          </button>
+          <button class="pill-btn secondary" type="button" onclick="window.location.href='history.html'">
+            🕘 ดูประวัติการเช็คชื่อ
+          </button>
+          <button class="pill-btn danger" type="button" onclick="logoutStudent()">
+            🚪 ออกจากระบบ
+          </button>
         </div>
       </div>
 
@@ -308,96 +369,129 @@
       </div>
     </header>
 
+    <!-- MAIN -->
     <main class="main">
-      <!-- SUMMARY 4 ใบ -->
-      <section class="stat-grid">
+      <!-- 4 การ์ดด้านบน -->
+      <section class="stats-grid">
         <article class="stat-card">
-          <div class="stat-icon">📊</div>
-          <div class="stat-content">
-            <div class="stat-label">จำนวนรายการเช็คชื่อทั้งหมด</div>
-            <div class="stat-value" id="totalRecords">0</div>
-            <div class="stat-note">รวมทุกครั้งที่มีการบันทึกในระบบ</div>
-          </div>
-        </article>
-
-        <article class="stat-card">
-          <div class="stat-icon">✅</div>
-          <div class="stat-content">
-            <div class="stat-label">มาเรียนตรงเวลา (OK)</div>
-            <div class="stat-value" id="okCount">0</div>
-            <div class="stat-note">
-              <span id="okPercent">0%</span> ของการเช็คชื่อทั้งหมด
+          <div class="stat-header">
+            <div class="stat-icon">📊</div>
+            <div>
+              <div class="stat-label">จำนวนรายการเช็คชื่อทั้งหมด</div>
+              <div class="stat-value" id="totalRecords">0</div>
             </div>
           </div>
+          <div class="stat-note">รวมทุกครั้งที่มีการบันทึกในระบบ</div>
         </article>
 
         <article class="stat-card">
-          <div class="stat-icon">⏰</div>
-          <div class="stat-content">
-            <div class="stat-label">มาสาย (LATE)</div>
-            <div class="stat-value" id="lateCount">0</div>
-            <div class="stat-note">
-              <span id="latePercent">0%</span> ของการเช็คชื่อทั้งหมด
+          <div class="stat-header">
+            <div class="stat-icon">✅</div>
+            <div>
+              <div class="stat-label">มาเรียนตรงเวลา (OK)</div>
+              <div class="stat-value" id="okCount">0</div>
             </div>
+          </div>
+          <div class="stat-note">
+            <span id="okPercent">0%</span> ของการเช็คชื่อทั้งหมด
           </div>
         </article>
 
         <article class="stat-card">
-          <div class="stat-icon">📈</div>
-          <div class="stat-content">
-            <div class="stat-label">อัตราการเข้าเรียน (มา + สาย)</div>
-            <div class="stat-value" id="ratePercent">0%</div>
-            <div class="stat-note">คิดจากจำนวนครั้งที่มาเรียนเปรียบเทียบกับทั้งหมด</div>
+          <div class="stat-header">
+            <div class="stat-icon">⏰</div>
+            <div>
+              <div class="stat-label">มาสาย (LATE)</div>
+              <div class="stat-value" id="lateCount">0</div>
+            </div>
+          </div>
+          <div class="stat-note">
+            <span id="latePercent">0%</span> ของการเช็คชื่อทั้งหมด
+          </div>
+        </article>
+
+        <article class="stat-card rate">
+          <div class="stat-header">
+            <div class="stat-icon">📈</div>
+            <div>
+              <div class="stat-label">อัตราการเข้าเรียน (มา + สาย)</div>
+              <div class="stat-value" id="ratePercent">0%</div>
+            </div>
+          </div>
+          <div class="stat-note">
+            คิดจากจำนวนครั้งที่มาเรียนเปรียบเทียบกับทั้งหมด
           </div>
         </article>
       </section>
 
-      <!-- CHART + RECENT -->
-      <section class="lower-grid">
-        <article class="card-base chart-card">
-          <div class="chart-header">
-            <div>
-              <div class="chart-title">กราฟ มา / สาย / ขาด</div>
-              <div class="chart-sub">แสดงจำนวนครั้งในแต่ละสถานะ จากข้อมูล ATTENDANCE ของคุณ</div>
-            </div>
-            <div class="chart-badge" id="statusSummaryBadge">
-              ยังไม่มีข้อมูลการเช็คชื่อ
-            </div>
+      <!-- แถวล่าง: กราฟ + ตาราง -->
+      <section class="bottom-grid">
+        <!-- กราฟโดนัท -->
+        <article class="panel">
+          <div class="panel-header">
+            <div class="panel-title">กราฟ มา / สาย / ขาด</div>
+            <span class="badge-soft">ข้อมูลจาก ATTENDANCE ของคุณ</span>
+          </div>
+          <div class="panel-sub">
+            แสดงจำนวนครั้งที่มาเรียนตรงเวลา มาสาย และขาดเรียนในภาพรวม
           </div>
 
           <div class="chart-wrap">
             <canvas id="statusChart"></canvas>
           </div>
-
-          <div id="dashMsg" class="dash-msg"></div>
         </article>
 
-        <article class="card-base">
-          <div class="recent-title">ประวัติการเช็คชื่อล่าสุด</div>
-          <div class="recent-sub">แสดง 5 รายการล่าสุดของคุณ</div>
+        <!-- ตาราง 5 รายการล่าสุด -->
+        <article class="panel right">
+          <div class="panel-header">
+            <div class="panel-title">ประวัติการเช็คชื่อล่าสุด</div>
+            <span class="badge-soft">แสดง 5 รายการล่าสุด</span>
+          </div>
+          <div class="panel-sub">
+            ดูเวลาที่เช็คชื่อ สถานะ และคาบเรียนล่าสุดของคุณ
+          </div>
 
-          <table class="recent-table">
-            <thead>
-              <tr>
-                <th>เวลา</th>
-                <th>TOKEN</th>
-                <th>สถานะ</th>
-                <th>ครู</th>
-              </tr>
-            </thead>
-            <tbody id="recentTable">
-              <!-- JS เติม -->
-            </tbody>
-          </table>
-          <div id="recentEmpty" class="recent-empty"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>เวลา</th>
+                  <th>TOKEN</th>
+                  <th>สถานะ</th>
+                  <th>ครู</th>
+                </tr>
+              </thead>
+              <tbody id="recentTableBody">
+                <tr>
+                  <td colspan="4" class="table-empty">
+                    ยังไม่มีข้อมูลการเช็คชื่อในระบบ
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="msg"></div>
         </article>
       </section>
     </main>
 
+    <!-- FOOTER -->
     <footer class="footer">
       <span>CPVC-Check · ระบบเช็คชื่อออนไลน์</span>
-      <span>เวอร์ชันนักเรียน • ดูเฉพาะข้อมูลของตนเอง</span>
+      <span>เวอร์ชันนักเรียน · ดูข้อมูลเฉพาะของตนเอง</span>
     </footer>
   </div>
+
+  <script>
+    // ฟังก์ชันออกจากระบบแบบง่าย ๆ
+    function logoutStudent() {
+      try {
+        localStorage.removeItem("cpvc_student");
+        sessionStorage.clear();
+      } catch (e) {}
+      window.location.href = "login.html";
+    }
+  </script>
 </body>
 </html>
