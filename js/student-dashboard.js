@@ -1,7 +1,10 @@
 // js/student-dashboard.js
 import { callApi } from "./api.js";
 
+let statusChart = null;
+
 document.addEventListener("DOMContentLoaded", () => {
+  // ------- ดึง element จาก dashboard.html -------
   const nameEl        = document.getElementById("studentNameDisplay");
   const idEl          = document.getElementById("studentIdDisplay");
 
@@ -12,43 +15,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const latePercentEl = document.getElementById("latePercent");
   const ratePercentEl = document.getElementById("ratePercent");
 
-  const dashMsgEl     = document.getElementById("dashMsg");
-  const statusBadgeEl = document.getElementById("statusSummaryBadge");
-
-  const btnScan       = document.getElementById("btnGoScan");
-  const btnHistory    = document.getElementById("btnGoHistory");
-  const btnLogout     = document.getElementById("btnLogout");
+  const msgEl         = document.getElementById("msg");
 
   const chartCanvas   = document.getElementById("statusChart");
-  const recentTable   = document.getElementById("recentTable");
-  const recentEmpty   = document.getElementById("recentEmpty");
+  const recentTableBody = document.getElementById("recentTableBody");
 
-  let statusChart = null;
-
-  // ---------- helper ----------
-  function setMsg(text, type = "") {
-    if (!dashMsgEl) return;
-    dashMsgEl.textContent = text || "";
-    dashMsgEl.classList.remove("error", "ok");
-    if (!text) return;
-    if (type === "error") dashMsgEl.classList.add("error");
-    if (type === "ok")    dashMsgEl.classList.add("ok");
-  }
-
-  function setStatusBadge(text) {
-    if (!statusBadgeEl) return;
-    statusBadgeEl.textContent = text;
-  }
-
-  function statusClass(status) {
-    const s = String(status || "").toUpperCase();
-    if (s === "OK") return "status-ok";
-    if (s === "LATE") return "status-late";
-    if (s === "ABSENT") return "status-absent";
-    return "";
-  }
-
-  // ---------- ดึง session นักเรียน ----------
+  // ------- อ่าน session นักเรียน -------
   let student = null;
   try {
     const rawLocal   = localStorage.getItem("cpvc_student");
@@ -61,24 +33,24 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!parsed || !parsed.studentId) throw new Error("invalid session");
 
     student = parsed;
-  } catch {
+  } catch (e) {
+    // ถ้าไม่มี session ให้เด้งกลับไปหน้า login
     window.location.href = "login.html";
     return;
   }
 
-  nameEl.textContent = student.name || "นักเรียน";
-  idEl.textContent   = student.studentId || "-";
+  if (nameEl) nameEl.textContent = student.name || "นักเรียน";
+  if (idEl)   idEl.textContent   = student.studentId || "-";
 
-  // ---------- โหลดข้อมูล Dashboard ----------
+  // โหลดข้อมูล Dashboard จาก GAS
   loadDashboard();
 
   async function loadDashboard() {
     setMsg("กำลังโหลดข้อมูลการเข้าเรียน...");
-    setStatusBadge("กำลังประมวลผล...");
 
     try {
       const res = await callApi("getStudentHistory", {
-        studentId: student.studentId
+        studentId: student.studentId,
       });
 
       if (!res || !res.success) {
@@ -92,90 +64,95 @@ document.addEventListener("DOMContentLoaded", () => {
       const late   = history.filter(r => String(r.status || "").toUpperCase() === "LATE").length;
       const absent = history.filter(r => String(r.status || "").toUpperCase() === "ABSENT").length;
 
-      const come = ok + late;
-      const rate = total ? Math.round((come * 100) / total) : 0;
-      const okPer   = total ? Math.round((ok   * 100) / total) : 0;
-      const latePer = total ? Math.round((late * 100) / total) : 0;
+      const come      = ok + late;
+      const rate      = total ? Math.round((come * 100) / total) : 0;
+      const okPer     = total ? Math.round((ok   * 100) / total) : 0;
+      const latePer   = total ? Math.round((late * 100) / total) : 0;
 
-      totalEl.textContent       = total;
-      okCountEl.textContent     = ok;
-      lateCountEl.textContent   = late;
-      okPercentEl.textContent   = okPer   + "%";
-      latePercentEl.textContent = latePer + "%";
-      ratePercentEl.textContent = rate    + "%";
+      if (totalEl)       totalEl.textContent       = total;
+      if (okCountEl)     okCountEl.textContent     = ok;
+      if (lateCountEl)   lateCountEl.textContent   = late;
+      if (okPercentEl)   okPercentEl.textContent   = okPer   + "%";
+      if (latePercentEl) latePercentEl.textContent = latePer + "%";
+      if (ratePercentEl) ratePercentEl.textContent = rate    + "%";
 
       if (!total) {
-        setMsg("ยังไม่มีประวัติการเช็คชื่อในระบบ", "");
-        setStatusBadge("ยังไม่มีข้อมูล");
+        setMsg("ยังไม่มีประวัติการเช็คชื่อในระบบ");
       } else {
-        setMsg(`ข้อมูลล่าสุดทั้งหมด ${total} รายการ`, "ok");
-        if (rate >= 90) {
-          setStatusBadge("สถานะดีมาก 👍");
-        } else if (rate >= 75) {
-          setStatusBadge("สถานะใช้ได้ ต้องรักษาระดับ 💪");
-        } else {
-          setStatusBadge("ควรปรับปรุงการเข้าเรียน ⚠️");
-        }
+        setMsg(`ข้อมูลล่าสุดทั้งหมด ${total} รายการ`);
       }
 
       renderChart(ok, late, absent);
       renderRecent(history);
-
     } catch (err) {
       console.error("loadDashboard error:", err);
-      setMsg(err.message || "โหลดข้อมูลไม่สำเร็จ", "error");
-      setStatusBadge("เกิดข้อผิดพลาด");
+      setMsg(err.message || "โหลดข้อมูลไม่สำเร็จ");
       renderChart(0, 0, 0);
       renderRecent([]);
     }
   }
 
+  function setMsg(text) {
+    if (!msgEl) return;
+    msgEl.textContent = text || "";
+  }
+
+  // ------- วาดกราฟโดนัท -------
   function renderChart(ok, late, absent) {
-    if (!chartCanvas || !window.Chart) return;
+    if (!chartCanvas || typeof Chart === "undefined") return;
 
     const ctx = chartCanvas.getContext("2d");
-    const data = {
-      labels: ["มา (OK)", "สาย (LATE)", "ขาด (ABSENT)"],
-      datasets: [{
-        label: "จำนวนครั้ง",
-        data: [ok, late, absent],
-      }]
-    };
 
-    const options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          labels: {
-            color: "#e5e7eb",
-            font: { size: 11 }
-          }
-        }
-      }
-    };
-
-    if (statusChart) statusChart.destroy();
+    if (statusChart) {
+      statusChart.destroy();
+    }
 
     statusChart = new Chart(ctx, {
       type: "doughnut",
-      data,
-      options
+      data: {
+        labels: ["มา (OK)", "สาย (LATE)", "ขาด (ABSENT)"],
+        datasets: [
+          {
+            data: [ok, late, absent],
+            backgroundColor: ["#22c55e", "#eab308", "#f97316"],
+            borderWidth: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false, // ปิด animation กันอาการกระพริบ
+        plugins: {
+          legend: {
+            labels: {
+              color: "#e5e7eb",
+              font: { size: 11 },
+            },
+          },
+        },
+      },
     });
   }
 
+  // ------- เติมตาราง 5 รายการล่าสุด -------
   function renderRecent(history) {
-    if (!recentTable || !recentEmpty) return;
+    if (!recentTableBody) return;
 
-    recentTable.innerHTML = "";
-    recentEmpty.textContent = "";
+    recentTableBody.innerHTML = "";
 
     if (!history.length) {
-      recentEmpty.textContent = "ยังไม่มีข้อมูลการเช็คชื่อ";
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 4;
+      td.className = "table-empty";
+      td.textContent = "ยังไม่มีข้อมูลการเช็คชื่อในระบบ";
+      tr.appendChild(td);
+      recentTableBody.appendChild(tr);
       return;
     }
 
-    // ใช้ 5 รายการล่าสุด (ข้อมูลในชีตเรียงจากเก่าสุด -> ใหม่สุด)
+    // ใช้ 5 รายการล่าสุด (ชีตเก่าสุด -> ใหม่สุด)
     const lastFive = history.slice(-5).reverse();
 
     lastFive.forEach(row => {
@@ -188,6 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const tdTime = document.createElement("td");
       tdTime.textContent = time;
+      tdTime.className = "time";
       tr.appendChild(tdTime);
 
       const tdToken = document.createElement("td");
@@ -196,29 +174,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const tdStatus = document.createElement("td");
       tdStatus.textContent = st;
-      tdStatus.className = statusClass(st);
+      const upper = String(st || "").toUpperCase();
+      if (upper === "OK") tdStatus.className = "status-ok";
+      else if (upper === "LATE") tdStatus.className = "status-late";
+      else if (upper === "ABSENT") tdStatus.className = "status-absent";
       tr.appendChild(tdStatus);
 
       const tdTeacher = document.createElement("td");
       tdTeacher.textContent = teacherEmail;
       tr.appendChild(tdTeacher);
 
-      recentTable.appendChild(tr);
+      recentTableBody.appendChild(tr);
     });
   }
-
-  // ---------- ปุ่มเมนู ----------
-  btnScan?.addEventListener("click", () => {
-    window.location.href = "scan.html";
-  });
-
-  btnHistory?.addEventListener("click", () => {
-    window.location.href = "history.html";
-  });
-
-  btnLogout?.addEventListener("click", () => {
-    localStorage.removeItem("cpvc_student");
-    sessionStorage.removeItem("student");
-    window.location.href = "login.html";
-  });
 });
