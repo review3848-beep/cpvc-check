@@ -10,8 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="../css/styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-  <script type="module" src="../js/student-dashboard.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module" src="../js/student-dashboard.js"></script>
 
   <style>
     :root {
@@ -35,33 +35,35 @@
 
     .page { min-height: 100vh; display: flex; flex-direction: column; }
 
+    /* NAVBAR ด้านบน */
     .top-nav {
       padding: 1.1rem 1.8rem;
       border-bottom: 1px solid rgba(15,23,42,.9);
-      background: radial-gradient(circle at 0 0, rgba(56,189,248,.25), transparent 55%),
-                  radial-gradient(circle at 100% 0, rgba(37,99,235,.35), transparent 55%),
-                  #020617;
+      background:
+        radial-gradient(circle at 0 0, rgba(56,189,248,.25), transparent 55%),
+        radial-gradient(circle at 100% 0, rgba(37,99,235,.35), transparent 55%),
+        #020617;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .top-left { display:flex; flex-direction:column; gap:.15rem; }
+    .top-left { display:flex; flex-direction:column; gap:.2rem; }
 
-    .top-title { font-size: 1.3rem; font-weight: 600; }
+    .top-title { font-size: 1.35rem; font-weight: 600; }
     .top-sub { font-size: .8rem; color: var(--text-muted); }
 
     .dash-nav {
       display: flex;
       gap: .6rem;
-      margin-top: .35rem;
+      margin-top: .4rem;
       flex-wrap: wrap;
     }
 
     .dash-nav button {
       background: linear-gradient(135deg,#2563eb,#38bdf8);
       border: none;
-      padding: .35rem .8rem;
+      padding: .38rem .9rem;
       border-radius: 999px;
       color: #f9fafb;
       font-size: .75rem;
@@ -100,54 +102,127 @@
       font-size:.9rem;
     }
 
+    /* MAIN LAYOUT */
     .main {
       flex: 1;
       max-width: 1100px;
       margin: 1.6rem auto 2.2rem;
       padding: 0 1.4rem;
+      display:flex;
+      flex-direction:column;
+      gap:1.4rem;
     }
 
+    /* SUMMARY CARDS */
     .stat-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+      grid-template-columns: repeat(auto-fit,minmax(230px,1fr));
       gap: 1rem;
-      margin-bottom: 1.6rem;
     }
 
     .stat-card {
-      background: radial-gradient(circle at 0 0, rgba(56,189,248,.22), transparent 60%),
-                  #020617;
+      background:
+        radial-gradient(circle at 0 0, rgba(56,189,248,.22), transparent 60%),
+        #020617;
       border-radius: 1.1rem;
-      padding: 1.1rem 1.2rem;
+      padding: 1.05rem 1.2rem;
       border: 1px solid var(--card-border);
       box-shadow: 0 16px 46px rgba(0,0,0,.9);
     }
 
     .stat-card:nth-child(4) {
-      background: radial-gradient(circle at 100% 0, rgba(34,197,94,.18), transparent 65%),
-                  #020617;
+      background:
+        radial-gradient(circle at 100% 0, rgba(34,197,94,.18), transparent 65%),
+        #020617;
       border-color: rgba(34,197,94,.6);
     }
 
-    .stat-label { font-size:.82rem; color:var(--text-muted); margin-bottom:.25rem; }
+    .stat-label { font-size:.82rem; color:var(--text-muted); margin-bottom:.3rem; }
     .stat-value { font-size:1.8rem; font-weight:700; }
-    .stat-note  { font-size:.78rem; color:#a5b4fc; margin-top:.2rem; }
+    .stat-note  { font-size:.78rem; color:#a5b4fc; margin-top:.25rem; }
 
-    .chart-card {
-      margin-top:.8rem;
+    /* GRID: CHART + RECENT TABLE */
+    .lower-grid {
+      display:grid;
+      grid-template-columns: minmax(0,1.5fr) minmax(0,1.1fr);
+      gap:1rem;
+      align-items:stretch;
+    }
+
+    .card-base {
       background:#020617;
       border-radius:1.2rem;
       border:1px solid rgba(30,64,175,.7);
       box-shadow:0 18px 50px rgba(15,23,42,.95);
-      padding:1.1rem 1.2rem 1.4rem;
+      padding:1.1rem 1.2rem 1.3rem;
     }
 
-    .chart-title { font-size:.95rem; margin-bottom:.15rem; }
-    .chart-sub   { font-size:.78rem; color:var(--text-muted); margin-bottom:.7rem; }
+    .chart-card { position:relative; }
+
+    .chart-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.6rem;
+      margin-bottom:.5rem;
+    }
+
+    .chart-title { font-size:.95rem; }
+    .chart-sub   { font-size:.78rem; color:var(--text-muted); }
+
+    .chart-badge {
+      padding:.2rem .6rem;
+      border-radius:999px;
+      font-size:.72rem;
+      background:rgba(15,23,42,.9);
+      border:1px solid rgba(148,163,184,.5);
+      color:#e5e7eb;
+      white-space:nowrap;
+    }
 
     .chart-wrap { position:relative; min-height:260px;}
     canvas { width:100% !important; height:100% !important; }
 
+    .dash-msg {
+      margin-top:.45rem;
+      font-size:.78rem;
+      color:#9ca3af;
+    }
+    .dash-msg.error { color:#fca5a5; }
+    .dash-msg.ok    { color:#bbf7d0; }
+
+    /* RECENT TABLE */
+    .recent-title { font-size:.92rem; margin-bottom:.25rem; }
+    .recent-sub   { font-size:.78rem; color:var(--text-muted); margin-bottom:.5rem; }
+
+    table.recent-table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:.8rem;
+    }
+    table.recent-table th,
+    table.recent-table td {
+      padding:.45rem .4rem;
+      border-bottom:1px solid rgba(30,64,175,.5);
+      text-align:left;
+      white-space:nowrap;
+    }
+    table.recent-table th {
+      color:#93c5fd;
+      font-weight:500;
+      font-size:.78rem;
+    }
+    table.recent-table td.status-ok   { color:#4ade80; font-weight:500; }
+    table.recent-table td.status-late { color:#facc15; font-weight:500; }
+    table.recent-table td.status-absent { color:#fb923c; font-weight:500; }
+
+    .recent-empty {
+      font-size:.78rem;
+      color:var(--text-muted);
+      margin-top:.2rem;
+    }
+
+    /* FOOTER */
     .footer {
       max-width: 1100px;
       margin: 0 auto 1.6rem;
@@ -157,6 +232,12 @@
       display:flex;
       justify-content:space-between;
       gap:.5rem;
+    }
+
+    @media (max-width:900px) {
+      .lower-grid {
+        grid-template-columns: minmax(0,1fr);
+      }
     }
 
     @media (max-width:640px) {
@@ -179,9 +260,9 @@
         <div class="top-sub">สรุปภาพรวมการเข้าเรียนของคุณในระบบ CPVC-Check</div>
 
         <div class="dash-nav">
-          <button type="button" onclick="goScan()">📸 ไปหน้าเช็คชื่อ</button>
-          <button type="button" onclick="goHistory()">🕘 ดูประวัติการเช็คชื่อ</button>
-          <button type="button" onclick="logout()">🚪 ออกจากระบบ</button>
+          <button type="button" id="btnGoScan">📸 ไปหน้าเช็คชื่อ</button>
+          <button type="button" id="btnGoHistory">🕘 ดูประวัติการเช็คชื่อ</button>
+          <button type="button" id="btnLogout">🚪 ออกจากระบบ</button>
         </div>
       </div>
 
@@ -192,6 +273,7 @@
     </header>
 
     <main class="main">
+      <!-- SUMMARY 4 ใบ -->
       <section class="stat-grid">
         <article class="stat-card">
           <div class="stat-label">จำนวนรายการเช็คชื่อทั้งหมด</div>
@@ -202,13 +284,17 @@
         <article class="stat-card">
           <div class="stat-label">มาเรียนตรงเวลา (OK)</div>
           <div class="stat-value" id="okCount">0</div>
-          <div class="stat-note"><span id="okPercent">0%</span> ของการเช็คชื่อทั้งหมด</div>
+          <div class="stat-note">
+            <span id="okPercent">0%</span> ของการเช็คชื่อทั้งหมด
+          </div>
         </article>
 
         <article class="stat-card">
           <div class="stat-label">มาสาย (LATE)</div>
           <div class="stat-value" id="lateCount">0</div>
-          <div class="stat-note"><span id="latePercent">0%</span> ของการเช็คชื่อทั้งหมด</div>
+          <div class="stat-note">
+            <span id="latePercent">0%</span> ของการเช็คชื่อทั้งหมด
+          </div>
         </article>
 
         <article class="stat-card">
@@ -218,13 +304,45 @@
         </article>
       </section>
 
-      <section class="chart-card">
-        <div class="chart-title">กราฟ มา / สาย / ขาด</div>
-        <div class="chart-sub">แสดงจำนวนครั้งในแต่ละสถานะ จากข้อมูล ATTENDANCE ของคุณ</div>
+      <!-- CHART + RECENT -->
+      <section class="lower-grid">
+        <article class="card-base chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">กราฟ มา / สาย / ขาด</div>
+              <div class="chart-sub">แสดงจำนวนครั้งในแต่ละสถานะ จากข้อมูล ATTENDANCE ของคุณ</div>
+            </div>
+            <div class="chart-badge" id="statusSummaryBadge">
+              ยังไม่มีข้อมูลการเช็คชื่อ
+            </div>
+          </div>
 
-        <div class="chart-wrap">
-          <canvas id="statusChart"></canvas>
-        </div>
+          <div class="chart-wrap">
+            <canvas id="statusChart"></canvas>
+          </div>
+
+          <div id="dashMsg" class="dash-msg"></div>
+        </article>
+
+        <article class="card-base">
+          <div class="recent-title">ประวัติการเช็คชื่อล่าสุด</div>
+          <div class="recent-sub">แสดง 5 รายการล่าสุดของคุณ</div>
+
+          <table class="recent-table">
+            <thead>
+              <tr>
+                <th>เวลา</th>
+                <th>TOKEN</th>
+                <th>สถานะ</th>
+                <th>ครู</th>
+              </tr>
+            </thead>
+            <tbody id="recentTable">
+              <!-- JS เติม -->
+            </tbody>
+          </table>
+          <div id="recentEmpty" class="recent-empty"></div>
+        </article>
       </section>
     </main>
 
@@ -233,36 +351,5 @@
       <span>เวอร์ชันนักเรียน • ดูเฉพาะข้อมูลของตนเอง</span>
     </footer>
   </div>
-
-  <script>
-    (function () {
-      const id = sessionStorage.getItem("studentId");
-      const name = sessionStorage.getItem("studentName");
-
-      if (!id) {
-        window.location.href = "../login.html";
-        return;
-      }
-
-      const nameEl = document.getElementById("studentNameDisplay");
-      const idEl = document.getElementById("studentIdDisplay");
-
-      if (nameEl) nameEl.textContent = name || "นักเรียน";
-      if (idEl) idEl.textContent = id;
-    })();
-
-    function goScan() {
-      window.location.href = "scan.html";
-    }
-
-    function goHistory() {
-      window.location.href = "history.html";
-    }
-
-    function logout() {
-      sessionStorage.clear();
-      window.location.href = "../login.html";
-    }
-  </script>
 </body>
 </html>

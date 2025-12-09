@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
   } catch (err) {
-    console.warn("อ่าน sessionStorage ไม่ได้:", err);
+    console.warn("sessionStorage error:", err);
     sessionStorage.clear();
   }
 
@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // รองรับโครง response หลายแบบ
+      // โครงตอบกลับ: { success:true, student:{studentId, name} }
       const s =
         resp.student ||
         resp.data || {
@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
           name: resp.name || "",
         };
 
-      // เก็บ session แบบที่ dashboard / history ใช้
+      // เก็บ session ให้ตรงกับ dashboard / scan / history
       sessionStorage.setItem("studentId", s.studentId || studentId);
       sessionStorage.setItem(
         "studentName",
@@ -100,13 +100,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // คลิกปุ่มเข้าสู่ระบบ
+  // คลิกปุ่ม = ล็อกอิน
   loginBtn.addEventListener("click", (e) => {
     e.preventDefault();
     handleLogin();
   });
 
-  // กด Enter เพื่อเข้าสู่ระบบ
+  // กด Enter ในช่องใดช่องหนึ่ง = ล็อกอิน
   [studentIdInput, passwordInput].forEach((input) => {
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
