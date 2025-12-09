@@ -16,7 +16,7 @@
   <style>
     :root {
       --bg-main: #020617;
-      --card-border: rgba(148, 163, 184, 0.25);
+      --card-border: rgba(148, 163, 184, 0.3);
       --text-main: #e5e7eb;
       --text-muted: #9ca3af;
     }
@@ -37,7 +37,7 @@
 
     /* NAVBAR ด้านบน */
     .top-nav {
-      padding: 1.1rem 1.8rem;
+      padding: 1.2rem 1.8rem;
       border-bottom: 1px solid rgba(15,23,42,.9);
       background:
         radial-gradient(circle at 0 0, rgba(56,189,248,.25), transparent 55%),
@@ -48,29 +48,29 @@
       justify-content: space-between;
     }
 
-    .top-left { display:flex; flex-direction:column; gap:.2rem; }
+    .top-left { display:flex; flex-direction:column; gap:.25rem; }
 
-    .top-title { font-size: 1.35rem; font-weight: 600; }
-    .top-sub { font-size: .8rem; color: var(--text-muted); }
+    .top-title { font-size: 1.4rem; font-weight: 600; }
+    .top-sub { font-size: .82rem; color: var(--text-muted); }
 
     .dash-nav {
       display: flex;
       gap: .6rem;
-      margin-top: .4rem;
+      margin-top: .45rem;
       flex-wrap: wrap;
     }
 
     .dash-nav button {
       background: linear-gradient(135deg,#2563eb,#38bdf8);
       border: none;
-      padding: .38rem .9rem;
+      padding: .4rem .9rem;
       border-radius: 999px;
       color: #f9fafb;
       font-size: .75rem;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: .25rem;
+      gap: .3rem;
       box-shadow: 0 10px 26px rgba(37,99,235,.7);
       transition: 0.15s;
     }
@@ -99,52 +99,92 @@
     .top-right strong {
       display:block;
       color:#e5e7eb;
-      font-size:.9rem;
+      font-size:.92rem;
     }
 
     /* MAIN LAYOUT */
     .main {
       flex: 1;
       max-width: 1100px;
-      margin: 1.6rem auto 2.2rem;
+      margin: 1.7rem auto 2.3rem;
       padding: 0 1.4rem;
       display:flex;
       flex-direction:column;
-      gap:1.4rem;
+      gap:1.5rem;
     }
 
-    /* SUMMARY CARDS */
+    /* SUMMARY 4 CARDS */
     .stat-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(230px,1fr));
+      grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
       gap: 1rem;
     }
 
     .stat-card {
-      background:
-        radial-gradient(circle at 0 0, rgba(56,189,248,.22), transparent 60%),
-        #020617;
+      position: relative;
+      overflow: hidden;
       border-radius: 1.1rem;
-      padding: 1.05rem 1.2rem;
+      padding: 1rem 1.1rem;
       border: 1px solid var(--card-border);
+      background:
+        radial-gradient(circle at 0 0, rgba(56,189,248,.2), transparent 60%),
+        radial-gradient(circle at 120% 0, rgba(37,99,235,.12), transparent 55%),
+        #020617;
       box-shadow: 0 16px 46px rgba(0,0,0,.9);
+      display:flex;
+      gap:.8rem;
+      align-items:flex-start;
     }
 
     .stat-card:nth-child(4) {
       background:
-        radial-gradient(circle at 100% 0, rgba(34,197,94,.18), transparent 65%),
+        radial-gradient(circle at 0 0, rgba(34,197,94,.23), transparent 60%),
+        radial-gradient(circle at 120% 0, rgba(56,189,248,.16), transparent 55%),
         #020617;
       border-color: rgba(34,197,94,.6);
     }
 
-    .stat-label { font-size:.82rem; color:var(--text-muted); margin-bottom:.3rem; }
-    .stat-value { font-size:1.8rem; font-weight:700; }
-    .stat-note  { font-size:.78rem; color:#a5b4fc; margin-top:.25rem; }
+    .stat-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 1.1rem;
+      flex-shrink:0;
+      background:
+        radial-gradient(circle at 30% 0%, rgba(248,250,252,.9), transparent 60%),
+        rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,.6);
+      box-shadow:0 10px 26px rgba(15,23,42,1);
+    }
+
+    .stat-content { flex:1; }
+
+    .stat-label {
+      font-size:.8rem;
+      color:var(--text-muted);
+      margin-bottom:.15rem;
+    }
+
+    .stat-value {
+      font-size:1.85rem;
+      font-weight:700;
+      line-height:1.1;
+    }
+
+    .stat-note  {
+      font-size:.76rem;
+      color:#a5b4fc;
+      margin-top:.15rem;
+      white-space:nowrap;
+    }
 
     /* GRID: CHART + RECENT TABLE */
     .lower-grid {
       display:grid;
-      grid-template-columns: minmax(0,1.5fr) minmax(0,1.1fr);
+      grid-template-columns: minmax(0,1.6fr) minmax(0,1.2fr);
       gap:1rem;
       align-items:stretch;
     }
@@ -162,20 +202,20 @@
     .chart-header {
       display:flex;
       justify-content:space-between;
-      align-items:center;
-      gap:.6rem;
-      margin-bottom:.5rem;
+      align-items:flex-start;
+      gap:.8rem;
+      margin-bottom:.6rem;
     }
 
-    .chart-title { font-size:.95rem; }
-    .chart-sub   { font-size:.78rem; color:var(--text-muted); }
+    .chart-title { font-size:.96rem; font-weight:500; }
+    .chart-sub   { font-size:.78rem; color:var(--text-muted); margin-top:.1rem; }
 
     .chart-badge {
-      padding:.2rem .6rem;
+      padding:.2rem .65rem;
       border-radius:999px;
       font-size:.72rem;
-      background:rgba(15,23,42,.9);
-      border:1px solid rgba(148,163,184,.5);
+      background:rgba(15,23,42,.96);
+      border:1px solid rgba(148,163,184,.55);
       color:#e5e7eb;
       white-space:nowrap;
     }
@@ -184,7 +224,7 @@
     canvas { width:100% !important; height:100% !important; }
 
     .dash-msg {
-      margin-top:.45rem;
+      margin-top:.5rem;
       font-size:.78rem;
       color:#9ca3af;
     }
@@ -192,8 +232,8 @@
     .dash-msg.ok    { color:#bbf7d0; }
 
     /* RECENT TABLE */
-    .recent-title { font-size:.92rem; margin-bottom:.25rem; }
-    .recent-sub   { font-size:.78rem; color:var(--text-muted); margin-bottom:.5rem; }
+    .recent-title { font-size:.94rem; font-weight:500; margin-bottom:.2rem; }
+    .recent-sub   { font-size:.78rem; color:var(--text-muted); margin-bottom:.55rem; }
 
     table.recent-table {
       width:100%;
@@ -203,7 +243,7 @@
     table.recent-table th,
     table.recent-table td {
       padding:.45rem .4rem;
-      border-bottom:1px solid rgba(30,64,175,.5);
+      border-bottom:1px solid rgba(30,64,175,.55);
       text-align:left;
       white-space:nowrap;
     }
@@ -219,7 +259,7 @@
     .recent-empty {
       font-size:.78rem;
       color:var(--text-muted);
-      margin-top:.2rem;
+      margin-top:.35rem;
     }
 
     /* FOOTER */
@@ -243,6 +283,7 @@
     @media (max-width:640px) {
       .top-nav { flex-direction:column; align-items:flex-start; gap:.6rem; }
       .top-right { text-align:left;}
+      .stat-card { padding: .9rem 1rem; }
     }
   </style>
 </head>
@@ -271,31 +312,43 @@
       <!-- SUMMARY 4 ใบ -->
       <section class="stat-grid">
         <article class="stat-card">
-          <div class="stat-label">จำนวนรายการเช็คชื่อทั้งหมด</div>
-          <div class="stat-value" id="totalRecords">0</div>
-          <div class="stat-note">รวมทุกครั้งที่มีการบันทึกในระบบ</div>
-        </article>
-
-        <article class="stat-card">
-          <div class="stat-label">มาเรียนตรงเวลา (OK)</div>
-          <div class="stat-value" id="okCount">0</div>
-          <div class="stat-note">
-            <span id="okPercent">0%</span> ของการเช็คชื่อทั้งหมด
+          <div class="stat-icon">📊</div>
+          <div class="stat-content">
+            <div class="stat-label">จำนวนรายการเช็คชื่อทั้งหมด</div>
+            <div class="stat-value" id="totalRecords">0</div>
+            <div class="stat-note">รวมทุกครั้งที่มีการบันทึกในระบบ</div>
           </div>
         </article>
 
         <article class="stat-card">
-          <div class="stat-label">มาสาย (LATE)</div>
-          <div class="stat-value" id="lateCount">0</div>
-          <div class="stat-note">
-            <span id="latePercent">0%</span> ของการเช็คชื่อทั้งหมด
+          <div class="stat-icon">✅</div>
+          <div class="stat-content">
+            <div class="stat-label">มาเรียนตรงเวลา (OK)</div>
+            <div class="stat-value" id="okCount">0</div>
+            <div class="stat-note">
+              <span id="okPercent">0%</span> ของการเช็คชื่อทั้งหมด
+            </div>
           </div>
         </article>
 
         <article class="stat-card">
-          <div class="stat-label">อัตราการเข้าเรียน (มา + สาย)</div>
-          <div class="stat-value" id="ratePercent">0%</div>
-          <div class="stat-note">คิดจากจำนวนครั้งที่มาเรียนเปรียบเทียบกับทั้งหมด</div>
+          <div class="stat-icon">⏰</div>
+          <div class="stat-content">
+            <div class="stat-label">มาสาย (LATE)</div>
+            <div class="stat-value" id="lateCount">0</div>
+            <div class="stat-note">
+              <span id="latePercent">0%</span> ของการเช็คชื่อทั้งหมด
+            </div>
+          </div>
+        </article>
+
+        <article class="stat-card">
+          <div class="stat-icon">📈</div>
+          <div class="stat-content">
+            <div class="stat-label">อัตราการเข้าเรียน (มา + สาย)</div>
+            <div class="stat-value" id="ratePercent">0%</div>
+            <div class="stat-note">คิดจากจำนวนครั้งที่มาเรียนเปรียบเทียบกับทั้งหมด</div>
+          </div>
         </article>
       </section>
 
