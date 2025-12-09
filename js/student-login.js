@@ -1,43 +1,6 @@
 // js/student-login.js
-
-// ================= CONFIG API =================
-// ถ้าใช้ไฟล์ api.js และมีตัวแปร API_BASE อยู่แล้ว จะใช้ API_BASE อัตโนมัติ
-// ถ้าไม่ได้ใช้ api.js ให้แก้ "YOUR_GAS_WEB_APP_EXEC_URL" เป็น URL /exec ของ Web App GAS
-const API_ENDPOINT =
-  typeof API_BASE !== "undefined"
-    ? API_BASE
-    : "YOUR_GAS_WEB_APP_EXEC_URL"; // แก้ตรงนี้ถ้าไม่ได้ใช้ api.js
-
-// helper เรียก API ฝั่ง GAS
-async function callStudentApi(action, payload) {
-  if (!API_ENDPOINT || API_ENDPOINT.startsWith("YOUR_GAS_WEB_APP")) {
-    console.error("ยังไม่ได้ตั้งค่า API_ENDPOINT ให้ถูกต้อง");
-    return { success: false, message: "API ยังไม่พร้อมใช้งาน (ยังไม่ได้ตั้งค่า URL)" };
-  }
-
-  try {
-    const res = await fetch(API_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, ...payload }),
-    });
-
-    const data = await res.json();
-    return data;
-  } catch (err) {
-    console.error("callStudentApi error:", err);
-    return { success: false, message: "ติดต่อเซิร์ฟเวอร์ไม่สำเร็จ" };
-  }
-}
-
-// เก็บ session นักเรียนใน localStorage
-function saveStudentSession(studentObj) {
-  try {
-    localStorage.setItem("cpvc_student", JSON.stringify(studentObj));
-  } catch (err) {
-    console.error("saveStudentSession error:", err);
-  }
-}
+// ใช้ร่วมกับ js/api.js ที่มีฟังก์ชัน callApi(action, payload)
+import { callApi } from "./api.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const studentIdInput = document.getElementById("studentId");
@@ -45,19 +8,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.getElementById("loginBtn");
   const msgBox = document.getElementById("msg");
 
-  // ===== ถ้าล็อกอินอยู่แล้วให้เด้งไป Dashboard =====
+  // ===== ถ้ามี session อยู่แล้ว ส่งไปหน้า dashboard เลย =====
   try {
-    const raw = localStorage.getItem("cpvc_student");
-    if (raw) {
-      const st = JSON.parse(raw);
-      if (st && st.studentId) {
-        window.location.href = "dashboard.html";
-        return;
-      }
+    const existId = sessionStorage.getItem("studentId");
+    if (existId) {
+      window.location.href = "dashboard.html";
+      return;
     }
   } catch (err) {
-    console.warn("อ่าน cpvc_student จาก localStorage ไม่ได้:", err);
-    localStorage.removeItem("cpvc_student");
+    console.warn("อ่าน sessionStorage ไม่ได้:", err);
+    sessionStorage.clear();
   }
 
   if (!studentIdInput || !passwordInput || !loginBtn) {
@@ -65,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  function setMessage(text, type) {
+  function setMessage(text, type = "error") {
     if (!msgBox) return;
     msgBox.textContent = text || "";
     msgBox.style.marginTop = text ? "1rem" : "0";
@@ -74,12 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
       msgBox.style.color = "";
       return;
     }
-
-    if (type === "error") {
-      msgBox.style.color = "#fca5a5"; // แดงอ่อน
-    } else {
-      msgBox.style.color = "#bbf7d0"; // เขียวอ่อน
-    }
+    msgBox.style.color = type === "error" ? "#fca5a5" : "#bbf7d0";
   }
 
   function setLoading(isLoading) {
@@ -88,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function handleLogin() {
-    setMessage("", "");
+    setMessage("");
 
     const studentId = (studentIdInput.value || "").trim();
     const password = (passwordInput.value || "").trim();
@@ -100,39 +55,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
     setLoading(true);
 
-    // เรียกฟังก์ชัน loginStudent ใน GAS
-    const resp = await callStudentApi("loginStudent", {
-      studentId,
-      password,
-    });
+    try {
+      // เรียกไปที่ GAS ผ่าน api.js
+      const resp = await callApi("loginStudent", {
+        studentId,
+        password,
+      });
 
-    setLoading(false);
+      setLoading(false);
 
-    if (!resp || !resp.success) {
-      const msg =
-        resp && resp.message
-          ? resp.message
-          : "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
-      setMessage(msg, "error");
-      return;
+      if (!resp || !resp.success) {
+        const msg =
+          resp && resp.message
+            ? resp.message
+            : "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
+        setMessage(msg, "error");
+        return;
+      }
+
+      // รองรับโครง response หลายแบบ
+      const s =
+        resp.student ||
+        resp.data || {
+          studentId,
+          name: resp.name || "",
+        };
+
+      // เก็บ session แบบที่ dashboard / history ใช้
+      sessionStorage.setItem("studentId", s.studentId || studentId);
+      sessionStorage.setItem(
+        "studentName",
+        s.name || s.studentName || "นักเรียน"
+      );
+
+      setMessage("เข้าสู่ระบบสำเร็จ กำลังพาไปหน้า Dashboard...", "success");
+
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 600);
+    } catch (err) {
+      console.error("handleLogin error:", err);
+      setLoading(false);
+      setMessage("ติดต่อเซิร์ฟเวอร์ไม่สำเร็จ", "error");
     }
-
-    // รองรับโครง response หลายแบบ
-    const student =
-      resp.student ||
-      resp.data || {
-        studentId: studentId,
-        name: resp.name || "",
-        email: resp.email || "",
-      };
-
-    saveStudentSession(student);
-
-    setMessage("เข้าสู่ระบบสำเร็จ กำลังพาไปหน้า Dashboard...", "success");
-
-    setTimeout(() => {
-      window.location.href = "dashboard.html";
-    }, 600);
   }
 
   // คลิกปุ่มเข้าสู่ระบบ
@@ -141,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
     handleLogin();
   });
 
-  // กด Enter ในช่องใดช่องหนึ่งแล้วล็อกอิน
+  // กด Enter เพื่อเข้าสู่ระบบ
   [studentIdInput, passwordInput].forEach((input) => {
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
