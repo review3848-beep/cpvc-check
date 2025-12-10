@@ -1,96 +1,294 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>ประวัติการเข้าเรียน | CPVC-Check</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <link rel="stylesheet" href="../css/styles.css">
-  <script type="module" src="../js/student-history.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../css/styles.css" />
+  <script src="../js/student-history.js" type="module" defer></script>
 
   <style>
     body {
-      margin:0;
-      min-height:100vh;
-      background:#020617;
-      color:white;
-      font-family:"Inter",system-ui,sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Prompt", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 0% 0%, #020617, transparent 55%),
+        radial-gradient(circle at 100% 100%, #020617, #020617 70%);
+      color: #e5e7eb;
     }
 
-    .nav {
-      padding:1rem 1.8rem;
-      background:rgba(15,23,42,.95);
-      border-bottom:1px solid rgba(148,163,184,.25);
-      display:flex;justify-content:space-between;align-items:center;
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    .nav-title { font-size:1.25rem; font-weight:600; }
-    .nav-user { font-size:.9rem; color:#cbd5f5; }
-
-    .wrap {
-      max-width:800px;
-      margin:2rem auto;
-      padding:1.6rem 1.4rem 2rem;
-      border-radius:1.2rem;
-      background:rgba(15,23,42,.9);
-      border:1px solid rgba(148,163,184,.3);
-      box-shadow:0 18px 48px rgba(15,23,42,.9);
+    .top-nav {
+      padding: 1.2rem 2rem;
+      background:
+        radial-gradient(circle at 0 0, rgba(56,189,248,.25), transparent 55%),
+        radial-gradient(circle at 100% 0, rgba(37,99,235,.4), transparent 55%),
+        #020617;
+      border-bottom: 1px solid rgba(15,23,42,.9);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      box-shadow: 0 18px 60px rgba(15,23,42,0.95);
     }
 
-    h2 { margin-top:0; margin-bottom:1.2rem; }
+    .top-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .top-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .top-sub {
+      font-size: 0.82rem;
+      color: #9ca3af;
+    }
+
+    .nav-actions {
+      margin-top: 0.6rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .pill-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 0.45rem 1.1rem;
+      font-size: 0.78rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+      color: #f9fafb;
+      background: linear-gradient(135deg,#2563eb,#38bdf8);
+      box-shadow: 0 12px 28px rgba(37,99,235,.7);
+      transition: transform .12s ease-out, box-shadow .12s ease-out, filter .12s;
+      white-space: nowrap;
+    }
+
+    .pill-btn.secondary {
+      background: linear-gradient(135deg,#0ea5e9,#22c55e);
+      box-shadow: 0 12px 28px rgba(34,197,94,.65);
+    }
+
+    .pill-btn.danger {
+      background: linear-gradient(135deg,#64748b,#020617);
+      box-shadow: 0 12px 28px rgba(15,23,42,.9);
+    }
+
+    .pill-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .top-right {
+      text-align: right;
+      font-size: 0.82rem;
+      color: #9ca3af;
+    }
+    .top-right strong {
+      display: block;
+      font-size: 0.95rem;
+      color: #e5e7eb;
+    }
+
+    .main {
+      flex: 1;
+      max-width: 1100px;
+      margin: 1.8rem auto 2.4rem;
+      padding: 0 1.5rem 0.4rem;
+    }
+
+    .history-card {
+      background: rgba(2, 6, 23, 0.96);
+      border-radius: 1.1rem;
+      border: 1px solid rgba(30,64,175,.7);
+      box-shadow: 0 18px 54px rgba(15,23,42,.95);
+      padding: 1.2rem 1.4rem 1.4rem;
+      backdrop-filter: blur(16px);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+
+    .card-sub {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 0.6rem;
+    }
+
+    .badge-soft {
+      font-size: 0.72rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,.55);
+      color: #e5e7eb;
+      background: rgba(15,23,42,.92);
+      white-space: nowrap;
+    }
+
+    .history-table-wrap {
+      overflow-x: auto;
+    }
 
     table {
-      width:100%;
-      border-collapse:collapse;
-      font-size:.9rem;
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      min-width: 700px;
     }
-
     th, td {
-      padding:.7rem .6rem;
-      border-bottom:1px solid rgba(148,163,184,.25);
-      text-align:left;
+      padding: 0.55rem 0.55rem;
+      border-bottom: 1px solid rgba(30,64,175,.55);
+      text-align: left;
+      white-space: nowrap;
+    }
+    th {
+      font-weight: 500;
+      color: #bfdbfe;
+      font-size: 0.78rem;
     }
 
-    th { color:#93c5fd; font-weight:500; }
+    td.status-ok    { color: #22c55e; font-weight: 600; }
+    td.status-late  { color: #eab308; font-weight: 600; }
+    td.status-absent{ color: #f97316; font-weight: 600; }
 
-    .status-ok { color:#4ade80; font-weight:600; }
-    .status-late { color:#eab308; font-weight:600; }
-    .status-absent { color:#f97316; font-weight:600; }
+    #historyMsg {
+      margin-top: 0.7rem;
+      font-size: 0.78rem;
+      color: #9ca3af;
+      text-align: right;
+    }
 
-    #msg {
-      margin-top:1rem;
-      text-align:center;
-      font-size:.9rem;
-      color:#cbd5f5;
+    .footer {
+      max-width: 1100px;
+      margin: 0 auto 1.6rem;
+      padding: 0 1.5rem;
+      font-size: 0.72rem;
+      color: #9ca3af;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .top-nav {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.1rem 1.3rem;
+      }
+      .top-right {
+        text-align: left;
+      }
+      .main {
+        padding: 0 1.1rem;
+      }
     }
   </style>
 </head>
-
 <body>
+  <div class="page">
+    <!-- HEADER -->
+    <header class="top-nav">
+      <div class="top-left">
+        <div class="top-title">ประวัติการเข้าเรียน</div>
+        <div class="top-sub">ดูรายการเช็คชื่อทั้งหมดของคุณในระบบ CPVC-Check</div>
 
+        <div class="nav-actions">
+          <button class="pill-btn secondary" type="button" onclick="window.location.href='dashboard.html'">
+            📊 กลับหน้า Dashboard
+          </button>
+          <button class="pill-btn" type="button" onclick="window.location.href='scan.html'">
+            📸 ไปหน้าเช็คชื่อ
+          </button>
+          <button class="pill-btn danger" type="button" onclick="logoutStudent()">
+            🚪 ออกจากระบบ
+          </button>
+        </div>
+      </div>
 
-  <div class="nav">
-    <div class="nav-title">CPVC-Check – ประวัติการเข้าเรียน</div>
-    <div class="nav-user">
-      👤 <span id="histName"></span> • <span id="histId"></span>
-    </div>
+      <div class="top-right">
+        <strong id="studentNameDisplay">นักเรียน</strong>
+        ID : <span id="studentIdDisplay">-</span>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main">
+      <section class="history-card">
+        <div class="card-header">
+          <div class="card-title">รายการเช็คชื่อทั้งหมด</div>
+          <span class="badge-soft">แสดง วิชา / ห้อง / สถานะ / ครู จาก ATTENDANCE</span>
+        </div>
+        <div class="card-sub">
+          ระบบจะดึงข้อมูลจากประวัติการเช็คชื่อของคุณและแสดงตามลำดับเวลาล่าสุดก่อน
+        </div>
+
+        <div class="history-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>เวลา</th>
+                <th>วิชา</th>
+                <th>ห้อง</th>
+                <th>สถานะ</th>
+                <th>ครูผู้สอน</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody">
+              <tr>
+                <td colspan="5" style="text-align:center;color:#9ca3af;">
+                  กำลังโหลดข้อมูล...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="historyMsg"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>CPVC-Check · ระบบเช็คชื่อออนไลน์</span>
+      <span>หน้าประวัติการเข้าเรียนของนักเรียน</span>
+    </footer>
   </div>
 
-  <div class="wrap">
-    <h2>ประวัติการเช็คชื่อ</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>วิชา / คาบ</th>
-          <th>วันที่เวลา</th>
-          <th>สถานะ</th>
-        </tr>
-      </thead>
-      <tbody id="historyTable">
-        <!-- JS เติม -->
-      </tbody>
-    </table>
-    <div id="msg"></div>
-  </div>
+  <script>
+    function logoutStudent() {
+      try {
+        localStorage.removeItem("cpvc_student");
+        sessionStorage.clear();
+      } catch (e) {}
+      window.location.href = "login.html";
+    }
+  </script>
 </body>
 </html>

@@ -133,7 +133,7 @@
       padding: 0 1.5rem 0.4rem;
     }
 
-    /* การ์ด 4 ใบบนสุด */
+    /* การ์ด 4 ใบเรียงสวย ๆ */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -271,18 +271,11 @@
     .chart-wrap {
       position: relative;
       min-height: 260px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
     }
 
-    /* ❗️ตรงนี้แหละที่ช่วยแก้กระพริบ – ไม่บังคับ height 100% */
     canvas {
-      display:block;
-      width:100% !important;
-      max-width:380px;
-      height:auto !important;
-      margin:0 auto;
+      width: 100% !important;
+      height: 100% !important;
     }
 
     table {
@@ -304,11 +297,9 @@
       font-size: 0.78rem;
     }
 
-    td.time { color: #e5e7eb; }
-
-    td.status-ok { color: var(--ok); font-weight: 600; }
-    td.status-late { color: var(--late); font-weight: 600; }
-    td.status-absent { color: var(--absent); font-weight: 600; }
+    td.status-ok    { color: var(--ok);    font-weight: 600; }
+    td.status-late  { color: var(--late);  font-weight: 600; }
+    td.status-absent{ color: var(--absent);font-weight: 600; }
 
     .table-empty {
       text-align: center;
@@ -317,12 +308,14 @@
       padding: 0.9rem 0.4rem;
     }
 
-    #msg {
+    #dashMsg {
       margin-top: 0.5rem;
       font-size: 0.78rem;
-      color: #fca5a5;
+      color: #9ca3af;
       text-align: right;
     }
+    #dashMsg.error { color: #fca5a5; }
+    #dashMsg.ok    { color: #bbf7d0; }
 
     /* ---------- FOOTER ---------- */
     .footer {
@@ -374,13 +367,13 @@
         <div class="top-sub">สรุปภาพรวมการเข้าเรียนของคุณในระบบ CPVC-Check</div>
 
         <div class="dash-actions">
-          <button class="pill-btn" type="button" onclick="window.location.href='scan.html'">
+          <button class="pill-btn" id="btnGoScan" type="button">
             📸 ไปหน้าเช็คชื่อ
           </button>
-          <button class="pill-btn secondary" type="button" onclick="window.location.href='history.html'">
+          <button class="pill-btn secondary" id="btnGoHistory" type="button">
             🕘 ดูประวัติการเช็คชื่อ
           </button>
-          <button class="pill-btn danger" type="button" onclick="logoutStudent()">
+          <button class="pill-btn danger" id="btnLogout" type="button">
             🚪 ออกจากระบบ
           </button>
         </div>
@@ -461,7 +454,7 @@
         <article class="panel">
           <div class="panel-header">
             <div class="panel-title">กราฟ มา / สาย / ขาด</div>
-            <span class="badge-soft">ข้อมูลจาก ATTENDANCE ของคุณ</span>
+            <span class="badge-soft" id="statusSummaryBadge">ข้อมูลจาก ATTENDANCE ของคุณ</span>
           </div>
           <div class="panel-sub">
             แสดงจำนวนครั้งที่มาเรียนตรงเวลา มาสาย และขาดเรียนในภาพรวม
@@ -491,16 +484,16 @@
                 <th>ครู</th>
               </tr>
             </thead>
-            <tbody id="recentTableBody">
+            <tbody id="recentTable">
               <tr>
-                <td colspan="4" class="table-empty">
+                <td colspan="4" class="table-empty" id="recentEmpty">
                   ยังไม่มีข้อมูลการเช็คชื่อในระบบ
                 </td>
               </tr>
             </tbody>
           </table>
 
-          <div id="msg"></div>
+          <div id="dashMsg"></div>
         </article>
       </section>
     </main>
@@ -510,15 +503,5 @@
       <span>เวอร์ชันนักเรียน · ดูข้อมูลเฉพาะของตนเอง</span>
     </footer>
   </div>
-
-  <script>
-    function logoutStudent() {
-      try {
-        localStorage.removeItem("cpvc_student");
-        sessionStorage.clear();
-      } catch (e) {}
-      window.location.href = "login.html";
-    }
-  </script>
 </body>
 </html>
