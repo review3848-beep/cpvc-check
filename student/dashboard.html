@@ -49,6 +49,8 @@
 
     /* ---------- NAVBAR ---------- */
     .top-nav {
+      position: relative;
+      z-index: 20; /* กันสิ่งอื่นมาทับหัว */
       padding: 1.2rem 2rem;
       background: var(--nav-bg);
       border-bottom: 1px solid rgba(15,23,42,.9);
@@ -367,13 +369,22 @@
         <div class="top-sub">สรุปภาพรวมการเข้าเรียนของคุณในระบบ CPVC-Check</div>
 
         <div class="dash-actions">
-          <button class="pill-btn" id="btnGoScan" type="button">
+          <!-- ใช้ onclick ตรง ๆ ให้แน่ใจว่ากดแล้วเปลี่ยนหน้า -->
+          <button class="pill-btn"
+                  type="button"
+                  onclick="window.location.href='scan.html'">
             📸 ไปหน้าเช็คชื่อ
           </button>
-          <button class="pill-btn secondary" id="btnGoHistory" type="button">
+
+          <button class="pill-btn secondary"
+                  type="button"
+                  onclick="window.location.href='history.html'">
             🕘 ดูประวัติการเช็คชื่อ
           </button>
-          <button class="pill-btn danger" id="btnLogout" type="button">
+
+          <button class="pill-btn danger"
+                  type="button"
+                  onclick="logoutStudent()">
             🚪 ออกจากระบบ
           </button>
         </div>
@@ -503,5 +514,15 @@
       <span>เวอร์ชันนักเรียน · ดูข้อมูลเฉพาะของตนเอง</span>
     </footer>
   </div>
+
+  <script>
+    function logoutStudent() {
+      try {
+        localStorage.removeItem("cpvc_student");
+        sessionStorage.clear();
+      } catch (e) {}
+      window.location.href = "login.html";
+    }
+  </script>
 </body>
 </html>
