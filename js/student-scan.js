@@ -1,34 +1,6 @@
 // js/student-scan.js
-
-// ================= CONFIG API =================
-// ถ้าใช้ไฟล์ api.js และมีตัวแปร API_BASE อยู่แล้ว จะใช้ API_BASE อัตโนมัติ
-// ถ้าไม่ได้ใช้ api.js ให้แก้ "YOUR_GAS_WEB_APP_EXEC_URL" เป็น URL /exec ของ Web App GAS
-const API_ENDPOINT =
-  typeof API_BASE !== "undefined"
-    ? API_BASE
-    : "YOUR_GAS_WEB_APP_EXEC_URL"; // แก้ตรงนี้ถ้าไม่ได้ใช้ api.js
-
-// helper เรียก API ฝั่ง GAS
-async function callStudentApi(action, payload) {
-  if (!API_ENDPOINT || API_ENDPOINT.startsWith("YOUR_GAS_WEB_APP")) {
-    console.error("ยังไม่ได้ตั้งค่า API_ENDPOINT ให้ถูกต้อง");
-    return { success: false, message: "API ยังไม่พร้อมใช้งาน (ยังไม่ได้ตั้งค่า URL)" };
-  }
-
-  try {
-    const res = await fetch(API_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, ...payload }),
-    });
-
-    const data = await res.json();
-    return data;
-  } catch (err) {
-    console.error("callStudentApi error:", err);
-    return { success: false, message: "ติดต่อเซิร์ฟเวอร์ไม่สำเร็จ" };
-  }
-}
+// ใช้ API กลางเดียวกับฝั่งครู
+import { callApi } from "./api.js";
 
 // ===== จัดการ session นักเรียน =====
 function getCurrentStudent() {
@@ -57,12 +29,12 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!student) return;
 
   // ===== DOM refs =====
-  const pillUserName = document.getElementById("pillUserName");
-  const tokenInput = document.getElementById("tokenInput");
-  const submitTokenBtn = document.getElementById("submitTokenBtn");
-  const scanMsg = document.getElementById("scanMsg");
-  const statusDot = document.getElementById("sessionStatusDot");
-  const statusText = document.getElementById("sessionStatusText");
+  const pillUserName    = document.getElementById("pillUserName");
+  const tokenInput      = document.getElementById("tokenInput");
+  const submitTokenBtn  = document.getElementById("submitTokenBtn");
+  const scanMsg         = document.getElementById("scanMsg");
+  const statusDot       = document.getElementById("sessionStatusDot");
+  const statusText      = document.getElementById("sessionStatusText");
 
   // ตั้งชื่อบน pill
   if (pillUserName) {
@@ -141,7 +113,16 @@ document.addEventListener("DOMContentLoaded", () => {
       token,
     };
 
-    const resp = await callStudentApi("markAttendance", payload);
+    let resp;
+    try {
+      resp = await callApi("markAttendance", payload);
+    } catch (err) {
+      console.error("callApi error:", err);
+      setLoading(false);
+      setStatus("error", "ติดต่อเซิร์ฟเวอร์ไม่สำเร็จ");
+      setScanMessage("เช็คชื่อไม่สำเร็จ กรุณาลองใหม่อีกครั้ง", "error");
+      return;
+    }
 
     setLoading(false);
 
