@@ -2,17 +2,17 @@
 import { callApi } from "./api.js";
 
 let statusChart = null;
+
+// ฟังก์ชันแปลงเวลาให้เป็นรูปแบบไทยอ่านง่าย
 function formatThaiDateTime(raw) {
   if (!raw) return "-";
 
-  // raw จะเป็น string แบบ "2025-12-11T03:28:57.000Z"
   const d = new Date(raw);
   if (isNaN(d.getTime())) {
-    // ถ้าแปลงไม่ได้ ให้โชว์ของเดิมไปเลย
+    // ถ้าแปลงไม่ได้ ให้โชว์ของเดิม
     return raw;
   }
 
-  // แปลงเป็นเวลาไทย + ฟอร์แมต
   return d.toLocaleString("th-TH", {
     timeZone: "Asia/Bangkok",
     year: "2-digit",
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const msgEl         = document.getElementById("msg");
 
-  const chartCanvas   = document.getElementById("statusChart");
+  const chartCanvas     = document.getElementById("statusChart");
   const recentTableBody = document.getElementById("recentTableBody");
 
   // ------- อ่าน session นักเรียน -------
@@ -85,10 +85,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const late   = history.filter(r => String(r.status || "").toUpperCase() === "LATE").length;
       const absent = history.filter(r => String(r.status || "").toUpperCase() === "ABSENT").length;
 
-      const come      = ok + late;
-      const rate      = total ? Math.round((come * 100) / total) : 0;
-      const okPer     = total ? Math.round((ok   * 100) / total) : 0;
-      const latePer   = total ? Math.round((late * 100) / total) : 0;
+      const come    = ok + late;
+      const rate    = total ? Math.round((come * 100) / total) : 0;
+      const okPer   = total ? Math.round((ok   * 100) / total) : 0;
+      const latePer = total ? Math.round((late * 100) / total) : 0;
 
       if (totalEl)       totalEl.textContent       = total;
       if (okCountEl)     okCountEl.textContent     = ok;
@@ -173,19 +173,21 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // ใช้ 5 รายการล่าสุด (ชีตเก่าสุด -> ใหม่สุด)
+    // ใช้ 5 รายการล่าสุด (จากท้าย array แล้วกลับด้าน)
     const lastFive = history.slice(-5).reverse();
 
     lastFive.forEach(row => {
       const tr = document.createElement("tr");
 
-      const time  = row.time   || "-";
+      const timeRaw = row.time || "-";
+      const timeLabel = formatThaiDateTime(timeRaw);
+
       const token = row.token  || "-";
       const st    = row.status || "-";
       const teacherEmail = row.teacherEmail || "-";
 
       const tdTime = document.createElement("td");
-      tdTime.textContent = time;
+      tdTime.textContent = timeLabel;   // ✅ ใช้เวลาแบบไทย
       tdTime.className = "time";
       tr.appendChild(tdTime);
 
