@@ -5,123 +5,112 @@ document.addEventListener("DOMContentLoaded", () => {
   const studentIdInput = document.getElementById("studentId");
   const passwordInput  = document.getElementById("password");
   const loginBtn       = document.getElementById("loginBtn");
-  const msgBox         = document.getElementById("msg");
+  const msgEl          = document.getElementById("msg");
 
-  // ---------- ถ้ามี session แล้ว ให้เด้งไป Dashboard ----------
+  // --------------------------
+  // ฟังก์ชันแสดงข้อความ
+  // --------------------------
+  function setMsg(text, type = "") {
+    msgEl.textContent = text || "";
+    msgEl.style.color =
+      type === "error" ? "#f87171" :
+      type === "ok"    ? "#4ade80" :
+      "#e5e7eb";
+  }
+
+  // --------------------------
+  // ป้องกันลูป redirect
+  // --------------------------
   try {
-    const raw = localStorage.getItem("cpvc_student");
+    const rawLocal   = localStorage.getItem("cpvc_student");
+    const rawSession = sessionStorage.getItem("student");
+    const raw = rawLocal || rawSession;
+
     if (raw) {
-      const st = JSON.parse(raw);
-      if (st && st.studentId) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.studentId) {
+        // ถ้ามี session อยู่แล้วให้ไป dashboard ทันที
         window.location.href = "dashboard.html";
         return;
       }
     }
   } catch (err) {
-    console.warn("อ่าน cpvc_student ไม่ได้:", err);
+    console.warn("Session error:", err);
+    // ถ้า JSON พัง ลบ session
     localStorage.removeItem("cpvc_student");
+    sessionStorage.removeItem("student");
   }
 
-  if (!studentIdInput || !passwordInput || !loginBtn) {
-    console.warn("ตรวจ id: studentId / password / loginBtn ใน HTML อีกที");
-    return;
-  }
-
-  function setMessage(text, type) {
-    if (!msgBox) return;
-    msgBox.textContent = text || "";
-    msgBox.style.marginTop = text ? "1rem" : "0";
-
-    if (!text) {
-      msgBox.style.color = "";
-      return;
-    }
-
-    if (type === "error") {
-      msgBox.style.color = "#fca5a5"; // แดงอ่อน
-    } else {
-      msgBox.style.color = "#bbf7d0"; // เขียวอ่อน
-    }
-  }
-
-  function setLoading(isLoading) {
-    loginBtn.disabled = isLoading;
-    loginBtn.textContent = isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ";
-  }
-
-  function saveStudentSession(studentObj) {
-    try {
-      localStorage.setItem("cpvc_student", JSON.stringify(studentObj));
-    } catch (err) {
-      console.error("saveStudentSession error:", err);
-    }
-  }
-
-  async function handleLogin() {
-    setMessage("", "");
-
-    const studentId = (studentIdInput.value || "").trim();
-    const password  = (passwordInput.value  || "").trim();
-
-    if (!studentId || !password) {
-      setMessage("กรุณากรอกรหัสนักเรียนและรหัสผ่าน", "error");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const resp = await callApi("loginStudent", {
-        studentId,
-        password
-      });
-
-      setLoading(false);
-
-      if (!resp || !resp.success) {
-        const msg =
-          resp && resp.message
-            ? resp.message
-            : "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
-        setMessage(msg, "error");
-        return;
-      }
-
-      // รองรับทั้ง resp.student และ resp.data
-      const student =
-        resp.student ||
-        resp.data || {
-          studentId,
-          name: resp.name || "",
-        };
-
-      saveStudentSession(student);
-
-      setMessage("เข้าสู่ระบบสำเร็จ กำลังพาไปหน้า Dashboard...", "success");
-
-      setTimeout(() => {
-        window.location.href = "dashboard.html";
-      }, 600);
-    } catch (err) {
-      console.error("loginStudent error:", err);
-      setLoading(false);
-      setMessage("ติดต่อเซิร์ฟเวอร์ไม่สำเร็จ", "error");
-    }
-  }
-
-  // คลิกปุ่มเข้าสู่ระบบ
+  // --------------------------
+  // ปุ่มเข้าสู่ระบบ
+  // --------------------------
   loginBtn.addEventListener("click", (e) => {
     e.preventDefault();
     handleLogin();
   });
 
-  // กด Enter ในช่อง input ใด ๆ ก็ล็อกอิน
-  [studentIdInput, passwordInput].forEach((input) => {
-    input.addEventListener("keydown", (e) => {
+  // กด Enter เพื่อเข้าสู่ระบบ
+  [studentIdInput, passwordInput].forEach((inp) => {
+    inp.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
         handleLogin();
       }
     });
   });
+
+  // --------------------------
+  // ฟังก์ชันเข้าสู่ระบบ
+  // --------------------------
+  async function handleLogin() {
+    const studentId = studentIdInput.value.trim();
+    const password  = passwordInput.value.trim();
+
+    if (!studentId || !password) {
+      setMsg("กรุณากรอกรหัสนักเรียนและรหัสผ่าน", "error");
+      return;
+    }
+
+    setMsg("กำลังเข้าสู่ระบบ...");
+    loginBtn.disabled = true;
+
+    try {
+      const res = await callApi("loginStudent", {
+        studentId,
+        password
+      });
+
+      console.log("loginStudent >", res);
+
+      if (!res?.success) {
+        setMsg(res?.message || "รหัสนักเรียนหรือรหัสผ่านไม่ถูกต้อง", "error");
+        loginBtn.disabled = false;
+        return;
+      }
+
+      // --------------------------
+      // บันทึก session
+      // --------------------------
+      const student = {
+        studentId: res.student.studentId,
+        name: res.student.name,
+      };
+
+      localStorage.setItem("cpvc_student", JSON.stringify(student));
+      sessionStorage.setItem("student", JSON.stringify(student));
+
+      setMsg("เข้าสู่ระบบสำเร็จ ✓", "ok");
+
+      // redirect
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 300);
+
+    } catch (err) {
+      console.error("Login Error:", err);
+      setMsg("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้", "error");
+    }
+
+    loginBtn.disabled = false;
+  }
 });
