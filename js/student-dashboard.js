@@ -184,10 +184,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const token = row.token  || "-";
       const st    = row.status || "-";
-      const teacherEmail = row.teacherEmail || "-";
+
+      // ใช้ชื่อครู ถ้าไม่มีชื่อค่อย fallback เป็นอีเมล
+      const teacherName = row.teacherName || row.teacherEmail || "-";
 
       const tdTime = document.createElement("td");
-      tdTime.textContent = timeLabel;   // ✅ ใช้เวลาแบบไทย
+      tdTime.textContent = timeLabel;
       tdTime.className = "time";
       tr.appendChild(tdTime);
 
@@ -204,7 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tr.appendChild(tdStatus);
 
       const tdTeacher = document.createElement("td");
-      tdTeacher.textContent = teacherEmail;
+      tdTeacher.textContent = teacherName;
       tr.appendChild(tdTeacher);
 
       recentTableBody.appendChild(tr);
