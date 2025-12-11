@@ -2,6 +2,27 @@
 import { callApi } from "./api.js";
 
 let statusChart = null;
+function formatThaiDateTime(raw) {
+  if (!raw) return "-";
+
+  // raw จะเป็น string แบบ "2025-12-11T03:28:57.000Z"
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) {
+    // ถ้าแปลงไม่ได้ ให้โชว์ของเดิมไปเลย
+    return raw;
+  }
+
+  // แปลงเป็นเวลาไทย + ฟอร์แมต
+  return d.toLocaleString("th-TH", {
+    timeZone: "Asia/Bangkok",
+    year: "2-digit",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   // ------- ดึง element จาก dashboard.html -------
