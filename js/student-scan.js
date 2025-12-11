@@ -2,6 +2,20 @@
 // ใช้ API กลางเดียวกับฝั่งครู
 import { callApi } from "./api.js";
 
+// ================= POPUP SUCCESS =================
+function showSuccessPopup(msg) {
+  const overlay = document.createElement("div");
+  overlay.className = "scan-success-overlay";
+  overlay.innerHTML = `
+    <div class="scan-success-modal">
+      <div class="scan-success-title">เช็คชื่อสำเร็จ 🎉</div>
+      <p class="scan-success-text">${msg || "บันทึกการเข้าเรียนเรียบร้อยแล้ว"}</p>
+      <p class="scan-success-sub">กำลังพาไปหน้า Dashboard ...</p>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
 // ===== จัดการ session นักเรียน =====
 function getCurrentStudent() {
   try {
@@ -29,12 +43,12 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!student) return;
 
   // ===== DOM refs =====
-  const pillUserName    = document.getElementById("pillUserName");
-  const tokenInput      = document.getElementById("tokenInput");
-  const submitTokenBtn  = document.getElementById("submitTokenBtn");
-  const scanMsg         = document.getElementById("scanMsg");
-  const statusDot       = document.getElementById("sessionStatusDot");
-  const statusText      = document.getElementById("sessionStatusText");
+  const pillUserName   = document.getElementById("pillUserName");
+  const tokenInput     = document.getElementById("tokenInput");
+  const submitTokenBtn = document.getElementById("submitTokenBtn");
+  const scanMsg        = document.getElementById("scanMsg");
+  const statusDot      = document.getElementById("sessionStatusDot");
+  const statusText     = document.getElementById("sessionStatusText");
 
   // ตั้งชื่อบน pill
   if (pillUserName) {
@@ -64,7 +78,6 @@ document.addEventListener("DOMContentLoaded", () => {
         statusDot.classList.add("error");
         break;
       default:
-        // default = neutral grey ตาม CSS เดิม
         break;
     }
   }
@@ -73,7 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!scanMsg) return;
     scanMsg.textContent = text || "";
     scanMsg.classList.remove("scanMsg-success");
-    if (!text) return;
 
     if (type === "success") {
       scanMsg.classList.add("scanMsg-success");
@@ -91,6 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  // ================= Handle Submit =================
   async function handleSubmitToken() {
     setScanMessage("", "");
     setStatus(null, "กำลังตรวจสอบ TOKEN...");
@@ -149,16 +162,22 @@ document.addEventListener("DOMContentLoaded", () => {
     setStatus("open", "บันทึกการเข้าเรียนเรียบร้อย");
     setScanMessage(finalMsg, "success");
 
+    // ⭐ แสดง Popup เท่ ๆ
+    showSuccessPopup(finalMsg);
+
     tokenInput.value = "";
+
+    // ⭐ เด้งไป Dashboard หลังจาก 1.5 วินาที
+    setTimeout(() => {
+      window.location.href = "dashboard.html";
+    }, 1500);
   }
 
-  // คลิกปุ่ม = ส่ง TOKEN
   submitTokenBtn.addEventListener("click", (e) => {
     e.preventDefault();
     handleSubmitToken();
   });
 
-  // กด Enter ในช่อง TOKEN = ส่งเหมือนกัน
   tokenInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -166,6 +185,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // สถานะเริ่มต้น
   setStatus(null, "รอกรอก TOKEN เพื่อเช็คชื่อ");
 });
