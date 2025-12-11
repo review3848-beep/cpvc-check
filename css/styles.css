@@ -581,4 +581,29 @@ table.recent-table td {
     transform: scale(1);
   }
 }
+.close-session-btn {
+  background: linear-gradient(135deg, #ff5f5f, #ff3030);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.close-session-btn:hover {
+  background: linear-gradient(135deg, #ff4d4d, #e60000);
+  transform: translateY(-2px);
+}
+
+.status-open {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.status-closed {
+  color: #f87171;
+  font-weight: 600;
+}
 
