@@ -2,18 +2,75 @@
 // ใช้ API กลางเดียวกับฝั่งครู
 import { callApi } from "./api.js";
 
-// ================= POPUP SUCCESS =================
+// ================= POPUP SUCCESS (inline style) =================
 function showSuccessPopup(msg) {
   const overlay = document.createElement("div");
   overlay.className = "scan-success-overlay";
-  overlay.innerHTML = `
-    <div class="scan-success-modal">
-      <div class="scan-success-title">เช็คชื่อสำเร็จ 🎉</div>
-      <p class="scan-success-text">${msg || "บันทึกการเข้าเรียนเรียบร้อยแล้ว"}</p>
-      <p class="scan-success-sub">กำลังพาไปหน้า Dashboard ...</p>
-    </div>
-  `;
+
+  // สไตล์ overlay
+  Object.assign(overlay.style, {
+    position: "fixed",
+    inset: "0",
+    background: "rgba(15, 23, 42, 0.78)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: "9999",
+    backdropFilter: "blur(4px)",
+  });
+
+  const modal = document.createElement("div");
+  modal.className = "scan-success-modal";
+  Object.assign(modal.style, {
+    background:
+      "radial-gradient(circle at 0% 0%, rgba(34,197,94,0.25), #020617)",
+    borderRadius: "20px",
+    padding: "1.8rem 2rem",
+    border: "1px solid rgba(34,197,94,0.7)",
+    boxShadow: "0 18px 40px rgba(0,0,0,0.65)",
+    maxWidth: "360px",
+    width: "90%",
+    textAlign: "center",
+    color: "#e5e7eb",
+    transform: "scale(0.9)",
+    opacity: "0",
+    transition: "opacity 0.22s ease-out, transform 0.22s ease-out",
+    fontFamily: '"Inter", system-ui, sans-serif',
+  });
+
+  const title = document.createElement("div");
+  title.textContent = "เช็คชื่อสำเร็จ 🎉";
+  Object.assign(title.style, {
+    fontSize: "1.25rem",
+    fontWeight: "600",
+    marginBottom: "0.35rem",
+  });
+
+  const text = document.createElement("p");
+  text.textContent = msg || "บันทึกการเข้าเรียนเรียบร้อยแล้ว";
+  Object.assign(text.style, {
+    fontSize: "0.95rem",
+    marginBottom: "0.4rem",
+  });
+
+  const sub = document.createElement("p");
+  sub.textContent = "กำลังพาไปหน้า Dashboard ...";
+  Object.assign(sub.style, {
+    fontSize: "0.8rem",
+    opacity: "0.75",
+  });
+
+  modal.appendChild(title);
+  modal.appendChild(text);
+  modal.appendChild(sub);
+  overlay.appendChild(modal);
   document.body.appendChild(overlay);
+
+  // ทำให้ modal ค่อย ๆ โผล่
+  requestAnimationFrame(() => {
+    modal.style.opacity = "1";
+    modal.style.transform = "scale(1)";
+  });
 }
 
 // ===== จัดการ session นักเรียน =====
