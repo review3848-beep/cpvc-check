@@ -1,9 +1,8 @@
 // js/teacher-dashboard.js
-// Dashboard ครู – โหลดสรุปคาบ, ตารางคาบ และปุ่มปิดคาบ
 import { callApi } from "./api.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  // ----- ดึง session ครูจาก sessionStorage -----
+  // ---------- ดึงข้อมูลครู ----------
   let teacher = null;
   try {
     const raw = sessionStorage.getItem("teacher");
@@ -17,65 +16,66 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // ----- DOM refs -----
+  // ---------- DOM ----------
   const teacherNameEl   = document.getElementById("teacherName");
   const teacherEmailEl  = document.getElementById("teacherEmail");
+
   const totalSessionsEl = document.getElementById("totalSessions");
   const openSessionsEl  = document.getElementById("openSessions");
   const totalAttEl      = document.getElementById("totalAttendance");
 
-  const sessionsTbody   = document.getElementById("sessionsTableBody");
   const subjectFilterEl = document.getElementById("subjectFilter");
-  const exportAllBtn    = document.getElementById("exportAllAttendanceBtn");
+  const chipsEl         = document.getElementById("subjectSummaryChips");
+  const sessionTableTbody = document.getElementById("sessionTable");
+  const msgEl           = document.getElementById("msg");
 
-  const loadingEl       = document.getElementById("dashboardLoading");
-  const errorEl         = document.getElementById("dashboardError");
+  const exportAllBtn    = document.getElementById("exportAllBtn");
 
-  if (teacherNameEl)  teacherNameEl.textContent  = teacher.name || "ครู";
-  if (teacherEmailEl) teacherEmailEl.textContent = teacher.email;
+  // modal
+  const modalBackdrop   = document.getElementById("sessionModal");
+  const modalTitleEl    = document.getElementById("modalTitle");
+  const modalSubtitleEl = document.getElementById("modalSubtitle");
+  const modalStatsEl    = document.getElementById("modalStats");
+  const modalTableBody  = document.getElementById("modalTableBody");
+  const modalFooterInfo = document.getElementById("modalFooterInfo");
+  const modalCloseBtn   = document.getElementById("modalCloseBtn");
+  const exportSessionBtn = document.getElementById("exportSessionBtn");
+
+  teacherNameEl.textContent  = teacher.name || "ครู";
+  teacherEmailEl.textContent = teacher.email;
 
   let allSessions = [];
+  let currentSessionToken = null;
 
-  // ----- helper แสดง loading / error -----
-  function setLoading(isLoading, text) {
-    if (!loadingEl) return;
-    loadingEl.style.display = isLoading ? "flex" : "none";
-    if (text) loadingEl.textContent = text;
+  // ---------- helpers ----------
+  function setMsg(text, type = "info") {
+    if (!msgEl) return;
+    msgEl.textContent = text || "";
+    if (!text) return;
+    msgEl.style.color = type === "error" ? "#f97373" : "#93c5fd";
   }
 
-  function setError(msg) {
-    if (!errorEl) return;
-    errorEl.textContent = msg || "";
-    errorEl.style.display = msg ? "block" : "none";
-  }
-
-  // ----- render summary cards -----
   function renderSummary(summary) {
     if (!summary) return;
-    if (totalSessionsEl) totalSessionsEl.textContent = summary.totalSessions ?? 0;
-    if (openSessionsEl)  openSessionsEl.textContent  = summary.openSessions ?? 0;
-    if (totalAttEl)      totalAttEl.textContent      = summary.totalAttendance ?? 0;
+    totalSessionsEl.textContent = summary.totalSessions ?? 0;
+    openSessionsEl.textContent  = summary.openSessions ?? 0;
+    totalAttEl.textContent      = summary.totalAttendance ?? 0;
   }
 
-  // ----- เติมรายการใน dropdown วิชา -----
-  function renderSubjectFilter(sessions) {
-    if (!subjectFilterEl) return;
-
-    // เคลียร์ options เดิม
+  function renderSubjectFilterOptions(sessions) {
     subjectFilterEl.innerHTML = "";
-
-    const optionAll = document.createElement("option");
-    optionAll.value = "";
-    optionAll.textContent = "ทั้งหมด";
-    subjectFilterEl.appendChild(optionAll);
+    const opAll = document.createElement("option");
+    opAll.value = "";
+    opAll.textContent = "ทั้งหมด";
+    subjectFilterEl.appendChild(opAll);
 
     const subjects = new Set();
-    sessions.forEach((r) => {
-      const subj = (r[1] || "").toString().trim();
+    sessions.forEach(row => {
+      const subj = (row[1] || "").toString().trim();
       if (subj) subjects.add(subj);
     });
 
-    Array.from(subjects).forEach((subj) => {
+    Array.from(subjects).forEach(subj => {
       const op = document.createElement("option");
       op.value = subj;
       op.textContent = subj;
@@ -83,87 +83,99 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ----- render ตารางคาบ -----
-  function renderSessionsTable(sessions, subjectFilter = "") {
-    if (!sessionsTbody) return;
+  function renderSubjectChips(subjects) {
+    chipsEl.innerHTML = "";
+    if (!subjects || !subjects.length) return;
 
-    sessionsTbody.innerHTML = "";
+    subjects.forEach(item => {
+      const chip = document.createElement("div");
+      chip.className = "chip";
+      const present = item.presentPercent ?? 0;
+      chip.innerHTML = `
+        <span>${item.subject}</span>
+        &nbsp;·&nbsp;
+        <span class="highlight">${present}%</span> มาเรียน
+      `;
+      chipsEl.appendChild(chip);
+    });
+  }
 
-    const rows = sessions.filter((row) => {
-      const subject = (row[1] || "").toString().trim();
-      if (!subjectFilter) return true;
-      return subject === subjectFilter;
+  // ---------- ตารางคาบ ----------
+  function renderSessionTable(filterSubject = "") {
+    sessionTableTbody.innerHTML = "";
+
+    const rows = allSessions.filter(row => {
+      const subj = (row[1] || "").toString().trim();
+      if (!filterSubject) return true;
+      return subj === filterSubject;
     });
 
     if (!rows.length) {
       const tr = document.createElement("tr");
       const td = document.createElement("td");
       td.colSpan = 5;
-      td.textContent = "ยังไม่มีคาบเรียนในเงื่อนไขนี้";
-      td.style.textAlign = "center";
-      td.style.padding = "16px 0";
+      td.className = "empty";
+      td.textContent = "ยังไม่มีข้อมูลคาบ";
       tr.appendChild(td);
-      sessionsTbody.appendChild(tr);
+      sessionTableTbody.appendChild(tr);
       return;
     }
 
-    rows.forEach((row) => {
-      // SESSIONS: A=TEACHER_EMAIL, B=SUBJECT, C=ROOM, D=TOKEN, E=STATUS, F=START_TIME
+    rows.forEach(row => {
+      // SESSIONS: A=TEACHER_EMAIL, B=SUBJECT, C=ROOM,
+      //           D=TOKEN, E=STATUS, F=START_TIME
       const subject = row[1] || "-";
       const room    = row[2] || "-";
       const token   = row[3] || "-";
-      const status  = (row[4] || "").toString().toUpperCase();
+      const rawStatus = (row[4] || "").toString().trim();
+      const status = rawStatus.toUpperCase();
       const startAt = row[5] || "";
 
       const tr = document.createElement("tr");
 
-      const statusClass =
-        status === "OPEN"
-          ? "status-open"
-          : status === "CLOSED"
-          ? "status-closed"
-          : "";
+      const isOpen = status === "OPEN";
+      const statusClass = isOpen ? "status-open" : "status-closed";
 
-      const closeBtnHtml =
-        status === "OPEN"
-          ? `<button class="close-session-btn" data-token="${token}">ปิดคาบ</button>`
-          : "";
+      const closeBtnHtml = isOpen
+        ? `<button class="btn-small btn-close-session" data-token="${token}">ปิดคาบ</button>`
+        : "";
 
       tr.innerHTML = `
         <td>
-          <div class="td-main">${subject}</div>
-          <div class="td-sub">ห้อง ${room}</div>
+          <div class="session-subject">${subject}</div>
+          <div class="session-room">ห้อง ${room}</div>
         </td>
         <td>${token}</td>
         <td>${startAt}</td>
-        <td class="${statusClass}">${status}</td>
-        <td class="td-actions">
+        <td>
+          <span class="status-pill ${statusClass}">${status}</span>
+        </td>
+        <td>
           ${closeBtnHtml}
-          <button class="detail-session-btn" data-token="${token}">
+          <button class="btn-small btn-view-session" data-token="${token}">
             ดูรายชื่อ มา / สาย / ขาด
           </button>
         </td>
       `;
 
-      sessionsTbody.appendChild(tr);
+      sessionTableTbody.appendChild(tr);
     });
 
     attachRowEvents();
   }
 
-  // ----- ติด event ให้ปุ่มปิดคาบ + ดูรายละเอียด -----
+  // ---------- ปุ่มในตาราง ----------
   function attachRowEvents() {
     // ปุ่มปิดคาบ
-    document.querySelectorAll(".close-session-btn").forEach((btn) => {
+    document.querySelectorAll(".btn-close-session").forEach(btn => {
       btn.addEventListener("click", async () => {
         const token = btn.dataset.token;
         if (!token) return;
 
-        const ok = window.confirm("ต้องการปิดคาบนี้ใช่หรือไม่?");
-        if (!ok) return;
+        if (!confirm("ต้องการปิดคาบนี้ใช่หรือไม่?")) return;
 
+        const oldText = btn.textContent;
         btn.disabled = true;
-        const prevText = btn.textContent;
         btn.textContent = "กำลังปิดคาบ...";
 
         try {
@@ -171,129 +183,258 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!res.success) {
             alert(res.message || "ปิดคาบไม่สำเร็จ");
             btn.disabled = false;
-            btn.textContent = prevText;
+            btn.textContent = oldText;
             return;
           }
 
           alert("ปิดคาบเรียบร้อยแล้ว");
-          // reload dashboard
-          loadDashboard();
+          await loadDashboard();
         } catch (err) {
           console.error(err);
           alert("เกิดข้อผิดพลาดในการปิดคาบ");
           btn.disabled = false;
-          btn.textContent = prevText;
+          btn.textContent = oldText;
         }
       });
     });
 
-    // ปุ่มดูรายละเอียด – ถ้ามี modal แยกไว้ คุณผูกต่อเองได้
-    document.querySelectorAll(".detail-session-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
+    // ปุ่มดูรายละเอียด
+    document.querySelectorAll(".btn-view-session").forEach(btn => {
+      btn.addEventListener("click", () => {
         const token = btn.dataset.token;
         if (!token) return;
-        try {
-          const res = await callApi("getSessionAttendance", {
-            teacherEmail: teacher.email,
-            token,
-          });
-          if (!res.success) {
-            alert(res.message || "โหลดรายละเอียดไม่สำเร็จ");
-            return;
-          }
-
-          // TODO: ตรงนี้คุณเอา res.session / res.rows ไปแสดงใน modal ตามดีไซน์ที่มีอยู่แล้ว
-          console.log("Session detail:", res);
-          alert("ฟังก์ชันดูรายละเอียดทำงานแล้ว (ดูใน console)");
-        } catch (err) {
-          console.error(err);
-          alert("เกิดข้อผิดพลาดในการโหลดรายละเอียดคาบ");
-        }
+        openSessionModal(token);
       });
     });
   }
 
-  // ----- export CSV ทั้งหมด -----
-  async function handleExportAll() {
-    if (!exportAllBtn) return;
+  // ---------- modal ----------
+  function showModal() {
+    if (!modalBackdrop) return;
+    modalBackdrop.classList.add("open");
+  }
 
+  function hideModal() {
+    if (!modalBackdrop) return;
+    modalBackdrop.classList.remove("open");
+    currentSessionToken = null;
+  }
+
+  if (modalCloseBtn) {
+    modalCloseBtn.addEventListener("click", hideModal);
+  }
+  if (modalBackdrop) {
+    modalBackdrop.addEventListener("click", e => {
+      if (e.target === modalBackdrop) hideModal();
+    });
+  }
+
+  async function openSessionModal(token) {
+    currentSessionToken = token;
+
+    modalTitleEl.textContent = "รายละเอียดคาบเรียน";
+    modalSubtitleEl.textContent = `TOKEN: ${token}`;
+    modalStatsEl.innerHTML = "";
+    modalFooterInfo.innerHTML = "";
+    modalTableBody.innerHTML =
+      `<tr><td colspan="4" style="text-align:center;color:#9ca3af;">กำลังโหลด...</td></tr>`;
+
+    showModal();
+
+    try {
+      const res = await callApi("getSessionAttendance", {
+        teacherEmail: teacher.email,
+        token,
+      });
+
+      if (!res.success) {
+        modalTableBody.innerHTML =
+          `<tr><td colspan="4" style="text-align:center;color:#f97373;">${res.message || "โหลดรายละเอียดไม่สำเร็จ"}</td></tr>`;
+        return;
+      }
+
+      const info  = res.session || {};
+      const rows  = res.rows || [];
+      const stats = res.stats || {};
+
+      const subj = info.subject || "-";
+      const room = info.room || "-";
+      const startAt = info.startAt || "";
+      modalTitleEl.textContent = `${subj} · ห้อง ${room}`;
+      modalSubtitleEl.textContent = `TOKEN: ${token} · เริ่มคาบ: ${startAt || "-"}`;
+
+      const ok = stats.ok || 0;
+      const late = stats.late || 0;
+      const absent = stats.absent || 0;
+      const total = stats.total || 0;
+      const come = ok + late;
+      const presentPercent = total ? Math.round((come * 100) / total) : 0;
+
+      const makeBadge = (cls, label) => {
+        const b = document.createElement("div");
+        b.className = `badge ${cls}`;
+        b.textContent = label;
+        return b;
+      };
+      modalStatsEl.innerHTML = "";
+      modalStatsEl.appendChild(makeBadge("ok",    `มาเรียน: ${ok}`));
+      modalStatsEl.appendChild(makeBadge("late",  `มาสาย: ${late}`));
+      modalStatsEl.appendChild(makeBadge("absent",`ขาด: ${absent}`));
+
+      modalFooterInfo.innerHTML = "";
+      modalFooterInfo.appendChild(
+        makeBadge("", `รวม ${total} คน · ${presentPercent}% มาเรียน (มา + สาย)`)
+      );
+
+      modalTableBody.innerHTML = "";
+      if (!rows.length) {
+        modalTableBody.innerHTML =
+          `<tr><td colspan="4" style="text-align:center;color:#9ca3af;">ยังไม่มีการเช็คชื่อในคาบนี้</td></tr>`;
+      } else {
+        rows.forEach(r => {
+          const tr = document.createElement("tr");
+          const st = (r.status || "").toString().toUpperCase();
+          let stLabel = "มาเรียน";
+          if (st === "LATE") stLabel = "สาย";
+          else if (st === "ABSENT") stLabel = "ขาด";
+
+          tr.innerHTML = `
+            <td>${r.studentId || "-"}</td>
+            <td>${r.studentName || "-"}</td>
+            <td>${r.time || "-"}</td>
+            <td>${stLabel}</td>
+          `;
+          modalTableBody.appendChild(tr);
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      modalTableBody.innerHTML =
+        `<tr><td colspan="4" style="text-align:center;color:#f97373;">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>`;
+    }
+  }
+
+  // export CSV
+  function downloadCsv(csvText, fileName) {
+    const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleExportAll() {
+    const oldText = exportAllBtn.textContent;
     exportAllBtn.disabled = true;
-    const prevText = exportAllBtn.textContent;
     exportAllBtn.textContent = "กำลังสร้างไฟล์...";
 
     try {
       const res = await callApi("exportTeacherAttendance", {
         teacherEmail: teacher.email,
       });
-
       if (!res.success) {
         alert(res.message || "สร้างไฟล์ไม่สำเร็จ");
-        exportAllBtn.disabled = false;
-        exportAllBtn.textContent = prevText;
         return;
       }
-
-      const blob = new Blob([res.csv || ""], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = res.fileName || "attendance_all.csv";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      downloadCsv(res.csv || "", res.fileName || "attendance_all.csv");
     } catch (err) {
       console.error(err);
       alert("เกิดข้อผิดพลาดในการสร้างไฟล์ CSV");
     } finally {
       exportAllBtn.disabled = false;
-      exportAllBtn.textContent = prevText;
+      exportAllBtn.textContent = oldText;
+    }
+  }
+
+  async function handleExportSession() {
+    if (!currentSessionToken) {
+      alert("ไม่พบ TOKEN ของคาบนี้");
+      return;
+    }
+    try {
+      const res = await callApi("exportSessionAttendance", {
+        teacherEmail: teacher.email,
+        token: currentSessionToken,
+      });
+      if (!res.success) {
+        alert(res.message || "สร้างไฟล์ไม่สำเร็จ");
+        return;
+      }
+      downloadCsv(
+        res.csv || "",
+        res.fileName || `attendance_${currentSessionToken}.csv`
+      );
+    } catch (err) {
+      console.error(err);
+      alert("เกิดข้อผิดพลาดในการสร้างไฟล์ CSV");
     }
   }
 
   if (exportAllBtn) {
-    exportAllBtn.addEventListener("click", (e) => {
+    exportAllBtn.addEventListener("click", e => {
       e.preventDefault();
       handleExportAll();
+    });
+  }
+  if (exportSessionBtn) {
+    exportSessionBtn.addEventListener("click", e => {
+      e.preventDefault();
+      handleExportSession();
     });
   }
 
   if (subjectFilterEl) {
     subjectFilterEl.addEventListener("change", () => {
-      const value = subjectFilterEl.value || "";
-      renderSessionsTable(allSessions, value);
+      const v = subjectFilterEl.value || "";
+      renderSessionTable(v);
     });
   }
 
-  // ----- โหลดข้อมูลจาก backend -----
+  // ---------- โหลด Dashboard ----------
   async function loadDashboard() {
-    setLoading(true, "กำลังโหลดข้อมูลคาบเรียน...");
-    setError("");
+    setMsg("กำลังโหลดข้อมูลคาบของคุณ...");
 
     try {
-      const res = await callApi("getTeacherDashboard", {
+      const dashRes = await callApi("getTeacherDashboard", {
         teacherEmail: teacher.email,
       });
 
-      if (!res.success) {
-        setError(res.message || "โหลดข้อมูลไม่สำเร็จ");
-        setLoading(false);
+      console.log("getTeacherDashboard result =", dashRes);
+
+      if (!dashRes.success) {
+        setMsg(dashRes.message || "โหลดข้อมูลไม่สำเร็จ", "error");
         return;
       }
 
-      allSessions = res.sessions || [];
-      renderSummary(res.summary || {});
-      renderSubjectFilter(allSessions);
-      const currentFilter = subjectFilterEl ? subjectFilterEl.value || "" : "";
-      renderSessionsTable(allSessions, currentFilter);
+      allSessions = dashRes.sessions || [];
+      renderSummary(dashRes.summary || {});
+      renderSubjectFilterOptions(allSessions);
+      const currentFilter = subjectFilterEl.value || "";
+      renderSessionTable(currentFilter);
+      setMsg("");
+
+      // โหลดสรุปวิชา (ไม่กระทบตาราง ถ้าพังแค่ไม่ขึ้น chips)
+      try {
+        const subjRes = await callApi("getSubjectSummary", {
+          teacherEmail: teacher.email,
+        });
+        if (subjRes && subjRes.success) {
+          renderSubjectChips(subjRes.subjects || []);
+        }
+      } catch (e) {
+        console.warn("getSubjectSummary error:", e);
+      }
+
     } catch (err) {
       console.error(err);
-      setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
-    } finally {
-      setLoading(false);
+      setMsg("เกิดข้อผิดพลาดในการโหลดข้อมูล Dashboard", "error");
     }
   }
 
-  // เริ่มโหลดครั้งแรก
+  // start
   loadDashboard();
 });
