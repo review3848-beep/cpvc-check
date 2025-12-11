@@ -165,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!history.length) {
       const tr = document.createElement("tr");
       const td = document.createElement("td");
-      td.colSpan = 4;
+      td.colSpan = 5; // เวลา / รายวิชา / TOKEN / สถานะ / ครู
       td.className = "table-empty";
       td.textContent = "ยังไม่มีข้อมูลการเช็คชื่อในระบบ";
       tr.appendChild(td);
@@ -179,24 +179,33 @@ document.addEventListener("DOMContentLoaded", () => {
     lastFive.forEach(row => {
       const tr = document.createElement("tr");
 
-      const timeRaw = row.time || "-";
+      const timeRaw   = row.time || "-";
       const timeLabel = formatThaiDateTime(timeRaw);
 
-      const token = row.token  || "-";
-      const st    = row.status || "-";
+      const subject   = row.subject || "-";                       // ⭐ วิชา
+      const token     = row.token  || "-";
+      const st        = row.status || "-";
 
       // ใช้ชื่อครู ถ้าไม่มีชื่อค่อย fallback เป็นอีเมล
       const teacherName = row.teacherName || row.teacherEmail || "-";
 
+      // เวลา
       const tdTime = document.createElement("td");
       tdTime.textContent = timeLabel;
       tdTime.className = "time";
       tr.appendChild(tdTime);
 
+      // รายวิชา
+      const tdSubject = document.createElement("td");
+      tdSubject.textContent = subject;
+      tr.appendChild(tdSubject);
+
+      // TOKEN
       const tdToken = document.createElement("td");
       tdToken.textContent = token;
       tr.appendChild(tdToken);
 
+      // สถานะ
       const tdStatus = document.createElement("td");
       tdStatus.textContent = st;
       const upper = String(st || "").toUpperCase();
@@ -205,6 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
       else if (upper === "ABSENT") tdStatus.className = "status-absent";
       tr.appendChild(tdStatus);
 
+      // ครู
       const tdTeacher = document.createElement("td");
       tdTeacher.textContent = teacherName;
       tr.appendChild(tdTeacher);

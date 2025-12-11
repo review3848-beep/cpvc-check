@@ -276,7 +276,6 @@
       justify-content:center;
     }
 
-    /* ❗️ตรงนี้แหละที่ช่วยแก้กระพริบ – ไม่บังคับ height 100% */
     canvas {
       display:block;
       width:100% !important;
@@ -479,13 +478,14 @@
             <span class="badge-soft">แสดง 5 รายการล่าสุด</span>
           </div>
           <div class="panel-sub">
-            ดูเวลาที่เช็คชื่อ สถานะ และคาบเรียนล่าสุดของคุณ
+            ดูเวลาที่เช็คชื่อ รายวิชา TOKEN สถานะ และครูผู้สอนล่าสุดของคุณ
           </div>
 
           <table>
             <thead>
               <tr>
                 <th>เวลา</th>
+                <th>รายวิชา</th>
                 <th>TOKEN</th>
                 <th>สถานะ</th>
                 <th>ครู</th>
@@ -493,7 +493,7 @@
             </thead>
             <tbody id="recentTableBody">
               <tr>
-                <td colspan="4" class="table-empty">
+                <td colspan="5" class="table-empty">
                   ยังไม่มีข้อมูลการเช็คชื่อในระบบ
                 </td>
               </tr>
@@ -506,7 +506,7 @@
     </main>
 
     <footer class="footer">
-      <span>CPVC-Check · ระบบเช็คชื่อออนไลน์</span>
+      <span> · ระบบเช็คชื่อออนไลน์</span>
       <span>เวอร์ชันนักเรียน · ดูข้อมูลเฉพาะของตนเอง</span>
     </footer>
   </div>
