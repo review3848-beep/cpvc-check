@@ -70,41 +70,61 @@
     }
 
     .top-title {
-      font-size: 1.5rem;
+      font-size: 1.55rem;
       font-weight: 600;
+      letter-spacing: .2px;
     }
 
     .top-sub {
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       color: var(--text-muted);
     }
 
-    .dash-actions {
-      margin-top: 0.6rem;
+    .top-right {
+      text-align: right;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    .top-right strong {
+      display: block;
+      font-size: 0.98rem;
+      color: #e5e7eb;
+    }
+
+    /* ---------- แถบปุ่มล่าง (เหมือนครู) ---------- */
+    .header-actions {
+      width: 100%;
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 0.9rem 1rem 1.2rem;
+      background:
+        linear-gradient(to bottom, rgba(2,6,23,0.80), rgba(2,6,23,0.98));
+      border-bottom: 1px solid rgba(30,64,175,.45);
+      box-shadow: 0 12px 40px rgba(15,23,42,.85);
     }
 
     .pill-btn {
       border: none;
       border-radius: 999px;
-      padding: 0.45rem 1.05rem;
-      font-size: 0.78rem;
+      padding: 0.48rem 1.15rem;
+      font-size: 0.8rem;
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
       cursor: pointer;
       color: #f9fafb;
       background: linear-gradient(135deg,#2563eb,#38bdf8);
-      box-shadow: 0 12px 28px rgba(37,99,235,.7);
-      transition: transform .12s ease-out, box-shadow .12s ease-out, filter .12s;
+      box-shadow: 0 12px 28px rgba(37,99,235,.55);
+      transition: transform .12s ease-out, filter .12s;
       white-space: nowrap;
     }
 
     .pill-btn.secondary {
       background: linear-gradient(135deg,#0ea5e9,#22c55e);
-      box-shadow: 0 12px 28px rgba(34,197,94,.65);
+      box-shadow: 0 12px 28px rgba(34,197,94,.45);
     }
 
     .pill-btn.danger {
@@ -117,32 +137,19 @@
       filter: brightness(1.05);
     }
 
-    .top-right {
-      text-align: right;
-      font-size: 0.82rem;
-      color: var(--text-muted);
-    }
-
-    .top-right strong {
-      display: block;
-      font-size: 0.95rem;
-      color: #e5e7eb;
-    }
-
     /* ---------- MAIN LAYOUT ---------- */
     .main {
       flex: 1;
       max-width: 1200px;
-      margin: 1.8rem auto 2.4rem;
+      margin: 1.6rem auto 2.4rem;
       padding: 0 1.5rem 0.4rem;
     }
 
-    /* การ์ด 4 ใบบนสุด */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 1rem;
-      margin-bottom: 1.8rem;
+      margin-bottom: 1.6rem;
     }
 
     .stat-card {
@@ -170,14 +177,11 @@
       pointer-events: none;
     }
 
-    .stat-card-inner {
-      position: relative;
-      z-index: 1;
-    }
+    .stat-card-inner { position: relative; z-index: 1; }
 
     .stat-card.rate {
       border-color: rgba(34,197,94,.7);
-      box-shadow: 0 20px 52px rgba(22,163,74,.4);
+      box-shadow: 0 20px 52px rgba(22,163,74,.35);
     }
 
     .stat-header {
@@ -188,8 +192,8 @@
     }
 
     .stat-icon {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       border-radius: 999px;
       display: flex;
       align-items: center;
@@ -201,27 +205,10 @@
       flex-shrink: 0;
     }
 
-    .stat-label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+    .stat-value { font-size: 1.75rem; font-weight: 700; }
+    .stat-note  { font-size: 0.76rem; color: #a5b4fc; }
 
-    .stat-value {
-      font-size: 1.7rem;
-      font-weight: 700;
-    }
-
-    .stat-note {
-      font-size: 0.76rem;
-      color: #a5b4fc;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 20px 54px rgba(15,23,42,.95);
-    }
-
-    /* ---------- BOTTOM GRID: CHART + TABLE ---------- */
     .bottom-grid {
       display: grid;
       grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.2fr);
@@ -239,9 +226,7 @@
       backdrop-filter: blur(16px);
     }
 
-    .panel.right {
-      border-color: rgba(148,163,184,.5);
-    }
+    .panel.right { border-color: rgba(148,163,184,.5); }
 
     .panel-header {
       display: flex;
@@ -251,16 +236,8 @@
       margin-bottom: 0.35rem;
     }
 
-    .panel-title {
-      font-size: 0.96rem;
-      font-weight: 500;
-    }
-
-    .panel-sub {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      margin-bottom: 0.6rem;
-    }
+    .panel-title { font-size: 0.96rem; font-weight: 500; }
+    .panel-sub   { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.6rem; }
 
     .badge-soft {
       font-size: 0.72rem;
@@ -288,27 +265,16 @@
       margin:0 auto;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8rem;
-    }
-
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
     th, td {
       padding: 0.55rem 0.45rem;
       border-bottom: 1px solid rgba(30,64,175,.5);
       text-align: left;
       white-space: nowrap;
     }
-
-    th {
-      font-weight: 500;
-      color: #bfdbfe;
-      font-size: 0.78rem;
-    }
+    th { font-weight: 500; color: #bfdbfe; font-size: 0.78rem; }
 
     td.time { color: #e5e7eb; }
-
     td.status-ok { color: var(--ok); font-weight: 600; }
     td.status-late { color: var(--late); font-weight: 600; }
     td.status-absent { color: var(--absent); font-weight: 600; }
@@ -327,7 +293,6 @@
       text-align: right;
     }
 
-    /* ---------- FOOTER ---------- */
     .footer {
       max-width: 1200px;
       margin: 0 auto 1.6rem;
@@ -339,14 +304,9 @@
       gap: 0.5rem;
     }
 
-    /* ---------- RESPONSIVE ---------- */
     @media (max-width: 1024px) {
-      .stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .bottom-grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .bottom-grid { grid-template-columns: minmax(0, 1fr); }
     }
 
     @media (max-width: 640px) {
@@ -355,15 +315,10 @@
         align-items: flex-start;
         padding: 1.1rem 1.3rem;
       }
-      .top-right {
-        text-align: left;
-      }
-      .stats-grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .main {
-        padding: 0 1.1rem;
-      }
+      .top-right { text-align: left; }
+      .stats-grid { grid-template-columns: minmax(0, 1fr); }
+      .main { padding: 0 1.1rem; }
+      .header-actions { flex-wrap: wrap; justify-content: flex-start; }
     }
   </style>
 </head>
@@ -373,38 +328,38 @@
     <!-- HEADER -->
     <header class="top-nav">
       <div class="top-left">
-        <div class="top-title">Dashboard นักเรียน</div>
-        <div class="top-sub">สรุปภาพรวมการเข้าเรียนของคุณในระบบ CPVC-Check</div>
-
-        <div class="dash-actions">
-          <button class="pill-btn" type="button" onclick="window.location.href='scan.html'">
-            📸 ไปหน้าเช็คชื่อ
-          </button>
-          <button class="pill-btn secondary" type="button" onclick="window.location.href='history.html'">
-            🕘 ดูประวัติการเช็คชื่อ
-          </button>
-          <button class="pill-btn danger" type="button" onclick="logoutStudent()">
-            🚪 ออกจากระบบ
-          </button>
-        </div>
+        <div class="top-title">🎓 Dashboard นักเรียน</div>
+        <div class="top-sub">📘 สรุปภาพรวมการเข้าเรียนของคุณในระบบ CPVC-Check</div>
       </div>
 
       <div class="top-right">
         <strong id="studentNameDisplay">นักเรียน</strong>
-        ID : <span id="studentIdDisplay">-</span>
+        <div>🆔 <span id="studentIdDisplay">-</span></div>
       </div>
     </header>
 
+    <!-- ปุ่มอยู่แถบล่าง -->
+    <div class="header-actions">
+      <button class="pill-btn" type="button" onclick="window.location.href='scan.html'">
+        📸 เช็คชื่อ
+      </button>
+      <button class="pill-btn secondary" type="button" onclick="window.location.href='history.html'">
+        🕘 ประวัติ
+      </button>
+      <button class="pill-btn danger" type="button" onclick="logoutStudent()">
+        🚪 ออกจากระบบ
+      </button>
+    </div>
+
     <!-- MAIN -->
     <main class="main">
-      <!-- การ์ด 4 ใบบนสุด -->
       <section class="stats-grid">
         <article class="stat-card">
           <div class="stat-card-inner">
             <div class="stat-header">
               <div class="stat-icon">📊</div>
               <div>
-                <div class="stat-label">จำนวนรายการเช็คชื่อทั้งหมด</div>
+                <div class="stat-label">📌 จำนวนรายการเช็คชื่อทั้งหมด</div>
                 <div class="stat-value" id="totalRecords">0</div>
               </div>
             </div>
@@ -417,7 +372,7 @@
             <div class="stat-header">
               <div class="stat-icon">✅</div>
               <div>
-                <div class="stat-label">มาเรียนตรงเวลา (OK)</div>
+                <div class="stat-label">✅ มาเรียนตรงเวลา (OK)</div>
                 <div class="stat-value" id="okCount">0</div>
               </div>
             </div>
@@ -432,7 +387,7 @@
             <div class="stat-header">
               <div class="stat-icon">⏰</div>
               <div>
-                <div class="stat-label">มาสาย (LATE)</div>
+                <div class="stat-label">⏰ มาสาย (LATE)</div>
                 <div class="stat-value" id="lateCount">0</div>
               </div>
             </div>
@@ -447,7 +402,7 @@
             <div class="stat-header">
               <div class="stat-icon">📈</div>
               <div>
-                <div class="stat-label">อัตราการเข้าเรียน (มา + สาย)</div>
+                <div class="stat-label">📈 อัตราการเข้าเรียน (มา + สาย)</div>
                 <div class="stat-value" id="ratePercent">0%</div>
               </div>
             </div>
@@ -458,12 +413,10 @@
         </article>
       </section>
 
-      <!-- แถวล่าง: กราฟ + ตาราง -->
       <section class="bottom-grid">
-        <!-- กราฟโดนัท -->
         <article class="panel">
           <div class="panel-header">
-            <div class="panel-title">กราฟ มา / สาย / ขาด</div>
+            <div class="panel-title">📊 กราฟ มา / สาย / ขาด</div>
             <span class="badge-soft">ข้อมูลจาก ATTENDANCE ของคุณ</span>
           </div>
           <div class="panel-sub">
@@ -475,10 +428,9 @@
           </div>
         </article>
 
-        <!-- ตาราง 5 รายการล่าสุด -->
         <article class="panel right">
           <div class="panel-header">
-            <div class="panel-title">ประวัติการเช็คชื่อล่าสุด</div>
+            <div class="panel-title">🧾 ประวัติการเช็คชื่อล่าสุด</div>
             <span class="badge-soft">แสดง 5 รายการล่าสุด</span>
           </div>
           <div class="panel-sub">
@@ -488,11 +440,11 @@
           <table>
             <thead>
               <tr>
-                <th>เวลา</th>
-                <th>รายวิชา</th>
-                <th>TOKEN</th>
-                <th>สถานะ</th>
-                <th>ครู</th>
+                <th>⏱️ เวลา</th>
+                <th>📚 รายวิชา</th>
+                <th>🔑 TOKEN</th>
+                <th>✅ สถานะ</th>
+                <th>👩‍🏫 ครู</th>
               </tr>
             </thead>
             <tbody id="recentTableBody">
@@ -510,7 +462,7 @@
     </main>
 
     <footer class="footer">
-      <span> · ระบบเช็คชื่อออนไลน์</span>
+      <span>CPVC-Check · ระบบเช็คชื่อออนไลน์</span>
       <span>เวอร์ชันนักเรียน · ดูข้อมูลเฉพาะของตนเอง</span>
     </footer>
   </div>
