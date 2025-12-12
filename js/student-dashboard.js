@@ -3,16 +3,10 @@ import { callApi } from "./api.js";
 
 let statusChart = null;
 
-// ฟังก์ชันแปลงเวลาให้เป็นรูปแบบไทยอ่านง่าย
 function formatThaiDateTime(raw) {
   if (!raw) return "-";
-
   const d = new Date(raw);
-  if (isNaN(d.getTime())) {
-    // ถ้าแปลงไม่ได้ ให้โชว์ของเดิม
-    return raw;
-  }
-
+  if (isNaN(d.getTime())) return String(raw);
   return d.toLocaleString("th-TH", {
     timeZone: "Asia/Bangkok",
     year: "2-digit",
@@ -24,10 +18,21 @@ function formatThaiDateTime(raw) {
   });
 }
 
+function upper(x) {
+  return String(x || "").toUpperCase().trim();
+}
+
+function statusPillHTML(stRaw) {
+  const st = upper(stRaw);
+  if (st === "OK") return `<span class="status-pill pill-ok">✅ OK</span>`;
+  if (st === "LATE") return `<span class="status-pill pill-late">⏰ LATE</span>`;
+  if (st === "ABSENT") return `<span class="status-pill pill-absent">❌ ABSENT</span>`;
+  return `<span class="status-pill" style="border:1px solid rgba(148,163,184,.5);color:#cbd5e1;background:rgba(15,23,42,.8);">• ${stRaw || "-"}</span>`;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  // ------- ดึง element จาก dashboard.html -------
-  const nameEl        = document.getElementById("studentNameDisplay");
-  const idEl          = document.getElementById("studentIdDisplay");
+  const nameEl = document.getElementById("studentNameDisplay");
+  const idEl   = document.getElementById("studentIdDisplay");
 
   const totalEl       = document.getElementById("totalRecords");
   const okCountEl     = document.getElementById("okCount");
@@ -36,78 +41,67 @@ document.addEventListener("DOMContentLoaded", () => {
   const latePercentEl = document.getElementById("latePercent");
   const ratePercentEl = document.getElementById("ratePercent");
 
-  const msgEl         = document.getElementById("msg");
+  const msgEl = document.getElementById("msg");
 
-  const chartCanvas     = document.getElementById("statusChart");
+  const chartCanvas = document.getElementById("statusChart");
   const recentTableBody = document.getElementById("recentTableBody");
 
-  // ------- อ่าน session นักเรียน -------
+  // ---- read student session
   let student = null;
   try {
-    const rawLocal   = localStorage.getItem("cpvc_student");
+    const rawLocal = localStorage.getItem("cpvc_student");
     const rawSession = sessionStorage.getItem("student");
     const raw = rawLocal || rawSession;
-
     if (!raw) throw new Error("no session");
-
     const parsed = JSON.parse(raw);
     if (!parsed || !parsed.studentId) throw new Error("invalid session");
-
     student = parsed;
   } catch (e) {
-    // ถ้าไม่มี session ให้เด้งกลับไปหน้า login
     window.location.href = "login.html";
     return;
   }
 
   if (nameEl) nameEl.textContent = student.name || "นักเรียน";
-  if (idEl)   idEl.textContent   = student.studentId || "-";
+  if (idEl) idEl.textContent = student.studentId || "-";
 
-  // โหลดข้อมูล Dashboard จาก GAS
   loadDashboard();
 
   async function loadDashboard() {
     setMsg("กำลังโหลดข้อมูลการเข้าเรียน...");
 
     try {
-      const res = await callApi("getStudentHistory", {
-        studentId: student.studentId,
-      });
-
+      const res = await callApi("getStudentHistory", { studentId: student.studentId });
       if (!res || !res.success) {
-        throw new Error(res && res.message ? res.message : "โหลดข้อมูลไม่สำเร็จ");
+        throw new Error(res?.message || "โหลดข้อมูลไม่สำเร็จ");
       }
 
-      const history = res.history || [];
-      const total   = history.length;
+      const history = Array.isArray(res.history) ? res.history : [];
+      const total = history.length;
 
-      const ok     = history.filter(r => String(r.status || "").toUpperCase() === "OK").length;
-      const late   = history.filter(r => String(r.status || "").toUpperCase() === "LATE").length;
-      const absent = history.filter(r => String(r.status || "").toUpperCase() === "ABSENT").length;
+      const ok = history.filter(r => upper(r.status) === "OK").length;
+      const late = history.filter(r => upper(r.status) === "LATE").length;
+      const absent = history.filter(r => upper(r.status) === "ABSENT").length;
 
-      const come    = ok + late;
-      const rate    = total ? Math.round((come * 100) / total) : 0;
-      const okPer   = total ? Math.round((ok   * 100) / total) : 0;
+      const come = ok + late;
+      const rate = total ? Math.round((come * 100) / total) : 0;
+      const okPer = total ? Math.round((ok * 100) / total) : 0;
       const latePer = total ? Math.round((late * 100) / total) : 0;
 
-      if (totalEl)       totalEl.textContent       = total;
-      if (okCountEl)     okCountEl.textContent     = ok;
-      if (lateCountEl)   lateCountEl.textContent   = late;
-      if (okPercentEl)   okPercentEl.textContent   = okPer   + "%";
+      if (totalEl) totalEl.textContent = total;
+      if (okCountEl) okCountEl.textContent = ok;
+      if (lateCountEl) lateCountEl.textContent = late;
+      if (okPercentEl) okPercentEl.textContent = okPer + "%";
       if (latePercentEl) latePercentEl.textContent = latePer + "%";
-      if (ratePercentEl) ratePercentEl.textContent = rate    + "%";
+      if (ratePercentEl) ratePercentEl.textContent = rate + "%";
 
-      if (!total) {
-        setMsg("ยังไม่มีประวัติการเช็คชื่อในระบบ");
-      } else {
-        setMsg(`ข้อมูลล่าสุดทั้งหมด ${total} รายการ`);
-      }
+      if (!total) setMsg("ยังไม่มีประวัติการเช็คชื่อในระบบ");
+      else setMsg("");
 
       renderChart(ok, late, absent);
       renderRecent(history);
     } catch (err) {
-      console.error("loadDashboard error:", err);
-      setMsg(err.message || "โหลดข้อมูลไม่สำเร็จ");
+      console.error("student dashboard error:", err);
+      setMsg(err?.message || "โหลดข้อมูลไม่สำเร็จ");
       renderChart(0, 0, 0);
       renderRecent([]);
     }
@@ -118,24 +112,20 @@ document.addEventListener("DOMContentLoaded", () => {
     msgEl.textContent = text || "";
   }
 
-  // ------- วาดกราฟโดนัท -------
   function renderChart(ok, late, absent) {
     if (!chartCanvas || typeof Chart === "undefined") return;
 
     const ctx = chartCanvas.getContext("2d");
-
-    if (statusChart) {
-      statusChart.destroy();
-    }
+    if (statusChart) statusChart.destroy();
 
     statusChart = new Chart(ctx, {
       type: "doughnut",
       data: {
-        labels: ["มา (OK)", "สาย (LATE)", "ขาด (ABSENT)"],
+        labels: ["OK", "LATE", "ABSENT"],
         datasets: [
           {
             data: [ok, late, absent],
-            backgroundColor: ["#22c55e", "#eab308", "#f97316"],
+            backgroundColor: ["#22c55e", "#f59e0b", "#ef4444"],
             borderWidth: 0,
           },
         ],
@@ -143,7 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: false, // ปิด animation กันอาการกระพริบ
+        animation: false,
         plugins: {
           legend: {
             labels: {
@@ -156,67 +146,65 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ------- เติมตาราง 5 รายการล่าสุด -------
   function renderRecent(history) {
     if (!recentTableBody) return;
-
     recentTableBody.innerHTML = "";
 
     if (!history.length) {
       const tr = document.createElement("tr");
       const td = document.createElement("td");
-      td.colSpan = 5; // เวลา / รายวิชา / TOKEN / สถานะ / ครู
-      td.className = "table-empty";
+      td.colSpan = 5;
+      td.className = "empty";
       td.textContent = "ยังไม่มีข้อมูลการเช็คชื่อในระบบ";
       tr.appendChild(td);
       recentTableBody.appendChild(tr);
       return;
     }
 
-    // ใช้ 5 รายการล่าสุด (จากท้าย array แล้วกลับด้าน)
-    const lastFive = history.slice(-5).reverse();
+    // 10 รายการล่าสุด
+    const last = history.slice(-10).reverse();
 
-    lastFive.forEach(row => {
+    last.forEach(row => {
       const tr = document.createElement("tr");
 
-      const timeRaw   = row.time || "-";
-      const timeLabel = formatThaiDateTime(timeRaw);
+      const timeLabel = formatThaiDateTime(row.time || row.timestamp || row.createdAt || "-");
 
-      const subject   = row.subject || "-";                       // ⭐ วิชา
-      const token     = row.token  || "-";
-      const st        = row.status || "-";
+      const subject =
+        row.subject ||
+        row.subjectName ||
+        row.course ||
+        row.courseName ||
+        row.className ||
+        "-";
 
-      // ใช้ชื่อครู ถ้าไม่มีชื่อค่อย fallback เป็นอีเมล
-      const teacherName = row.teacherName || row.teacherEmail || "-";
+      const token = row.token || "-";
+      const st = row.status || "-";
 
-      // เวลา
+      const teacher =
+        row.teacherName ||
+        row.teacher ||
+        row.teacherFullname ||
+        row.teacherEmail ||
+        "-";
+
       const tdTime = document.createElement("td");
       tdTime.textContent = timeLabel;
-      tdTime.className = "time";
       tr.appendChild(tdTime);
 
-      // รายวิชา
       const tdSubject = document.createElement("td");
       tdSubject.textContent = subject;
       tr.appendChild(tdSubject);
 
-      // TOKEN
       const tdToken = document.createElement("td");
       tdToken.textContent = token;
       tr.appendChild(tdToken);
 
-      // สถานะ
       const tdStatus = document.createElement("td");
-      tdStatus.textContent = st;
-      const upper = String(st || "").toUpperCase();
-      if (upper === "OK") tdStatus.className = "status-ok";
-      else if (upper === "LATE") tdStatus.className = "status-late";
-      else if (upper === "ABSENT") tdStatus.className = "status-absent";
+      tdStatus.innerHTML = statusPillHTML(st);
       tr.appendChild(tdStatus);
 
-      // ครู
       const tdTeacher = document.createElement("td");
-      tdTeacher.textContent = teacherName;
+      tdTeacher.textContent = teacher;
       tr.appendChild(tdTeacher);
 
       recentTableBody.appendChild(tr);

@@ -1,480 +1,400 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <title>Dashboard นักเรียน | CPVC-Check</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <title>CPVC-Check | Dashboard นักเรียน</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="../css/styles.css" />
-
+  <link rel="stylesheet" href="../css/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-  <script src="../js/student-dashboard.js" type="module" defer></script>
+  <script type="module" src="../js/student-dashboard.js" defer></script>
 
   <style>
-    :root {
-      --bg-main: #020617;
-      --panel: rgba(2, 6, 23, 0.96);
-      --nav-bg: radial-gradient(circle at 0 0, rgba(56,189,248,.25), transparent 55%),
-                radial-gradient(circle at 100% 0, rgba(37,99,235,.4), transparent 55%),
-                #020617;
-      --card-border: rgba(148,163,184,0.3);
-      --text-main: #e5e7eb;
-      --text-muted: #9ca3af;
-      --ok: #22c55e;
-      --late: #eab308;
-      --absent: #f97316;
+    :root{
+      --nav-bg: rgba(15,23,42,.95);
+      --card: rgba(15,23,42,.97);
+      --border: rgba(148,163,184,.45);
+      --muted: #9ca3af;
+      --text: #e5e7eb;
+      --ok:#4ade80;
+      --late:#fb923c;
+      --absent:#fecaca;
     }
 
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: "Prompt", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    body{
+      margin:0;
+      min-height:100vh;
       background:
-        radial-gradient(circle at 0% 0%, #020617, transparent 55%),
-        radial-gradient(circle at 100% 100%, #020617, #020617 70%);
-      color: var(--text-main);
+        radial-gradient(circle at 0 0,#1d2337,transparent 55%),
+        radial-gradient(circle at 100% 0,#312e81,transparent 55%),
+        #020617;
+      color:var(--text);
+      font-family:"Inter",system-ui,sans-serif;
     }
 
-    .page {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+    header{
+      padding:1.1rem 2rem;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      border-bottom:1px solid rgba(148,163,184,.35);
+      background:var(--nav-bg);
+      backdrop-filter:blur(16px);
+      position:sticky;top:0;z-index:40;
+    }
+    header h2{
+      margin:0;
+      font-size:1.4rem;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .subhead{
+      font-size:.8rem;
+      color:var(--muted);
+      margin-top:.1rem;
+      font-family:"Prompt",system-ui,sans-serif;
+    }
+    .userbox{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      font-size:.85rem;
+      color:#c7d2fe;
+    }
+    .userbox span.id{
+      font-size:.78rem;
+      color:var(--muted);
     }
 
-    /* ---------- NAVBAR (เต็มจอ) ---------- */
-    .top-nav {
-      width: 100%;
-      max-width: 100% !important;
-      border-radius: 0 !important;
-
-      padding: 1.2rem 2rem;
-      background: var(--nav-bg);
-      border-bottom: 1px solid rgba(15,23,42,.9);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1.5rem;
-      box-shadow: 0 18px 60px rgba(15,23,42,0.95);
+    /* STATS */
+    .stats{
+      max-width:1100px;
+      margin:1.6rem auto 1.1rem;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:1rem;
+      padding:0 1.4rem;
     }
-
-    .top-left {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
+    .stat{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:1.2rem;
+      padding:1rem 1rem 1.1rem;
+      box-shadow:0 20px 50px rgba(15,23,42,.95);
+      position:relative;
+      overflow:hidden;
     }
-
-    .top-title {
-      font-size: 1.55rem;
-      font-weight: 600;
-      letter-spacing: .2px;
-    }
-
-    .top-sub {
-      font-size: 0.82rem;
-      color: var(--text-muted);
-    }
-
-    .top-right {
-      text-align: right;
-      font-size: 0.84rem;
-      color: var(--text-muted);
-      line-height: 1.3;
-    }
-
-    .top-right strong {
-      display: block;
-      font-size: 0.98rem;
-      color: #e5e7eb;
-    }
-
-    /* ---------- แถบปุ่มล่าง (เหมือนครู) ---------- */
-    .header-actions {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      gap: 0.75rem;
-      padding: 0.9rem 1rem 1.2rem;
+    .stat::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
       background:
-        linear-gradient(to bottom, rgba(2,6,23,0.80), rgba(2,6,23,0.98));
-      border-bottom: 1px solid rgba(30,64,175,.45);
-      box-shadow: 0 12px 40px rgba(15,23,42,.85);
+        radial-gradient(circle at 0 0, rgba(59,130,246,.22), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(16,185,129,.16), transparent 60%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .stat > *{ position:relative; z-index:1; }
+    .stat-label{font-size:.78rem;color:var(--muted);}
+    .stat-value{font-size:1.6rem;font-weight:800;margin-top:.2rem;}
+    .stat-footer{font-size:.75rem;color:#60a5fa;margin-top:.2rem;font-family:"Prompt",system-ui,sans-serif;}
+
+    /* ACTION BAR */
+    .action-bar{
+      max-width:1100px;
+      margin:0 auto 1.2rem;
+      padding:0 1.4rem;
+      display:flex;
+      justify-content:space-between;
+      gap:.8rem;
+      flex-wrap:wrap;
+    }
+    .btn-main,
+    .btn-outline{
+      padding:.7rem 1.5rem;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      font-weight:700;
+      font-size:.9rem;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:.45rem;
+      white-space:nowrap;
+      transition:.2s;
+    }
+    .btn-main{
+      background:linear-gradient(135deg,#4f46e5,#6366f1);
+      color:white;
+      box-shadow:0 16px 40px rgba(79,70,229,.7);
+    }
+    .btn-main:hover{
+      transform:translateY(-1px);
+      box-shadow:0 18px 46px rgba(79,70,229,.8);
+    }
+    .btn-outline{
+      border:1px solid rgba(148,163,184,.7);
+      background:rgba(15,23,42,.8);
+      color:#e5e7eb;
+    }
+    .btn-outline:hover{
+      background:rgba(148,163,184,.16);
+      transform:translateY(-1px);
     }
 
-    .pill-btn {
-      border: none;
-      border-radius: 999px;
-      padding: 0.48rem 1.15rem;
-      font-size: 0.8rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      cursor: pointer;
-      color: #f9fafb;
-      background: linear-gradient(135deg,#2563eb,#38bdf8);
-      box-shadow: 0 12px 28px rgba(37,99,235,.55);
-      transition: transform .12s ease-out, filter .12s;
-      white-space: nowrap;
-    }
-
-    .pill-btn.secondary {
-      background: linear-gradient(135deg,#0ea5e9,#22c55e);
-      box-shadow: 0 12px 28px rgba(34,197,94,.45);
-    }
-
-    .pill-btn.danger {
-      background: linear-gradient(135deg,#64748b,#020617);
-      box-shadow: 0 12px 28px rgba(15,23,42,.9);
-    }
-
-    .pill-btn:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.05);
-    }
-
-    /* ---------- MAIN LAYOUT ---------- */
-    .main {
-      flex: 1;
-      max-width: 1200px;
-      margin: 1.6rem auto 2.4rem;
-      padding: 0 1.5rem 0.4rem;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.6rem;
-    }
-
-    .stat-card {
-      position: relative;
-      background: linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.88));
-      border-radius: 1.1rem;
-      border: 1px solid var(--card-border);
-      padding: 1rem 1.15rem;
-      box-shadow: 0 18px 46px rgba(0,0,0,.9);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-      backdrop-filter: blur(18px);
-    }
-
-    .stat-card::before {
-      content: "";
-      position: absolute;
-      inset: -40%;
+    /* =========================
+       TABLE CARD (แยกซ้าย/ขวา)
+       ========================= */
+    .table-card{
+      max-width:1100px;
+      margin:0 auto 2.4rem;
+      padding:1.3rem 1.2rem 1.5rem;
+      border-radius:1.4rem;
       background:
-        radial-gradient(circle at 0 0, rgba(56,189,248,0.16), transparent 60%),
-        radial-gradient(circle at 100% 100%, rgba(37,99,235,0.16), transparent 60%);
-      opacity: 0.9;
-      pointer-events: none;
+        radial-gradient(circle at 0 0, rgba(59,130,246,.35), transparent 55%),
+        radial-gradient(circle at 100% 0, rgba(16,185,129,.18), transparent 55%),
+        rgba(15,23,42,.98);
+      border:1px solid rgba(148,163,184,.5);
+      box-shadow:0 24px 60px rgba(15,23,42,.95);
     }
 
-    .stat-card-inner { position: relative; z-index: 1; }
-
-    .stat-card.rate {
-      border-color: rgba(34,197,94,.7);
-      box-shadow: 0 20px 52px rgba(22,163,74,.35);
+    /* หัวการ์ด */
+    .table-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:1rem;
+      margin-bottom:1rem;
+    }
+    .table-header h3{
+      margin:0;
+      font-size:1rem;
+      font-weight:800;
+    }
+    .hint{
+      font-size:.8rem;
+      color:var(--muted);
+      font-family:"Prompt",system-ui,sans-serif;
     }
 
-    .stat-header {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      margin-bottom: 0.2rem;
+    /* ✅ ตัวแยกซ้าย/ขวา */
+    .table-split{
+      display:grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+      gap: 1.2rem;
+      align-items: start;
     }
 
-    .stat-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-      background: radial-gradient(circle at 0 0, rgba(56,189,248,.9), transparent 65%),
-                  radial-gradient(circle at 100% 100%, rgba(37,99,235,.8), transparent 60%);
-      box-shadow: 0 10px 26px rgba(37,99,235,.9);
-      flex-shrink: 0;
+    /* ซ้าย: ตาราง */
+    .table-side{
+      min-width:0;
     }
 
-    .stat-label { font-size: 0.8rem; color: var(--text-muted); }
-    .stat-value { font-size: 1.75rem; font-weight: 700; }
-    .stat-note  { font-size: 0.76rem; color: #a5b4fc; }
-
-    .bottom-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.2fr);
-      gap: 1.1rem;
-      align-items: flex-start;
+    /* ขวา: กราฟ */
+    .chart-side{
+      min-width:0;
+      background: rgba(2,6,23,.28);
+      border: 1px solid rgba(148,163,184,.18);
+      border-radius: 1rem;
+      padding: 1rem;
+      display:flex;
+      flex-direction:column;
+      gap:.75rem;
+      position: sticky; /* อยู่กับที่ตอนเลื่อน (บนจอใหญ่) */
+      top: 88px;        /* เผื่อ header sticky */
     }
-
-    .panel {
-      background: var(--panel);
-      border-radius: 1.1rem;
-      border: 1px solid rgba(30,64,175,.75);
-      box-shadow: 0 18px 54px rgba(15,23,42,.95);
-      padding: 1.1rem 1.2rem 1.25rem;
-      min-height: 260px;
-      backdrop-filter: blur(16px);
-    }
-
-    .panel.right { border-color: rgba(148,163,184,.5); }
-
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.6rem;
-      margin-bottom: 0.35rem;
-    }
-
-    .panel-title { font-size: 0.96rem; font-weight: 500; }
-    .panel-sub   { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.6rem; }
-
-    .badge-soft {
-      font-size: 0.72rem;
-      padding: 0.15rem 0.55rem;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,.55);
-      color: #e5e7eb;
-      background: rgba(15,23,42,.92);
-      white-space: nowrap;
-    }
-
-    .chart-wrap {
-      position: relative;
-      min-height: 260px;
+    .chart-title{
       display:flex;
       align-items:center;
+      justify-content:space-between;
+      gap: .6rem;
+    }
+
+    .chart-wrap{
+      display:flex;
       justify-content:center;
+      align-items:center;
+      min-height:260px;
     }
-
-    canvas {
-      display:block;
+    #statusChart{
       width:100% !important;
-      max-width:380px;
+      max-width:340px;
       height:auto !important;
-      margin:0 auto;
+      display:block;
     }
 
-    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-    th, td {
-      padding: 0.55rem 0.45rem;
-      border-bottom: 1px solid rgba(30,64,175,.5);
-      text-align: left;
-      white-space: nowrap;
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:.85rem;
+      border-radius: 1rem;
+      overflow:hidden;
     }
-    th { font-weight: 500; color: #bfdbfe; font-size: 0.78rem; }
-
-    td.time { color: #e5e7eb; }
-    td.status-ok { color: var(--ok); font-weight: 600; }
-    td.status-late { color: var(--late); font-weight: 600; }
-    td.status-absent { color: var(--absent); font-weight: 600; }
-
-    .table-empty {
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      padding: 0.9rem 0.4rem;
+    thead{
+      background:linear-gradient(90deg,#020617,#1e3a8a);
     }
-
-    #msg {
-      margin-top: 0.5rem;
-      font-size: 0.78rem;
-      color: #fca5a5;
-      text-align: right;
+    th,td{
+      padding:.6rem .55rem;
+      border-bottom:1px solid rgba(31,41,55,.85);
+      text-align:left;
+      white-space:nowrap;
     }
-
-    .footer {
-      max-width: 1200px;
-      margin: 0 auto 1.6rem;
-      padding: 0 1.5rem;
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-      gap: 0.5rem;
+    th{
+      font-size:.75rem;
+      letter-spacing:.06em;
+      color:#c7d2fe;
+    }
+    tbody tr:nth-child(even){
+      background:rgba(15,23,42,.96);
+    }
+    tbody tr:hover{
+      background:rgba(59,130,246,.15);
     }
 
-    @media (max-width: 1024px) {
-      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .bottom-grid { grid-template-columns: minmax(0, 1fr); }
+    .empty{
+      text-align:center;
+      padding:1rem 0;
+      color:var(--muted);
+      font-family:"Prompt",system-ui,sans-serif;
     }
 
-    @media (max-width: 640px) {
-      .top-nav {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 1.1rem 1.3rem;
+    #msg{
+      max-width:1100px;
+      margin:0 auto 1.0rem;
+      padding:0 1.4rem;
+      font-size:.85rem;
+      text-align:center;
+      color:#f97373;
+      font-family:"Prompt",system-ui,sans-serif;
+    }
+
+    /* มือถือ: เรียงบนล่าง */
+    @media(max-width:900px){
+      .table-split{
+        grid-template-columns: 1fr;
       }
-      .top-right { text-align: left; }
-      .stats-grid { grid-template-columns: minmax(0, 1fr); }
-      .main { padding: 0 1.1rem; }
-      .header-actions { flex-wrap: wrap; justify-content: flex-start; }
+      .chart-side{
+        position: relative;
+        top: auto;
+      }
+    }
+
+    @media(max-width:768px){
+      header{padding-inline:1.2rem;}
+      .stats,.action-bar{padding-inline:1.2rem;}
+      .table-card{margin-inline:1.2rem;}
+      .userbox{align-items:flex-start;}
     }
   </style>
 </head>
 
 <body>
-  <div class="page">
-    <!-- HEADER -->
-    <header class="top-nav">
-      <div class="top-left">
-        <div class="top-title">🎓 Dashboard นักเรียน</div>
-        <div class="top-sub">📘 สรุปภาพรวมการเข้าเรียนของคุณในระบบ CPVC-Check</div>
-      </div>
+<header>
+  <div>
+    <h2>🎓 Dashboard นักเรียน</h2>
+    <div class="subhead">ภาพรวมการเข้าเรียนและรายการเช็คชื่อของคุณ</div>
+  </div>
+  <div class="userbox">
+    <span id="studentNameDisplay">-</span>
+    <span class="id">🆔 <span id="studentIdDisplay">-</span></span>
+  </div>
+</header>
 
-      <div class="top-right">
-        <strong id="studentNameDisplay">นักเรียน</strong>
-        <div>🆔 <span id="studentIdDisplay">-</span></div>
-      </div>
-    </header>
-
-    <!-- ปุ่มอยู่แถบล่าง -->
-    <div class="header-actions">
-      <button class="pill-btn" type="button" onclick="window.location.href='scan.html'">
-        📸 เช็คชื่อ
-      </button>
-      <button class="pill-btn secondary" type="button" onclick="window.location.href='history.html'">
-        🕘 ประวัติ
-      </button>
-      <button class="pill-btn danger" type="button" onclick="logoutStudent()">
-        🚪 ออกจากระบบ
-      </button>
-    </div>
-
-    <!-- MAIN -->
-    <main class="main">
-      <section class="stats-grid">
-        <article class="stat-card">
-          <div class="stat-card-inner">
-            <div class="stat-header">
-              <div class="stat-icon">📊</div>
-              <div>
-                <div class="stat-label">📌 จำนวนรายการเช็คชื่อทั้งหมด</div>
-                <div class="stat-value" id="totalRecords">0</div>
-              </div>
-            </div>
-            <div class="stat-note">รวมทุกครั้งที่มีการบันทึกในระบบ</div>
-          </div>
-        </article>
-
-        <article class="stat-card">
-          <div class="stat-card-inner">
-            <div class="stat-header">
-              <div class="stat-icon">✅</div>
-              <div>
-                <div class="stat-label">✅ มาเรียนตรงเวลา (OK)</div>
-                <div class="stat-value" id="okCount">0</div>
-              </div>
-            </div>
-            <div class="stat-note">
-              <span id="okPercent">0%</span> ของการเช็คชื่อทั้งหมด
-            </div>
-          </div>
-        </article>
-
-        <article class="stat-card">
-          <div class="stat-card-inner">
-            <div class="stat-header">
-              <div class="stat-icon">⏰</div>
-              <div>
-                <div class="stat-label">⏰ มาสาย (LATE)</div>
-                <div class="stat-value" id="lateCount">0</div>
-              </div>
-            </div>
-            <div class="stat-note">
-              <span id="latePercent">0%</span> ของการเช็คชื่อทั้งหมด
-            </div>
-          </div>
-        </article>
-
-        <article class="stat-card rate">
-          <div class="stat-card-inner">
-            <div class="stat-header">
-              <div class="stat-icon">📈</div>
-              <div>
-                <div class="stat-label">📈 อัตราการเข้าเรียน (มา + สาย)</div>
-                <div class="stat-value" id="ratePercent">0%</div>
-              </div>
-            </div>
-            <div class="stat-note">
-              คิดจากจำนวนครั้งที่มาเรียนเปรียบเทียบกับทั้งหมด
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <section class="bottom-grid">
-        <article class="panel">
-          <div class="panel-header">
-            <div class="panel-title">📊 กราฟ มา / สาย / ขาด</div>
-            <span class="badge-soft">ข้อมูลจาก ATTENDANCE ของคุณ</span>
-          </div>
-          <div class="panel-sub">
-            แสดงจำนวนครั้งที่มาเรียนตรงเวลา มาสาย และขาดเรียนในภาพรวม
-          </div>
-
-          <div class="chart-wrap">
-            <canvas id="statusChart"></canvas>
-          </div>
-        </article>
-
-        <article class="panel right">
-          <div class="panel-header">
-            <div class="panel-title">🧾 ประวัติการเช็คชื่อล่าสุด</div>
-            <span class="badge-soft">แสดง 5 รายการล่าสุด</span>
-          </div>
-          <div class="panel-sub">
-            ดูเวลาที่เช็คชื่อ รายวิชา TOKEN สถานะ และครูผู้สอนล่าสุดของคุณ
-          </div>
-
-          <table>
-            <thead>
-              <tr>
-                <th>⏱️ เวลา</th>
-                <th>📚 รายวิชา</th>
-                <th>🔑 TOKEN</th>
-                <th>✅ สถานะ</th>
-                <th>👩‍🏫 ครู</th>
-              </tr>
-            </thead>
-            <tbody id="recentTableBody">
-              <tr>
-                <td colspan="5" class="table-empty">
-                  ยังไม่มีข้อมูลการเช็คชื่อในระบบ
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div id="msg"></div>
-        </article>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <span>CPVC-Check · ระบบเช็คชื่อออนไลน์</span>
-      <span>เวอร์ชันนักเรียน · ดูข้อมูลเฉพาะของตนเอง</span>
-    </footer>
+<section class="stats">
+  <div class="stat">
+    <div class="stat-label">📌 จำนวนรายการเช็คชื่อทั้งหมด</div>
+    <div class="stat-value" id="totalRecords">0</div>
+    <div class="stat-footer">รวมทุกครั้งที่ถูกบันทึกในระบบ</div>
   </div>
 
-  <script>
-    function logoutStudent() {
-      try {
-        localStorage.removeItem("cpvc_student");
-        sessionStorage.clear();
-      } catch (e) {}
-      window.location.href = "login.html";
-    }
-  </script>
+  <div class="stat">
+    <div class="stat-label">✅ มาเรียนตรงเวลา (OK)</div>
+    <div class="stat-value"><span id="okCount">0</span> <span style="font-size:.9rem;color:var(--muted);font-weight:700">(<span id="okPercent">0%</span>)</span></div>
+    <div class="stat-footer">สถานะ = OK</div>
+  </div>
+
+  <div class="stat">
+    <div class="stat-label">⏰ มาสาย (LATE)</div>
+    <div class="stat-value"><span id="lateCount">0</span> <span style="font-size:.9rem;color:var(--muted);font-weight:700">(<span id="latePercent">0%</span>)</span></div>
+    <div class="stat-footer">สถานะ = LATE</div>
+  </div>
+
+  <div class="stat">
+    <div class="stat-label">📈 อัตราการเข้าเรียน (มา + สาย)</div>
+    <div class="stat-value" id="ratePercent">0%</div>
+    <div class="stat-footer">คิดจาก OK + LATE เทียบกับทั้งหมด</div>
+  </div>
+</section>
+
+<section class="action-bar">
+  <div>
+    <a href="scan.html" class="btn-main">📸 เช็คชื่อเข้าเรียน</a>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+    <a href="history.html" class="btn-outline">🧾 ดูประวัติทั้งหมด</a>
+    <button class="btn-outline" type="button" onclick="logoutStudent()">🚪 ออกจากระบบ</button>
+  </div>
+</section>
+
+<div id="msg"></div>
+
+<section class="table-card">
+  <div class="table-header">
+    <div>
+      <h3>🧾 รายการเช็คชื่อล่าสุด</h3>
+      <div class="hint">แสดง 10 รายการล่าสุด (เวลา / รายวิชา / TOKEN / สถานะ / ครู)</div>
+    </div>
+    <div class="hint">📊 สัดส่วนสถานะ</div>
+  </div>
+
+  <!-- ✅ แยกซ้าย/ขวาตรงนี้ -->
+  <div class="table-split">
+
+    <!-- ซ้าย: ตาราง -->
+    <div class="table-side">
+      <table>
+        <thead>
+          <tr>
+            <th>⏱️ เวลา</th>
+            <th>📚 รายวิชา</th>
+            <th>🔑 TOKEN</th>
+            <th>✅ สถานะ</th>
+            <th>👩‍🏫 ครู</th>
+          </tr>
+        </thead>
+        <tbody id="recentTableBody">
+          <tr><td colspan="5" class="empty">กำลังโหลดข้อมูล...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ขวา: กราฟ -->
+    <aside class="chart-side">
+      <div class="chart-title">
+        <div class="hint">📊 สัดส่วนสถานะ</div>
+        <div class="hint">OK / LATE / ABSENT</div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="statusChart"></canvas>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+<script>
+  function logoutStudent() {
+    try {
+      localStorage.removeItem("cpvc_student");
+      sessionStorage.clear();
+    } catch (e) {}
+    window.location.href = "login.html";
+  }
+</script>
 </body>
 </html>
