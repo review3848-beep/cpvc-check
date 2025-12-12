@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>จัดการผู้ใช้ | Admin | CPVC-Check</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="../css/styles.css">
+
+  <style>
+    :root{
+      --accent1:#14b8a6;
+      --accent2:#06b6d4;
+      --panel:rgba(15,23,42,.9);
+      --border:rgba(148,163,184,.25);
+      --muted:#94a3b8;
+    }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:"Inter",system-ui,sans-serif;
+      color:#e5e7eb;
+      background:
+        radial-gradient(circle at 0% 0%, #0f766e 0, transparent 55%),
+        radial-gradient(circle at 100% 100%, #020617 0, #020617 70%),
+        #020617;
+    }
+
+    /* ===== TOP BAR ===== */
+    .top{
+      padding:1.4rem 1.8rem;
+      background:linear-gradient(90deg, rgba(15,23,42,.95), rgba(15,23,42,.85));
+      border-bottom:1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:1rem;
+    }
+    .top h1{
+      margin:0 0 .25rem;
+      font-size:1.55rem;
+    }
+    .top .sub{
+      margin:0;
+      font-size:.9rem;
+      color:var(--muted);
+    }
+    .top .who{
+      text-align:right;
+      font-size:.9rem;
+      color:var(--muted);
+      line-height:1.3;
+    }
+    .top a{
+      color:#67e8f9;
+      text-decoration:none;
+      font-weight:600;
+    }
+    .top a:hover{ text-decoration:underline; }
+
+    .container{
+      max-width:1180px;
+      margin:0 auto;
+      padding:1.6rem 1.4rem 3rem;
+    }
+
+    /* ===== STATS ===== */
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:1.2rem;
+      margin-bottom:1.3rem;
+    }
+    .stat{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:1.3rem;
+      padding:1.2rem 1.4rem;
+      box-shadow:0 12px 34px rgba(0,0,0,.35);
+    }
+    .stat .label{
+      font-size:.85rem;
+      color:var(--muted);
+    }
+    .stat .value{
+      font-size:1.6rem;
+      font-weight:750;
+      margin-top:.35rem;
+      color:#67e8f9;
+    }
+
+    /* ===== TOOLBAR ===== */
+    .toolbar{
+      display:flex;
+      gap:1rem;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin:1.1rem 0 1.2rem;
+    }
+    .filters{
+      display:flex;
+      gap:.8rem;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .input, .select{
+      background:rgba(15,23,42,.65);
+      border:1px solid var(--border);
+      color:#e5e7eb;
+      padding:.7rem .9rem;
+      border-radius:.9rem;
+      outline:none;
+      min-width:220px;
+    }
+    .select{ min-width:180px; }
+    .input::placeholder{ color:#64748b; }
+
+    .btn{
+      padding:.72rem 1.1rem;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(15,23,42,.55);
+      color:#e5e7eb;
+      cursor:pointer;
+      font-weight:650;
+      transition:.12s ease;
+    }
+    .btn:hover{
+      border-color:rgba(20,184,166,.55);
+      box-shadow:0 12px 30px rgba(20,184,166,.18);
+    }
+
+    .btn-primary{
+      border:none;
+      background:linear-gradient(90deg,var(--accent1),var(--accent2));
+      color:#052a2a;
+      box-shadow:0 18px 46px rgba(20,184,166,.28);
+    }
+    .btn-primary:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.04);
+      box-shadow:0 22px 56px rgba(20,184,166,.4);
+    }
+
+    /* ===== TABLE ===== */
+    .table-card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:1.4rem;
+      overflow:hidden;
+      box-shadow:0 14px 40px rgba(0,0,0,.45);
+    }
+    .table-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:1rem;
+      padding:1.05rem 1.2rem;
+      border-bottom:1px solid var(--border);
+    }
+    .table-head h2{
+      margin:0;
+      font-size:1.05rem;
+      font-weight:700;
+    }
+    .hint{
+      color:var(--muted);
+      font-size:.85rem;
+    }
+
+    .table-scroll{
+      overflow:auto;
+      width:100%;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:.9rem;
+      min-width:900px;
+    }
+    th, td{
+      padding:.75rem .9rem;
+      border-bottom:1px solid rgba(148,163,184,.18);
+      text-align:left;
+      vertical-align:middle;
+      white-space:nowrap;
+    }
+    th{
+      font-size:.8rem;
+      color:#cbd5f5;
+      background:rgba(2,6,23,.55);
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+    tbody tr:hover{ background:rgba(15,23,42,.55); }
+
+    .badge{
+      padding:.25rem .6rem;
+      border-radius:999px;
+      font-size:.75rem;
+      font-weight:700;
+      display:inline-block;
+    }
+    .b-admin{ background:rgba(6,182,212,.18); color:#67e8f9; }
+    .b-teacher{ background:rgba(99,102,241,.18); color:#a5b4fc; }
+    .b-student{ background:rgba(20,184,166,.18); color:#5eead4; }
+
+    .b-active{ background:rgba(34,197,94,.18); color:#4ade80; }
+    .b-suspend{ background:rgba(234,179,8,.18); color:#facc15; }
+    .b-deleted{ background:rgba(239,68,68,.18); color:#f87171; }
+
+    .row-actions{
+      display:flex;
+      gap:.5rem;
+    }
+    .mini{
+      padding:.45rem .75rem;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(15,23,42,.55);
+      color:#e5e7eb;
+      cursor:pointer;
+      font-weight:650;
+      font-size:.82rem;
+      transition:.12s ease;
+    }
+    .mini:hover{
+      border-color:rgba(20,184,166,.55);
+      box-shadow:0 10px 26px rgba(20,184,166,.16);
+    }
+
+    #msg{
+      margin:1rem .2rem 0;
+      color:var(--muted);
+      font-size:.9rem;
+      min-height:1.1rem;
+    }
+
+    @media(max-width:900px){
+      .stats{ grid-template-columns:repeat(2,1fr); }
+      .input{ min-width:100%; }
+      .select{ min-width:160px; }
+    }
+    @media(max-width:520px){
+      .stats{ grid-template-columns:1fr; }
+      .top{ padding:1.1rem 1.2rem; }
+      .container{ padding:1.2rem 1.1rem 2.6rem; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TOP -->
+  <div class="top">
+    <div>
+      <h1>จัดการผู้ใช้</h1>
+      <p class="sub">
+        ดู/ค้นหา/ระงับบัญชี ครู-นักเรียน (และแอดมินถ้ามี)
+        · <a href="dashboard.html">กลับ Dashboard</a>
+      </p>
+    </div>
+    <div class="who">
+      แอดมินระบบ<br>
+      <b id="adminEmail">admin@cpvc.ac.th</b>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat">
+        <div class="label">ผู้ใช้ทั้งหมด</div>
+        <div class="value" id="statAll">–</div>
+      </div>
+      <div class="stat">
+        <div class="label">ครู</div>
+        <div class="value" id="statTeachers">–</div>
+      </div>
+      <div class="stat">
+        <div class="label">นักเรียน</div>
+        <div class="value" id="statStudents">–</div>
+      </div>
+      <div class="stat">
+        <div class="label">ถูกระงับ</div>
+        <div class="value" id="statSuspended">–</div>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="filters">
+        <input id="q" class="input" type="text" placeholder="🔍 ค้นหา: ชื่อ / อีเมล / รหัสนักเรียน / รหัสครู">
+        <select id="role" class="select">
+          <option value="ALL">ทุกบทบาท</option>
+          <option value="ADMIN">แอดมิน</option>
+          <option value="TEACHER">ครู</option>
+          <option value="STUDENT">นักเรียน</option>
+        </select>
+        <select id="status" class="select">
+          <option value="ALL">ทุกสถานะ</option>
+          <option value="ACTIVE">ACTIVE</option>
+          <option value="SUSPENDED">SUSPENDED</option>
+          <option value="DELETED">DELETED</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button id="refreshBtn" class="btn">รีเฟรช</button>
+        <button id="addTeacherBtn" class="btn btn-primary">+ เพิ่มครู</button>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+      <div class="table-head">
+        <h2>รายการผู้ใช้</h2>
+        <div class="hint" id="resultHint">–</div>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>ชื่อ</th>
+              <th>อีเมล/รหัส</th>
+              <th>บทบาท</th>
+              <th>สถานะ</th>
+              <th>สร้างเมื่อ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody">
+            <!-- ตัวอย่างแถว (JS จะมาแทน) -->
+            <tr>
+              <td>ตัวอย่าง ผู้ใช้</td>
+              <td>demo@cpvc.ac.th</td>
+              <td><span class="badge b-teacher">TEACHER</span></td>
+              <td><span class="badge b-active">ACTIVE</span></td>
+              <td>2025-12-12</td>
+              <td>
+                <div class="row-actions">
+                  <button class="mini">แก้ไข</button>
+                  <button class="mini">ระงับ</button>
+                  <button class="mini">รีเซ็ตรหัส</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="msg"></div>
+
+  </div>
+
+  <script type="module" src="../js/admin-users.js"></script>
+</body>
+</html>

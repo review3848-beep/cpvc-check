@@ -1,302 +1,177 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Admin Dashboard | CPVC-Check</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
-
-  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="../css/styles.css">
 
   <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: "Prompt", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:"Inter",system-ui,sans-serif;
+      color:#e5e7eb;
       background:
-        radial-gradient(circle at 0 0, #020617, transparent 55%),
-        radial-gradient(circle at 100% 0, #1d4ed8, transparent 55%),
+        radial-gradient(circle at 0% 0%, #0f766e 0, transparent 55%),
+        radial-gradient(circle at 100% 100%, #020617 0, #020617 70%),
         #020617;
-      color: #e5e7eb;
     }
 
-    .page {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+    .container{
+      max-width:1100px;
+      margin:0 auto;
+      padding:2rem 1.4rem;
     }
 
-    header {
-      padding: 1.2rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background:
-        radial-gradient(circle at 0 0, rgba(56,189,248,.25), transparent 55%),
-        radial-gradient(circle at 100% 0, rgba(37,99,235,.35), transparent 55%),
-        #020617;
-      border-bottom: 1px solid rgba(15,23,42,.9);
-      box-shadow: 0 20px 60px rgba(15,23,42,.95);
+    h1{
+      font-size:1.7rem;
+      margin-bottom:.3rem;
     }
 
-    .head-left h1 {
-      margin: 0;
-      font-size: 1.5rem;
-      font-weight: 600;
+    .sub{
+      color:#94a3b8;
+      margin-bottom:2rem;
     }
 
-    .head-left p {
-      margin: 0.2rem 0 0;
-      font-size: 0.8rem;
-      color: #9ca3af;
+    /* ===== cards ===== */
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:1.2rem;
+      margin-bottom:2rem;
     }
 
-    .head-right {
-      text-align: right;
-      font-size: 0.8rem;
-      color: #9ca3af;
+    .card{
+      background:rgba(15,23,42,.88);
+      border:1px solid rgba(148,163,184,.25);
+      border-radius:1.2rem;
+      padding:1.4rem;
+      box-shadow:0 10px 30px rgba(0,0,0,.4);
     }
 
-    .head-right strong {
-      display: block;
-      color: #e5e7eb;
-      font-size: 0.9rem;
+    .card .label{
+      font-size:.85rem;
+      color:#94a3b8;
     }
 
-    .logout-btn {
-      margin-top: 0.35rem;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,.6);
-      background: rgba(15,23,42,.95);
-      color: #e5e7eb;
-      padding: 0.35rem 0.9rem;
-      font-size: 0.78rem;
-      cursor: pointer;
+    .card .value{
+      font-size:1.9rem;
+      font-weight:600;
+      margin-top:.3rem;
+      color:#67e8f9;
     }
 
-    .logout-btn:hover {
-      background: rgba(248,113,113,.15);
-      border-color: rgba(248,113,113,.7);
-      color: #fecaca;
+    /* ===== menu ===== */
+    .menu{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:1.2rem;
     }
 
-    main {
-      flex: 1;
-      max-width: 1200px;
-      margin: 1.8rem auto 2.2rem;
-      padding: 0 1.6rem;
+    .menu a{
+      text-decoration:none;
+      color:#e5e7eb;
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.6rem;
+    .menu-item{
+      background:rgba(15,23,42,.9);
+      border:1px solid rgba(148,163,184,.25);
+      border-radius:1.2rem;
+      padding:1.6rem;
+      transition:.15s ease;
+      height:100%;
     }
 
-    .card {
-      background: rgba(15,23,42,.96);
-      border-radius: 1rem;
-      border: 1px solid rgba(148,163,184,.4);
-      padding: 1rem 1.1rem;
-      box-shadow: 0 16px 40px rgba(0,0,0,.9);
+    .menu-item:hover{
+      transform:translateY(-2px);
+      border-color:#14b8a6;
+      box-shadow:0 14px 40px rgba(20,184,166,.35);
     }
 
-    .card h3 {
-      margin: 0 0 0.2rem;
-      font-size: 0.95rem;
-      font-weight: 500;
+    .menu-item .icon{
+      font-size:1.6rem;
+      margin-bottom:.6rem;
     }
 
-    .card p {
-      margin: 0;
-      font-size: 0.78rem;
-      color: #9ca3af;
+    .menu-item h3{
+      margin:.2rem 0 .3rem;
+      font-size:1.1rem;
     }
 
-    .card-value {
-      margin-top: 0.5rem;
-      font-size: 1.6rem;
-      font-weight: 700;
-    }
-
-    .card-tag {
-      margin-top: 0.55rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      font-size: 0.72rem;
-      padding: 0.18rem 0.55rem;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,.55);
-      color: #c7d2fe;
-      background: rgba(15,23,42,.9);
-    }
-
-    .section {
-      margin-top: 1.6rem;
-    }
-
-    .section h2 {
-      margin: 0 0 0.4rem;
-      font-size: 1rem;
-      font-weight: 500;
-    }
-
-    .section p {
-      margin: 0 0 0.7rem;
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-
-    .link-list {
-      font-size: 0.8rem;
-      padding-left: 1.1rem;
-      color: #e5e7eb;
-    }
-
-    .link-list li + li {
-      margin-top: 0.2rem;
-    }
-
-    .link-list a {
-      color: #93c5fd;
-      text-decoration: none;
-    }
-
-    .link-list a:hover {
-      text-decoration: underline;
-    }
-
-    footer {
-      max-width: 1200px;
-      margin: 0 auto 1.4rem;
-      padding: 0 1.6rem;
-      font-size: 0.72rem;
-      color: #9ca3af;
-      display: flex;
-      justify-content: space-between;
-      gap: 0.5rem;
-    }
-
-    @media (max-width: 960px) {
-      .grid {
-        grid-template-columns: repeat(2, minmax(0,1fr));
-      }
-    }
-
-    @media (max-width: 640px) {
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        padding-inline: 1.3rem;
-      }
-      .head-right {
-        text-align: left;
-      }
-      main {
-        padding-inline: 1.2rem;
-      }
-      footer {
-        padding-inline: 1.2rem;
-        flex-direction: column;
-      }
-      .grid {
-        grid-template-columns: minmax(0,1fr);
-      }
+    .menu-item p{
+      font-size:.85rem;
+      color:#94a3b8;
+      line-height:1.4;
     }
   </style>
 </head>
+
 <body>
-  <div class="page">
-    <header>
-      <div class="head-left">
-        <h1>Admin Dashboard</h1>
-        <p>จัดการระบบ CPVC-Check ในมุมมองผู้ดูแลระบบ</p>
+  <div class="container">
+    <h1>Admin Dashboard</h1>
+    <div class="sub">ภาพรวมระบบ CPVC-Check (สำหรับผู้ดูแล)</div>
+
+    <!-- ===== stats ===== -->
+    <div class="stats">
+      <div class="card">
+        <div class="label">จำนวนนักเรียน</div>
+        <div class="value" id="statStudents">–</div>
       </div>
-      <div class="head-right">
-        <strong id="adminName">Admin</strong>
-        <span id="adminEmail">-</span>
-        <button class="logout-btn" type="button" onclick="logoutAdmin()">
-          🚪 ออกจากระบบ
-        </button>
+
+      <div class="card">
+        <div class="label">จำนวนครู</div>
+        <div class="value" id="statTeachers">–</div>
       </div>
-    </header>
 
-    <main>
-      <section class="grid">
-        <article class="card">
-          <h3>ครูในระบบ</h3>
-          <p>จำนวนครูทั้งหมดที่ลงทะเบียนในชีต TEACHERS</p>
-          <div class="card-value" id="teacherCount">-</div>
-          <div class="card-tag">ข้อมูลจากชีต TEACHERS</div>
-        </article>
+      <div class="card">
+        <div class="label">คาบเรียนวันนี้</div>
+        <div class="value" id="statSessions">–</div>
+      </div>
 
-        <article class="card">
-          <h3>นักเรียนในระบบ</h3>
-          <p>จำนวนรหัสนักเรียนในชีต STUDENTS</p>
-          <div class="card-value" id="studentCount">-</div>
-          <div class="card-tag">ข้อมูลจากชีต STUDENTS</div>
-        </article>
+      <div class="card">
+        <div class="label">อัตราเข้าเรียนวันนี้</div>
+        <div class="value" id="statRate">–%</div>
+      </div>
+    </div>
 
-        <article class="card">
-          <h3>คาบเรียนที่บันทึก</h3>
-          <p>จำนวนคาบในชีต SESSIONS (รวมทั้งหมด)</p>
-          <div class="card-value" id="sessionCount">-</div>
-          <div class="card-tag">ข้อมูลจากชีต SESSIONS</div>
-        </article>
-      </section>
+    <!-- ===== menu ===== -->
+    <div class="menu">
+      <a href="users.html">
+        <div class="menu-item">
+          <div class="icon">👤</div>
+          <h3>จัดการผู้ใช้</h3>
+          <p>เพิ่ม แก้ไข ระงับบัญชีครูและนักเรียน</p>
+        </div>
+      </a>
 
-      <section class="section">
-        <h2>ลิงก์จัดการข้อมูล (ไปที่ Google Sheets)</h2>
-        <p>ใช้สำหรับเปิดชีตต้นฉบับของระบบ CPVC-Check เพื่อจัดการข้อมูลโดยตรง</p>
-        <ul class="link-list">
-          <li>ชีตหลัก CPVC-Check: <a href="#" target="_blank">เปิดสเปรดชีต</a> (ใส่ลิงก์จริงภายหลัง)</li>
-          <li>ดู/เพิ่มแอดมินในชีต <strong>ADMINS</strong></li>
-          <li>ดูรายชื่อครูในชีต <strong>TEACHERS</strong></li>
-          <li>ดูรายชื่อนักเรียนในชีต <strong>STUDENTS</strong></li>
-          <li>ดูข้อมูลคาบเรียนในชีต <strong>SESSIONS</strong></li>
-          <li>ดูประวัติการเช็คชื่อทั้งหมดในชีต <strong>ATTENDANCE</strong></li>
-        </ul>
-      </section>
-    </main>
+      <a href="attendance.html">
+        <div class="menu-item">
+          <div class="icon">📋</div>
+          <h3>ตรวจสอบการเช็คชื่อ</h3>
+          <p>ดูและแก้ไขข้อมูลเช็คชื่อกรณีพิเศษ</p>
+        </div>
+      </a>
 
-    <footer>
-      <span>CPVC-Check · Admin Panel</span>
-      <span>สำหรับผู้ดูแลระบบ · จัดการข้อมูลระดับระบบ</span>
-    </footer>
+      <a href="settings.html">
+        <div class="menu-item">
+          <div class="icon">⚙️</div>
+          <h3>ตั้งค่าระบบ</h3>
+          <p>Late, Auto-Absent, เปิด/ปิดระบบ</p>
+        </div>
+      </a>
+
+      <a href="reports.html">
+        <div class="menu-item">
+          <div class="icon">📊</div>
+          <h3>รายงาน & Export</h3>
+          <p>ดาวน์โหลดข้อมูล CSV / Excel</p>
+        </div>
+      </a>
+    </div>
   </div>
 
-  <script>
-    // อ่าน session แอดมิน
-    (function initAdmin() {
-      let admin = null;
-      try {
-        const raw = sessionStorage.getItem("admin");
-        if (raw) admin = JSON.parse(raw);
-      } catch (e) {
-        admin = null;
-      }
-
-      if (!admin || !admin.email) {
-        // ถ้าไม่มี session แอดมิน → กลับหน้า login
-        window.location.href = "login.html";
-        return;
-      }
-
-      document.getElementById("adminName").textContent  = admin.name || "Admin";
-      document.getElementById("adminEmail").textContent = admin.email || "-";
-    })();
-
-    function logoutAdmin() {
-      try {
-        sessionStorage.removeItem("admin");
-      } catch (e) {}
-      window.location.href = "login.html";
-    }
-  </script>
+  <script type="module" src="../js/admin-dashboard.js"></script>
 </body>
 </html>
