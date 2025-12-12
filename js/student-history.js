@@ -3,10 +3,10 @@
 import { callApi } from "./api.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const nameEl   = document.getElementById("studentNameDisplay");
-  const idEl     = document.getElementById("studentIdDisplay");
-  const tbody    = document.getElementById("historyBody");
-  const msgEl    = document.getElementById("historyMsg");
+  const nameEl = document.getElementById("studentNameDisplay");
+  const idEl = document.getElementById("studentIdDisplay");
+  const tbody = document.getElementById("historyBody");
+  const msgEl = document.getElementById("historyMsg");
 
   // ---------- helper ----------
   function setMsg(text) {
@@ -20,6 +20,22 @@ document.addEventListener("DOMContentLoaded", () => {
     if (s === "LATE") return "status-late";
     if (s === "ABSENT") return "status-absent";
     return "";
+  }
+
+  // ✅ แปลงเวลาให้สวย (ไทย + พ.ศ. + เวลาเครื่องผู้ใช้)
+  function formatDateTimeTH(value) {
+    if (!value) return "-";
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return String(value); // ถ้าพังให้โชว์เดิม
+
+    return new Intl.DateTimeFormat("th-TH", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(d);
   }
 
   // ---------- session นักเรียน ----------
@@ -36,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (nameEl) nameEl.textContent = student.name || "นักเรียน";
-  if (idEl)   idEl.textContent   = student.studentId || "-";
+  if (idEl) idEl.textContent = student.studentId || "-";
 
   // ---------- โหลดประวัติ ----------
   loadHistory();
@@ -78,27 +94,29 @@ document.addEventListener("DOMContentLoaded", () => {
       td.colSpan = 5;
       td.textContent = "ยังไม่มีข้อมูลการเช็คชื่อ";
       td.style.textAlign = "center";
-      tbody.appendChild(tr);
       tr.appendChild(td);
+      tbody.appendChild(tr);
       return;
     }
 
-    // ใช้ 20 รายการล่าสุด (หรือจะเปลี่ยนเป็น 5 ก็ได้)
-    const list = history.slice().reverse(); // ใหม่สุดอยู่บน
+    // ใหม่สุดอยู่บน
+    const list = history.slice().reverse();
 
     list.forEach((row) => {
       const tr = document.createElement("tr");
 
-      const time  = row.time || "-";
-      const token = row.token || "-";
+      const rawTime = row.time || "";
       const status = row.status || "-";
       const subject = row.subject || "-";
       const room = row.room || "-";
       const teacherName = row.teacherName || row.teacherEmail || "-";
 
-      // เวลา
+      // เวลา (สวยขึ้น)
       const tdTime = document.createElement("td");
-      tdTime.textContent = time;
+      tdTime.textContent = formatDateTimeTH(rawTime || "-");
+      tdTime.classList.add("time-col");
+      // เก็บค่าเดิมไว้ดู (hover)
+      if (rawTime) tdTime.title = rawTime;
       tr.appendChild(tdTime);
 
       // วิชา + ห้อง
