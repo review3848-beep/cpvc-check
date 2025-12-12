@@ -2,10 +2,11 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>เข้าสู่ระบบแอดมิน | CPVC-Check</title>
+  <title>เข้าสู่ระบบแอดมิน | NexAttend</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <link rel="stylesheet" href="../css/styles.css">
+  <!-- ใช้สไตล์หลักของโปรเจกต์ -->
+  <link rel="stylesheet" href="../css/styles.css" >
 
   <style>
     :root {
@@ -14,10 +15,8 @@
       --border: rgba(148,163,184,0.35);
       --text-main: #f9fafb;
       --text-muted: #94a3b8;
-
-      /* เขียวอมฟ้า – FinTech */
-      --accent1: #14b8a6; /* teal-500 */
-      --accent2: #06b6d4; /* cyan-500 */
+      --accent1: #6366f1; /* indigo */
+      --accent2: #0ea5e9; /* sky */
     }
 
     * { box-sizing: border-box; }
@@ -32,7 +31,7 @@
       font-family: "Inter", system-ui, sans-serif;
       color: var(--text-main);
       background:
-        radial-gradient(circle at 0% 0%, #0f766e 0, transparent 55%),
+        radial-gradient(circle at 0% 0%, #1e293b 0, transparent 55%),
         radial-gradient(circle at 100% 100%, #020617 0, #020617 70%);
     }
 
@@ -58,7 +57,7 @@
       justify-content: center;
       color: #fff;
       font-size: 1.9rem;
-      box-shadow: 0 0 22px rgba(20,184,166,.55);
+      box-shadow: 0 0 20px rgba(99,102,241,.55);
     }
 
     h2 {
@@ -99,8 +98,8 @@
     input::placeholder { color: #64748b; }
 
     input:focus {
-      border-color: var(--accent1);
-      box-shadow: 0 0 0 1px rgba(20,184,166,.55);
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 1px rgba(56,189,248,.55);
       background: rgba(15,23,42,1);
     }
 
@@ -114,7 +113,7 @@
       font-size: .95rem;
       background: linear-gradient(135deg, var(--accent1), var(--accent2));
       color: #fff;
-      box-shadow: 0 14px 34px rgba(20,184,166,.45);
+      box-shadow: 0 14px 32px rgba(99,102,241,.45);
       margin-top: .2rem;
       transition: .15s ease;
     }
@@ -122,7 +121,7 @@
     .btn:hover {
       transform: translateY(-1px);
       filter: brightness(1.05);
-      box-shadow: 0 20px 44px rgba(20,184,166,.6);
+      box-shadow: 0 18px 40px rgba(99,102,241,.6);
     }
 
     #msg {
@@ -140,7 +139,7 @@
     }
 
     .footer a {
-      color: #67e8f9;
+      color: #93c5fd;
       text-decoration: none;
     }
 
@@ -153,18 +152,28 @@
     <div class="icon">🛡️</div>
     <h2>เข้าสู่ระบบแอดมิน</h2>
     <div class="subtitle">
-      สำหรับผู้ดูแลระบบ CPVC-Check<br>
+      สำหรับผู้ดูแลระบบ NexAttend<br>
       ใช้บัญชีที่อยู่ในชีต <b>ADMINS</b>
     </div>
 
     <div class="form-group">
       <label for="email">อีเมลแอดมิน</label>
-      <input type="email" id="email" placeholder="admin@cpvc.ac.th">
+      <input
+        type="email"
+        id="email"
+        placeholder="admin@nexattend.com"
+        autocomplete="off"
+      />
     </div>
 
     <div class="form-group">
       <label for="password">รหัสผ่าน</label>
-      <input type="password" id="password" placeholder="••••••••">
+      <input
+        type="password"
+        id="password"
+        placeholder="••••••••"
+        autocomplete="off"
+      />
     </div>
 
     <button id="loginBtn" class="btn">เข้าสู่ระบบแอดมิน</button>
@@ -178,6 +187,7 @@
     </div>
   </div>
 
+  <!-- JS แอดมิน -->
   <script type="module" src="../js/admin-login.js"></script>
 </body>
 </html>
