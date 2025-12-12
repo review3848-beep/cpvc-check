@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>จัดการผู้ใช้ | Admin | CPVC-Check</title>
+  <title>ตรวจสอบการเช็คชื่อ | Admin | CPVC-Check</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="stylesheet" href="../css/styles.css">
@@ -37,26 +37,10 @@
       align-items:flex-end;
       gap:1rem;
     }
-    .top h1{
-      margin:0 0 .25rem;
-      font-size:1.55rem;
-    }
-    .top .sub{
-      margin:0;
-      font-size:.9rem;
-      color:var(--muted);
-    }
-    .top .who{
-      text-align:right;
-      font-size:.9rem;
-      color:var(--muted);
-      line-height:1.3;
-    }
-    .top a{
-      color:#67e8f9;
-      text-decoration:none;
-      font-weight:600;
-    }
+    .top h1{ margin:0 0 .25rem; font-size:1.55rem; }
+    .top .sub{ margin:0; font-size:.9rem; color:var(--muted); }
+    .top .who{ text-align:right; font-size:.9rem; color:var(--muted); line-height:1.3; }
+    .top a{ color:#67e8f9; text-decoration:none; font-weight:650; }
     .top a:hover{ text-decoration:underline; }
 
     .container{
@@ -65,48 +49,30 @@
       padding:1.6rem 1.4rem 3rem;
     }
 
-    /* ===== STATS ===== */
-    .stats{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:1.2rem;
-      margin-bottom:1.3rem;
-    }
-    .stat{
+    /* ===== FILTER BAR ===== */
+    .filters-card{
       background:var(--panel);
       border:1px solid var(--border);
-      border-radius:1.3rem;
-      padding:1.2rem 1.4rem;
+      border-radius:1.4rem;
       box-shadow:0 12px 34px rgba(0,0,0,.35);
-    }
-    .stat .label{
-      font-size:.85rem;
-      color:var(--muted);
-    }
-    .stat .value{
-      font-size:1.6rem;
-      font-weight:750;
-      margin-top:.35rem;
-      color:#67e8f9;
-    }
-
-    /* ===== TOOLBAR ===== */
-    .toolbar{
-      display:flex;
-      gap:1rem;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:space-between;
-      margin:1.1rem 0 1.2rem;
+      padding:1.15rem 1.2rem;
+      margin-bottom:1.2rem;
     }
     .filters{
       display:flex;
-      gap:.8rem;
       flex-wrap:wrap;
+      gap:.8rem;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .left, .right{
+      display:flex;
+      flex-wrap:wrap;
+      gap:.8rem;
       align-items:center;
     }
 
-    .input, .select{
+    .input, .select, .date{
       background:rgba(15,23,42,.65);
       border:1px solid var(--border);
       color:#e5e7eb;
@@ -115,7 +81,8 @@
       outline:none;
       min-width:220px;
     }
-    .select{ min-width:180px; }
+    .date{ min-width:170px; }
+    .select{ min-width:170px; }
     .input::placeholder{ color:#64748b; }
 
     .btn{
@@ -132,7 +99,6 @@
       border-color:rgba(20,184,166,.55);
       box-shadow:0 12px 30px rgba(20,184,166,.18);
     }
-
     .btn-primary{
       border:none;
       background:linear-gradient(90deg,var(--accent1),var(--accent2));
@@ -164,23 +130,20 @@
     .table-head h2{
       margin:0;
       font-size:1.05rem;
-      font-weight:700;
+      font-weight:750;
     }
     .hint{
       color:var(--muted);
       font-size:.85rem;
     }
 
-    .table-scroll{
-      overflow:auto;
-      width:100%;
-    }
+    .table-scroll{ overflow:auto; width:100%; }
 
     table{
       width:100%;
       border-collapse:collapse;
       font-size:.9rem;
-      min-width:900px;
+      min-width:1050px;
     }
     th, td{
       padding:.75rem .9rem;
@@ -203,21 +166,14 @@
       padding:.25rem .6rem;
       border-radius:999px;
       font-size:.75rem;
-      font-weight:700;
+      font-weight:800;
       display:inline-block;
     }
-    .b-admin{ background:rgba(6,182,212,.18); color:#67e8f9; }
-    .b-teacher{ background:rgba(99,102,241,.18); color:#a5b4fc; }
-    .b-student{ background:rgba(20,184,166,.18); color:#5eead4; }
+    .ok{ background:rgba(34,197,94,.18); color:#4ade80; }
+    .late{ background:rgba(234,179,8,.18); color:#facc15; }
+    .absent{ background:rgba(239,68,68,.18); color:#f87171; }
 
-    .b-active{ background:rgba(34,197,94,.18); color:#4ade80; }
-    .b-suspend{ background:rgba(234,179,8,.18); color:#facc15; }
-    .b-deleted{ background:rgba(239,68,68,.18); color:#f87171; }
-
-    .row-actions{
-      display:flex;
-      gap:.5rem;
-    }
+    .row-actions{ display:flex; gap:.5rem; }
     .mini{
       padding:.45rem .75rem;
       border-radius:999px;
@@ -242,12 +198,12 @@
     }
 
     @media(max-width:900px){
-      .stats{ grid-template-columns:repeat(2,1fr); }
       .input{ min-width:100%; }
+      .date{ min-width:160px; }
       .select{ min-width:160px; }
+      .filters{ gap:1rem; }
     }
     @media(max-width:520px){
-      .stats{ grid-template-columns:1fr; }
       .top{ padding:1.1rem 1.2rem; }
       .container{ padding:1.2rem 1.1rem 2.6rem; }
     }
@@ -259,10 +215,9 @@
   <!-- TOP -->
   <div class="top">
     <div>
-      <h1>จัดการผู้ใช้</h1>
+      <h1>ตรวจสอบการเช็คชื่อ</h1>
       <p class="sub">
-        ภาพรวมและจัดการผู้ใช้ทั้งหมดในระบบ CPVC-Check
-        · <a href="dashboard.html">กลับ Dashboard</a>
+        ตรวจสอบและจัดการรายการเช็คชื่อของนักเรียนในระบบ CPVC-Check
       </p>
     </div>
     <div class="who">
@@ -273,54 +228,33 @@
 
   <div class="container">
 
-    <!-- STATS -->
-    <div class="stats">
-      <div class="stat">
-        <div class="label">ผู้ใช้ทั้งหมด</div>
-        <div class="value" id="statAll">–</div>
-      </div>
-      <div class="stat">
-        <div class="label">ครู</div>
-        <div class="value" id="statTeachers">–</div>
-      </div>
-      <div class="stat">
-        <div class="label">นักเรียน</div>
-        <div class="value" id="statStudents">–</div>
-      </div>
-      <div class="stat">
-        <div class="label">ถูกระงับ</div>
-        <div class="value" id="statSuspended">–</div>
-      </div>
-    </div>
-
-    <!-- TOOLBAR -->
-    <div class="toolbar">
+    <!-- FILTERS -->
+    <div class="filters-card">
       <div class="filters">
-        <input id="q" class="input" type="text" placeholder="🔍 ค้นหา: ชื่อ / อีเมล / รหัสนักเรียน / รหัสครู">
-        <select id="role" class="select">
-          <option value="ALL">ทุกบทบาท</option>
-          <option value="ADMIN">แอดมิน</option>
-          <option value="TEACHER">ครู</option>
-          <option value="STUDENT">นักเรียน</option>
-        </select>
-        <select id="status" class="select">
-          <option value="ALL">ทุกสถานะ</option>
-          <option value="ACTIVE">ACTIVE</option>
-          <option value="SUSPENDED">SUSPENDED</option>
-          <option value="DELETED">DELETED</option>
-        </select>
-      </div>
+        <div class="left">
+          <input id="q" class="input" type="text"
+                 placeholder="🔍 ค้นหา: วิชา/ห้อง/ครู/รหัสนักเรียน/อีเมล/Token">
+          <input id="fromDate" class="date" type="date">
+          <input id="toDate" class="date" type="date">
+          <select id="status" class="select">
+            <option value="ALL">ทุกสถานะ</option>
+            <option value="OK">OK</option>
+            <option value="LATE">LATE</option>
+            <option value="ABSENT">ABSENT</option>
+          </select>
+        </div>
 
-      <div class="actions">
-        <button id="refreshBtn" class="btn">รีเฟรช</button>
-        <button id="addTeacherBtn" class="btn btn-primary">+ เพิ่มครู</button>
+        <div class="right">
+          <button id="refreshBtn" class="btn">รีเฟรช</button>
+          <button id="exportBtn" class="btn btn-primary">Export (CSV)</button>
+        </div>
       </div>
     </div>
 
     <!-- TABLE -->
     <div class="table-card">
       <div class="table-head">
-        <h2>รายการผู้ใช้</h2>
+        <h2>รายการเช็คชื่อ</h2>
         <div class="hint" id="resultHint">–</div>
       </div>
 
@@ -328,27 +262,29 @@
         <table>
           <thead>
             <tr>
-              <th>ชื่อ</th>
-              <th>อีเมล/รหัส</th>
-              <th>บทบาท</th>
+              <th>วันเวลา</th>
+              <th>วิชา / ห้อง</th>
+              <th>ครู</th>
+              <th>นักเรียน</th>
+              <th>Token</th>
               <th>สถานะ</th>
-              <th>สร้างเมื่อ</th>
               <th>จัดการ</th>
             </tr>
           </thead>
-          <tbody id="usersBody">
+          <tbody id="attendanceBody">
             <!-- ตัวอย่างแถว (JS จะมาแทน) -->
             <tr>
-              <td>ตัวอย่าง ผู้ใช้</td>
-              <td>demo@cpvc.ac.th</td>
-              <td><span class="badge b-teacher">TEACHER</span></td>
-              <td><span class="badge b-active">ACTIVE</span></td>
-              <td>2025-12-12</td>
+              <td>2025-12-12 10:05</td>
+              <td>CPVC101 / ห้อง 2</td>
+              <td>teacher@demo.com</td>
+              <td>67319100101</td>
+              <td>Q3M87N</td>
+              <td><span class="badge ok">OK</span></td>
               <td>
                 <div class="row-actions">
-                  <button class="mini">แก้ไข</button>
-                  <button class="mini">ระงับ</button>
-                  <button class="mini">รีเซ็ตรหัส</button>
+                  <button class="mini" data-act="setOk">OK</button>
+                  <button class="mini" data-act="setLate">LATE</button>
+                  <button class="mini" data-act="setAbsent">ABSENT</button>
                 </div>
               </td>
             </tr>
@@ -361,6 +297,6 @@
 
   </div>
 
-  <script type="module" src="../js/admin-users.js"></script>
+  <script type="module" src="../js/admin-attendance.js"></script>
 </body>
 </html>
