@@ -1,79 +1,158 @@
-import { callApi } from "./api.js";
+/* =====================================================
+   Admin Dashboard Controller
+   CPVC-Check / NexAttend
+   ใช้ร่วมกับ js/api.js
+===================================================== */
 
+import { callApi } from "../js/api.js";
+
+/* =========================
+   CONFIG
+========================= */
+
+// badge แจ้งเตือน
+const BADGE_MAP = {
+  users: "badge-users",
+  review: "badge-review",
+  settings: "badge-settings"
+};
+
+const LEVEL = {
+  danger: 4,
+  warning: 2
+};
+
+// element id ของสถิติผู้ใช้
+const STAT_MAP = {
+  students: "stat-students",
+  teachers: "stat-teachers",
+  total: "stat-total"
+};
+
+const REFRESH_INTERVAL = 30000; // 30 วิ
+
+/* =========================
+   INIT
+========================= */
 document.addEventListener("DOMContentLoaded", () => {
-  const elStudents = document.getElementById("statStudents");
-  const elTeachers = document.getElementById("statTeachers");
-  const elSessions  = document.getElementById("statSessions");
-  const elRate      = document.getElementById("statRate");
+  renderToday();
+  loadAdminBadges();
+  loadUserStats();
+  setupAutoRefresh();
+  setupCardActions();
+});
 
-  const setText = (el, text) => { if (el) el.textContent = text; };
+/* =========================
+   DATE
+========================= */
+function renderToday() {
+  const el = document.getElementById("today");
+  if (!el) return;
 
-  // ---- helper: format percent ----
-  function toPercent(value) {
-    const n = Number(value);
-    if (!Number.isFinite(n)) return "–%";
-    return `${Math.round(n)}%`;
-  }
+  el.textContent = new Date().toLocaleDateString("th-TH", {
+    dateStyle: "medium"
+  });
+}
 
-  // ---- auth: ดึง admin session (ถ้าคุณเก็บชื่อ key อื่น ปรับ 2 บรรทัดนี้) ----
-  function getAdminSession() {
-    // แนะนำให้เก็บตอน login: localStorage.setItem("adminSession", JSON.stringify({ email, token }))
-    try {
-      return JSON.parse(localStorage.getItem("adminSession") || "null");
-    } catch {
-      return null;
-    }
-  }
+/* =========================
+   BADGES
+========================= */
+async function loadAdminBadges() {
+  try {
+    const data = await callApi("adminBadges");
 
-  function requireLoginIfNoSession() {
-    const s = getAdminSession();
-    // ถ้ายังไม่ทำระบบ session ก็ให้ผ่านไปก่อน (ไม่ redirect) เพื่อไม่ให้คุณงงตอนทดสอบ
-    // ถ้าคุณพร้อมคุมเข้ม ให้ uncomment 3 บรรทัดนี้:
-    // if (!s || !s.token) {
-    //   window.location.href = "login.html";
-    // }
-    return s;
-  }
+    Object.keys(BADGE_MAP).forEach(type => {
+      const el = document.getElementById(BADGE_MAP[type]);
+      if (!el) return;
 
-  // ---- main load ----
-  async function loadStats() {
-    setText(elStudents, "…");
-    setText(elTeachers, "…");
-    setText(elSessions, "…");
-    setText(elRate, "…");
+      const count = Number(data[type] || 0);
 
-    const session = requireLoginIfNoSession();
-
-    try {
-      // action นี้ต้องมีใน Code.gs ฝั่ง Admin
-      // response ที่คาดหวัง:
-      // { ok:true, data:{ students:123, teachers:9, todaySessions:12, todayAttendanceRate:87 } }
-      const res = await callApi({
-        action: "adminGetDashboardStats",
-        // ส่ง session ไปเผื่อคุณเช็คสิทธิในอนาคต
-        adminSession: session || null
-      });
-
-      if (!res || res.ok !== true) {
-        throw new Error(res?.error || "โหลดข้อมูลไม่สำเร็จ");
+      if (count <= 0) {
+        el.style.display = "none";
+        return;
       }
 
-      const d = res.data || {};
-      setText(elStudents, Number.isFinite(Number(d.students)) ? String(d.students) : "–");
-      setText(elTeachers, Number.isFinite(Number(d.teachers)) ? String(d.teachers) : "–");
-      setText(elSessions,  Number.isFinite(Number(d.todaySessions)) ? String(d.todaySessions) : "–");
-      setText(elRate, toPercent(d.todayAttendanceRate));
-    } catch (err) {
-      console.error("[admin-dashboard] loadStats error:", err);
-      setText(elStudents, "–");
-      setText(elTeachers, "–");
-      setText(elSessions, "–");
-      setText(elRate, "–%");
-    }
+      el.style.display = "inline-block";
+      el.textContent = count;
+      el.className = "badge";
+
+      if (count >= LEVEL.danger) {
+        el.classList.add("danger");
+      } else if (count >= LEVEL.warning) {
+        el.classList.add("warning");
+      } else {
+        el.classList.add("info");
+      }
+    });
+  } catch (err) {
+    console.error("❌ Load admin badges failed:", err);
   }
+}
 
-  loadStats();
+/* =========================
+   USER STATS (REAL DATA)
+========================= */
+async function loadUserStats() {
+  try {
+    const data = await callApi("adminStats");
+    /*
+      expected:
+      {
+        students: number,
+        teachers: number,
+        admins: number
+      }
+    */
 
-  // ---- optional: refresh ทุก 60 วิ (อยากได้ค่อยเปิด) ----
-  // setInterval(loadStats, 60000);
-});
+    const students = Number(data.students || 0);
+    const teachers = Number(data.teachers || 0);
+    const admins  = Number(data.admins || 0);
+    const total   = students + teachers + admins;
+
+    setStat("students", students);
+    setStat("teachers", teachers);
+    setStat("total", total);
+
+  } catch (err) {
+    console.error("❌ Load user stats failed:", err);
+  }
+}
+
+function setStat(key, value) {
+  const el = document.getElementById(STAT_MAP[key]);
+  if (!el) return;
+
+  // ใส่ comma แบบมือโปร
+  el.textContent = value.toLocaleString("th-TH");
+}
+
+/* =========================
+   AUTO REFRESH
+========================= */
+function setupAutoRefresh() {
+  setInterval(() => {
+    loadAdminBadges();
+    loadUserStats();
+  }, REFRESH_INTERVAL);
+}
+
+/* =========================
+   CARD ACTIONS
+========================= */
+function setupCardActions() {
+  document.querySelectorAll(".action-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const target = card.dataset.target;
+      if (!target) return;
+      window.location.href = target;
+    });
+  });
+}
+
+/* =========================
+   MANUAL DEBUG
+========================= */
+window.reloadAdminDashboard = () => {
+  loadAdminBadges();
+  loadUserStats();
+};

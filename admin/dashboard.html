@@ -1,188 +1,293 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Dashboard </title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Admin Dashboard | NexAttend</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="stylesheet" href="../css/styles.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <style>
-    body{
-      margin:0;
-      min-height:100vh;
-      font-family:"Inter",system-ui,sans-serif;
-      color:#e5e7eb;
-      background:
-        radial-gradient(circle at 0% 0%, #0f766e 0, transparent 55%),
-        radial-gradient(circle at 100% 100%, #020617 0, #020617 70%),
-        #020617;
-    }
+<style>
+:root{
+  --bg:#020617;
+  --panel:rgba(15,23,42,.75);
+  --border:rgba(148,163,184,.18);
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+  --accent:#38bdf8;
 
-    .container{
-      max-width:1100px;
-      margin:0 auto;
-      padding:2rem 1.4rem;
-    }
+  --danger:#f87171;
+  --warning:#fbbf24;
+  --info:#60a5fa;
+  --success:#34d399;
+}
 
-    h1{
-      font-size:1.7rem;
-      margin-bottom:.3rem;
-    }
+*{box-sizing:border-box}
 
-    .sub{
-      color:#94a3b8;
-      margin-bottom:2rem;
-    }
+body{
+  margin:0;
+  font-family:"Inter",system-ui,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(600px at 10% 10%, rgba(56,189,248,.18), transparent 45%),
+    radial-gradient(600px at 90% 90%, rgba(99,102,241,.18), transparent 45%),
+    var(--bg);
+}
 
-    /* ===== cards ===== */
-    .stats{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:1.2rem;
-      margin-bottom:2rem;
-    }
+/* ================= HEADER ================= */
+.header-wrap{position:relative;overflow:hidden}
+.header-wrap::before{
+  content:"";
+  position:absolute;
+  inset:-70%;
+  background:
+    radial-gradient(500px at 20% 50%, rgba(56,189,248,.25), transparent 45%),
+    radial-gradient(400px at 80% 50%, rgba(99,102,241,.25), transparent 45%);
+  filter:blur(110px);
+  opacity:.6;
+}
 
-    .card{
-      background:rgba(15,23,42,.88);
-      border:1px solid rgba(148,163,184,.25);
-      border-radius:1.2rem;
-      padding:1.4rem;
-      box-shadow:0 10px 30px rgba(0,0,0,.4);
-    }
+.header-glass{
+  backdrop-filter:blur(14px) saturate(140%);
+  background:linear-gradient(180deg, rgba(15,23,42,.8), rgba(2,6,23,.95));
+  border-bottom:1px solid var(--border);
+}
 
-    .card .label{
-      font-size:.85rem;
-      color:#94a3b8;
-    }
+.header{
+  max-width:1200px;
+  margin:auto;
+  padding:1.1rem 1.5rem;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
 
-    .card .value{
-      font-size:1.9rem;
-      font-weight:600;
-      margin-top:.3rem;
-      color:#67e8f9;
-    }
+.header h1{
+  margin:0;
+  font-size:1.35rem;
+  font-weight:600;
+}
 
-    /* ===== menu ===== */
-    .menu{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:1.2rem;
-    }
+.header-right{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  font-size:.8rem;
+  color:var(--muted);
+}
 
-    .menu a{
-      text-decoration:none;
-      color:#e5e7eb;
-    }
+.status{
+  padding:.18rem .55rem;
+  border-radius:999px;
+  font-size:.65rem;
+  background:rgba(52,211,153,.18);
+  color:var(--success);
+  box-shadow:0 0 0 1px rgba(52,211,153,.35);
+}
 
-    .menu-item{
-      background:rgba(15,23,42,.9);
-      border:1px solid rgba(148,163,184,.25);
-      border-radius:1.2rem;
-      padding:1.6rem;
-      transition:.15s ease;
-      height:100%;
-    }
+/* ================= MAIN ================= */
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:2.6rem 1.5rem 3.5rem;
+}
 
-    .menu-item:hover{
-      transform:translateY(-2px);
-      border-color:#14b8a6;
-      box-shadow:0 14px 40px rgba(20,184,166,.35);
-    }
+/* ================= ACTION CARDS ================= */
+.section-title{
+  font-size:1.05rem;
+  margin-bottom:1.2rem;
+}
 
-    .menu-item .icon{
-      font-size:1.6rem;
-      margin-bottom:.6rem;
-    }
+.actions{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:1.6rem;
+}
 
-    .menu-item h3{
-      margin:.2rem 0 .3rem;
-      font-size:1.1rem;
-    }
+.action-card{
+  position:relative;
+  padding:1.7rem;
+  border-radius:1.5rem;
+  background:linear-gradient(180deg, rgba(15,23,42,.9), rgba(2,6,23,.95));
+  border:1px solid var(--border);
+  box-shadow:0 14px 35px rgba(0,0,0,.45);
+  transition:.35s cubic-bezier(.2,.8,.2,1);
+  cursor:pointer;
+}
 
-    .menu-item p{
-      font-size:.85rem;
-      color:#94a3b8;
-      line-height:1.4;
-    }
-  </style>
+.action-card:hover{
+  transform:translateY(-8px);
+  box-shadow:0 40px 90px rgba(0,0,0,.7);
+}
+
+.action-icon{
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.2rem;
+  background:rgba(56,189,248,.18);
+  box-shadow:inset 0 0 0 1px rgba(56,189,248,.35);
+  margin-bottom:.9rem;
+}
+
+.action-card h3{
+  margin:.2rem 0 .35rem;
+  font-size:1.05rem;
+}
+
+.action-card p{
+  margin:0;
+  font-size:.85rem;
+  color:var(--muted);
+}
+
+/* ================= BADGE ================= */
+.badge{
+  position:absolute;
+  top:14px;
+  right:14px;
+  padding:.25rem .55rem;
+  font-size:.65rem;
+  border-radius:999px;
+  font-weight:600;
+}
+
+.badge.danger{
+  background:rgba(248,113,113,.18);
+  color:var(--danger);
+  box-shadow:0 0 0 1px rgba(248,113,113,.45);
+  animation:pulse 1.6s infinite;
+}
+
+.badge.warning{
+  background:rgba(251,191,36,.18);
+  color:var(--warning);
+  box-shadow:0 0 0 1px rgba(251,191,36,.45);
+}
+
+.badge.info{
+  background:rgba(96,165,250,.18);
+  color:var(--info);
+  box-shadow:0 0 0 1px rgba(96,165,250,.45);
+}
+
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(248,113,113,.6)}
+  70%{box-shadow:0 0 0 8px rgba(248,113,113,0)}
+  100%{box-shadow:0 0 0 0 rgba(248,113,113,0)}
+}
+
+/* footer */
+.footer{
+  margin-top:3.5rem;
+  text-align:center;
+  font-size:.75rem;
+  color:var(--muted);
+}
+</style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>Admin Dashboard</h1>
-    <p class="sub">ภาพรวมและการจัดการระบบ NexAttend</p>
 
-    <!-- ===== stats ===== -->
-    <div class="stats">
-      <div class="card">
-        <div class="label">จำนวนนักเรียน</div>
-        <div class="value" id="statStudents">–</div>
+<!-- HEADER -->
+<div class="header-wrap">
+  <div class="header-glass">
+    <div class="header">
+      <h1>Admin Dashboard</h1>
+      <div class="header-right">
+        <span id="today"></span>
+        <span class="status">● Online</span>
       </div>
-
-      <div class="card">
-        <div class="label">จำนวนครู</div>
-        <div class="value" id="statTeachers">–</div>
-      </div>
-
-      <div class="card">
-        <div class="label">คาบเรียนวันนี้</div>
-        <div class="value" id="statSessions">–</div>
-      </div>
-
-      <div class="card">
-        <div class="label">อัตราเข้าเรียนวันนี้</div>
-        <div class="value" id="statRate">–%</div>
-      </div>
-    </div>
-
-    <!-- ===== menu ===== -->
-    <div class="menu">
-      <a href="users.html">
-        <div class="menu-item">
-          <div class="icon">👤</div>
-          <h3>จัดการผู้ใช้</h3>
-          <p>เพิ่ม แก้ไข ระงับบัญชีครูและนักเรียน</p>
-        </div>
-      </a>
-
-      <a href="attendance.html">
-        <div class="menu-item">
-          <div class="icon">📋</div>
-          <h3>ตรวจสอบการเช็คชื่อ</h3>
-          <p>ดูและแก้ไขข้อมูลเช็คชื่อกรณีพิเศษ</p>
-        </div>
-      </a>
-
-      <a href="settings.html">
-        <div class="menu-item">
-          <div class="icon">⚙️</div>
-          <h3>ตั้งค่าระบบ</h3>
-          <p>Late, Auto-Absent, เปิด/ปิดระบบ</p>
-        </div>
-      </a>
-
-      <a href="reports.html">
-        <div class="menu-item">
-          <div class="icon">📊</div>
-          <h3>รายงาน & Export</h3>
-          <p>ดาวน์โหลดข้อมูล CSV / Excel</p>
-        </div>
-      </a>
     </div>
   </div>
+</div>
 
-  <script type="module" src="../js/admin-dashboard.js"></script>
-  <script src="js/admin-guard.js"></script>
-  <button id="logoutBtn">ออกจากระบบ</button>
+<!-- MAIN -->
+<div class="container">
+
+  <div class="section-title">การจัดการระบบ</div>
+
+  <div class="actions">
+
+    <div class="action-card">
+      <span class="badge danger" id="badge-users">0</span>
+      <div class="action-icon">👥</div>
+      <h3>จัดการผู้ใช้</h3>
+      <p>บัญชีที่ต้องตรวจสอบ</p>
+    </div>
+
+    <div class="action-card">
+      <span class="badge warning" id="badge-review">0</span>
+      <div class="action-icon">📋</div>
+      <h3>ตรวจสอบข้อมูล</h3>
+      <p>คำขอแก้ไขย้อนหลัง</p>
+    </div>
+
+    <div class="action-card">
+      <span class="badge info" id="badge-settings">0</span>
+      <div class="action-icon">⚙</div>
+      <h3>ตั้งค่าระบบ</h3>
+      <p>การตั้งค่าใหม่</p>
+    </div>
+
+    <div class="action-card">
+      <div class="action-icon">📈</div>
+      <h3>รายงาน</h3>
+      <p>Export CSV / Excel</p>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    NexAttend Admin • Live Badge Console
+  </div>
+
+</div>
 
 <script>
-  document.getElementById("logoutBtn").onclick = () => {
-    localStorage.removeItem("adminLoggedIn");
-    window.location.href = "login.html";
-  };
+/* ===== DATE ===== */
+document.getElementById("today").textContent =
+  new Date().toLocaleDateString("th-TH",{dateStyle:"medium"});
+
+/* ===== CONFIG ===== */
+const API_URL = "https://script.google.com/macros/s/XXXXXXXXXXXX/exec"; // ← แก้ของคุณ
+const BADGE_MAP = {
+  users: "badge-users",
+  review: "badge-review",
+  settings: "badge-settings"
+};
+
+/* ===== LOAD BADGES ===== */
+fetch(`${API_URL}?action=adminBadges`)
+  .then(r => r.json())
+  .then(data => {
+    Object.keys(BADGE_MAP).forEach(key => {
+      const el = document.getElementById(BADGE_MAP[key]);
+      const count = Number(data[key] || 0);
+
+      if (!el || count <= 0) {
+        if (el) el.style.display = "none";
+        return;
+      }
+
+      el.textContent = count;
+
+      if (count >= 4) {
+        el.className = "badge danger";
+      } else if (count >= 2) {
+        el.className = "badge warning";
+      } else {
+        el.className = "badge info";
+      }
+    });
+  })
+  .catch(err => {
+    console.error("Badge API error:", err);
+  });
 </script>
-<button id="logoutBtn" class="logout-btn">ออกจากระบบ</button>
 
 </body>
 </html>
