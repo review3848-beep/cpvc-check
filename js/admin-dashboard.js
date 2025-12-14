@@ -1,158 +1,310 @@
-/* =====================================================
-   Admin Dashboard Controller
-   CPVC-Check / NexAttend
-   ใช้ร่วมกับ js/api.js
-===================================================== */
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<title>Admin Dashboard | NexAttend</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root{
+  --bg:#020617;
+  --panel:#0f172a;
+  --border:rgba(148,163,184,.18);
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+  --accent:#38bdf8;
+  --success:#34d399;
+  --danger:#f87171;
+}
+
+/* ===== RESET / FIT ===== */
+*{box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{
+  margin:0;
+  font-family:Inter,system-ui,sans-serif;
+  background:linear-gradient(180deg,#020617,#020617);
+  color:var(--text);
+}
+
+/* ===== HEADER (เตี้ย) ===== */
+.header{
+  height:56px;
+  padding:.6rem 1.2rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,#0f172a,#020617);
+}
+.header h1{margin:0;font-size:1.25rem}
+.meta{font-size:.75rem;color:var(--muted)}
+.status{
+  margin-left:.5rem;
+  padding:.15rem .5rem;
+  border-radius:999px;
+  font-size:.6rem;
+  background:rgba(52,211,153,.18);
+  color:var(--success);
+}
+
+/* ===== CONTAINER ===== */
+.container{
+  height:calc(100vh - 56px);
+  padding:1rem 1.2rem;
+}
+
+/* ===== KPI (เตี้ย) ===== */
+.kpis{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:.8rem;
+}
+.kpi{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:1rem;
+  padding:.8rem 1rem;
+}
+.kpi .label{font-size:.7rem;color:var(--muted)}
+.kpi .value{font-size:1.4rem;font-weight:700}
+.kpi.danger .value{color:var(--danger)}
+.kpi.success .value{color:var(--success)}
+
+/* ===== MAIN GRID ===== */
+.grid{
+  height:calc(100% - 104px); /* KPI สูงรวม */
+  margin-top:.8rem;
+  display:grid;
+  grid-template-columns:2.2fr 1fr;
+  gap:.8rem;
+}
+
+/* ===== ACTIONS ===== */
+.actions{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:.8rem;
+}
+.action{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:1rem;
+  padding:.9rem 1rem;
+  position:relative;
+  cursor:pointer;
+}
+.action.primary{border-color:var(--accent)}
+.action h3{margin:.1rem 0 .2rem;font-size:.95rem}
+.action p{margin:0;font-size:.72rem;color:var(--muted)}
+.badge{
+  position:absolute;
+  top:8px;right:8px;
+  font-size:.6rem;
+  padding:.2rem .45rem;
+  border-radius:999px;
+  background:rgba(248,113,113,.18);
+  color:var(--danger);
+}
+
+/* ===== CHART (ล็อกความสูง) ===== */
+.chart-box{
+  margin-top:.8rem;
+  height:160px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:1rem;
+  padding:.6rem .8rem;
+}
+.chart-box h3{margin:.2rem 0 .4rem;font-size:.9rem}
+.chart-box canvas{height:100px !important}
+
+/* ===== ACTIVITY (ไม่ดันหน้า) ===== */
+.panel{
+  height:100%;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:1rem;
+  padding:.8rem;
+  display:flex;
+  flex-direction:column;
+}
+.panel h3{margin:0 0 .4rem;font-size:.95rem}
+.timeline{
+  list-style:none;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+}
+.timeline li{
+  padding:.4rem 0;
+  font-size:.75rem;
+  border-bottom:1px dashed var(--border);
+}
+.timeline span{display:block;font-size:.6rem;color:var(--muted)}
+
+/* ===== MOBILE ===== */
+@media(max-width:900px){
+  html,body{overflow:auto}
+  .container{height:auto}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .grid{height:auto;grid-template-columns:1fr}
+  .actions{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1>Admin Dashboard</h1>
+  <div class="meta">
+    <span id="today"></span>
+    <span class="status">● Online</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- KPI -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">นักเรียนทั้งหมด</div>
+      <div class="value" id="stat-students">—</div>
+    </div>
+    <div class="kpi">
+      <div class="label">ครูทั้งหมด</div>
+      <div class="value" id="stat-teachers">—</div>
+    </div>
+    <div class="kpi danger">
+      <div class="label">ขาดเรียนวันนี้</div>
+      <div class="value" id="stat-absent">—</div>
+    </div>
+    <div class="kpi success">
+      <div class="label">อัตราเข้าเรียน</div>
+      <div class="value" id="stat-rate">0%</div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- LEFT -->
+    <div>
+      <div class="actions">
+        <div class="action primary" data-target="users.html">
+          <span class="badge" id="badge-users">0</span>
+          <h3>👥 จัดการผู้ใช้</h3>
+          <p>บัญชีที่ต้องตรวจสอบ</p>
+        </div>
+        <div class="action" data-target="review.html">
+          <span class="badge" id="badge-review">0</span>
+          <h3>📋 ตรวจสอบข้อมูล</h3>
+          <p>คำขอแก้ไขย้อนหลัง</p>
+        </div>
+        <div class="action" data-target="settings.html">
+          <h3>⚙ ตั้งค่าระบบ</h3>
+          <p>Late / Auto-Absent</p>
+        </div>
+      </div>
+
+      <div class="chart-box">
+        <h3>📊 แนวโน้มเข้าเรียน 7 วัน</h3>
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="panel">
+      <h3>📌 Activity ล่าสุด</h3>
+      <ul class="timeline" id="activityList">
+        <li class="muted">กำลังโหลด…</li>
+      </ul>
+    </div>
+
+  </div>
+
+</div>
+
+<script type="module">
 import { callApi } from "../js/api.js";
 
-/* =========================
-   CONFIG
-========================= */
+/* DATE */
+document.getElementById("today").textContent =
+  new Date().toLocaleDateString("th-TH",{dateStyle:"medium"});
 
-// badge แจ้งเตือน
-const BADGE_MAP = {
-  users: "badge-users",
-  review: "badge-review",
-  settings: "badge-settings"
-};
+/* STATS */
+async function loadStats(){
+  try{
+    const d = await callApi("adminStats");
+    document.getElementById("stat-students").textContent = d.students ?? "—";
+    document.getElementById("stat-teachers").textContent = d.teachers ?? "—";
+    document.getElementById("stat-absent").textContent = d.absent ?? "—";
+    const rate = Number.isFinite(d.rate) ? d.rate : 0;
+    document.getElementById("stat-rate").textContent = rate + "%";
+  }catch(e){}
+}
 
-const LEVEL = {
-  danger: 4,
-  warning: 2
-};
+/* BADGES */
+async function loadBadges(){
+  try{
+    const d = await callApi("adminBadges");
+    setBadge("badge-users", d.users);
+    setBadge("badge-review", d.review);
+  }catch(e){}
+}
+function setBadge(id,val){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const n=Number(val||0);
+  el.style.display = n>0?"inline-block":"none";
+  el.textContent = n;
+}
 
-// element id ของสถิติผู้ใช้
-const STAT_MAP = {
-  students: "stat-students",
-  teachers: "stat-teachers",
-  total: "stat-total"
-};
+/* ACTIVITY */
+async function loadActivity(){
+  const list=document.getElementById("activityList");
+  try{
+    const data=await callApi("adminActivity");
+    list.innerHTML="";
+    (data||[]).slice(0,4).forEach(a=>{
+      const li=document.createElement("li");
+      li.innerHTML=`${a.text}<span>${a.time}</span>`;
+      list.appendChild(li);
+    });
+    if(!list.children.length){
+      list.innerHTML='<li class="muted">ยังไม่มี activity วันนี้</li>';
+    }
+  }catch(e){
+    list.innerHTML='<li class="muted">โหลด activity ไม่สำเร็จ</li>';
+  }
+}
 
-const REFRESH_INTERVAL = 30000; // 30 วิ
+/* CHART */
+let chart;
+async function loadChart(){
+  try{
+    const d=await callApi("adminTrend7Days");
+    if(!d?.values?.length) return;
+    if(chart) chart.destroy();
+    chart=new Chart(document.getElementById("trendChart"),{
+      type:"line",
+      data:{labels:d.labels,datasets:[{data:d.values,borderColor:"#38bdf8",tension:.4,pointRadius:0}]},
+      options:{plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}
+    });
+  }catch(e){}
+}
 
-/* =========================
-   INIT
-========================= */
-document.addEventListener("DOMContentLoaded", () => {
-  renderToday();
-  loadAdminBadges();
-  loadUserStats();
-  setupAutoRefresh();
-  setupCardActions();
+/* ROUTE */
+document.querySelectorAll("[data-target]").forEach(el=>{
+  el.onclick=()=>location.href=el.dataset.target;
 });
 
-/* =========================
-   DATE
-========================= */
-function renderToday() {
-  const el = document.getElementById("today");
-  if (!el) return;
+/* INIT */
+loadStats(); loadBadges(); loadActivity(); loadChart();
+</script>
 
-  el.textContent = new Date().toLocaleDateString("th-TH", {
-    dateStyle: "medium"
-  });
-}
-
-/* =========================
-   BADGES
-========================= */
-async function loadAdminBadges() {
-  try {
-    const data = await callApi("adminBadges");
-
-    Object.keys(BADGE_MAP).forEach(type => {
-      const el = document.getElementById(BADGE_MAP[type]);
-      if (!el) return;
-
-      const count = Number(data[type] || 0);
-
-      if (count <= 0) {
-        el.style.display = "none";
-        return;
-      }
-
-      el.style.display = "inline-block";
-      el.textContent = count;
-      el.className = "badge";
-
-      if (count >= LEVEL.danger) {
-        el.classList.add("danger");
-      } else if (count >= LEVEL.warning) {
-        el.classList.add("warning");
-      } else {
-        el.classList.add("info");
-      }
-    });
-  } catch (err) {
-    console.error("❌ Load admin badges failed:", err);
-  }
-}
-
-/* =========================
-   USER STATS (REAL DATA)
-========================= */
-async function loadUserStats() {
-  try {
-    const data = await callApi("adminStats");
-    /*
-      expected:
-      {
-        students: number,
-        teachers: number,
-        admins: number
-      }
-    */
-
-    const students = Number(data.students || 0);
-    const teachers = Number(data.teachers || 0);
-    const admins  = Number(data.admins || 0);
-    const total   = students + teachers + admins;
-
-    setStat("students", students);
-    setStat("teachers", teachers);
-    setStat("total", total);
-
-  } catch (err) {
-    console.error("❌ Load user stats failed:", err);
-  }
-}
-
-function setStat(key, value) {
-  const el = document.getElementById(STAT_MAP[key]);
-  if (!el) return;
-
-  // ใส่ comma แบบมือโปร
-  el.textContent = value.toLocaleString("th-TH");
-}
-
-/* =========================
-   AUTO REFRESH
-========================= */
-function setupAutoRefresh() {
-  setInterval(() => {
-    loadAdminBadges();
-    loadUserStats();
-  }, REFRESH_INTERVAL);
-}
-
-/* =========================
-   CARD ACTIONS
-========================= */
-function setupCardActions() {
-  document.querySelectorAll(".action-card").forEach(card => {
-    card.addEventListener("click", () => {
-      const target = card.dataset.target;
-      if (!target) return;
-      window.location.href = target;
-    });
-  });
-}
-
-/* =========================
-   MANUAL DEBUG
-========================= */
-window.reloadAdminDashboard = () => {
-  loadAdminBadges();
-  loadUserStats();
-};
+</body>
+</html>
