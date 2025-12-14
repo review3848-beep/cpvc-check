@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- ใช้สไตล์หลักของโปรเจกต์ -->
-  <link rel="stylesheet" href="../css/styles.css" >
+  <link rel="stylesheet" href="../css/styles.css">
 
   <style>
     :root {
@@ -15,18 +15,13 @@
       --border: rgba(148,163,184,0.35);
       --text-main: #f9fafb;
       --text-muted: #94a3b8;
-      --accent1: #6366f1; /* indigo */
-      --accent2: #0ea5e9; /* sky */
+      --accent1: #6366f1;
+      --accent2: #0ea5e9;
     }
-
     * { box-sizing: border-box; }
-
     body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      margin: 0; min-height: 100vh;
+      display: flex; justify-content: center; align-items: center;
       padding: 1.5rem;
       font-family: "Inter", system-ui, sans-serif;
       color: var(--text-main);
@@ -34,10 +29,8 @@
         radial-gradient(circle at 0% 0%, #1e293b 0, transparent 55%),
         radial-gradient(circle at 100% 100%, #020617 0, #020617 70%);
     }
-
     .card {
-      width: 100%;
-      max-width: 440px;
+      width: 100%; max-width: 440px;
       padding: 2.6rem 2.3rem 2.1rem;
       border-radius: 1.4rem;
       backdrop-filter: blur(18px);
@@ -45,104 +38,44 @@
       border: 1px solid var(--border);
       box-shadow: 0 18px 50px rgba(15,23,42,0.9);
     }
-
     .icon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 1rem;
+      width: 64px; height: 64px; margin: 0 auto 1rem;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--accent1), var(--accent2));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 1.9rem;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 1.9rem;
       box-shadow: 0 0 20px rgba(99,102,241,.55);
     }
-
-    h2 {
-      text-align: center;
-      margin: 0 0 .35rem 0;
-      font-size: 1.6rem;
-      font-weight: 600;
-    }
-
-    .subtitle {
-      text-align: center;
-      font-size: .9rem;
-      color: var(--text-muted);
-      margin-bottom: 1.8rem;
-    }
-
+    h2 { text-align: center; margin: 0 0 .35rem; font-size: 1.6rem; font-weight: 600; }
+    .subtitle { text-align: center; font-size: .9rem; color: var(--text-muted); margin-bottom: 1.8rem; }
     .form-group { margin-bottom: 1.1rem; }
-
-    label {
-      font-size: .85rem;
-      color: #cbd5f5;
-      margin-bottom: .35rem;
-      display: block;
-    }
-
+    label { font-size: .85rem; color: #cbd5f5; margin-bottom: .35rem; display: block; }
     input {
-      width: 100%;
-      padding: .9rem;
-      border-radius: .9rem;
+      width: 100%; padding: .9rem; border-radius: .9rem;
       border: 1px solid rgba(148,163,184,.35);
-      background: rgba(15,23,42,.95);
-      color: #e5e7eb;
-      font-size: .95rem;
-      outline: none;
-      transition: .15s ease;
+      background: rgba(15,23,42,.95); color: #e5e7eb; font-size: .95rem;
+      outline: none; transition: .15s ease;
     }
-
     input::placeholder { color: #64748b; }
-
     input:focus {
       border-color: var(--accent2);
       box-shadow: 0 0 0 1px rgba(56,189,248,.55);
       background: rgba(15,23,42,1);
     }
-
     .btn {
-      width: 100%;
-      padding: .95rem;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: .95rem;
+      width: 100%; padding: .95rem; border-radius: 999px;
+      border: none; cursor: pointer; font-weight: 600; font-size: .95rem;
       background: linear-gradient(135deg, var(--accent1), var(--accent2));
-      color: #fff;
-      box-shadow: 0 14px 32px rgba(99,102,241,.45);
-      margin-top: .2rem;
-      transition: .15s ease;
+      color: #fff; box-shadow: 0 14px 32px rgba(99,102,241,.45);
+      margin-top: .2rem; transition: .15s ease;
     }
-
     .btn:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.05);
+      transform: translateY(-1px); filter: brightness(1.05);
       box-shadow: 0 18px 40px rgba(99,102,241,.6);
     }
-
-    #msg {
-      margin-top: 1rem;
-      text-align: center;
-      font-size: .9rem;
-      min-height: 1.1rem;
-    }
-
-    .footer {
-      margin-top: 1.2rem;
-      text-align: center;
-      font-size: .85rem;
-      color: var(--text-muted);
-    }
-
-    .footer a {
-      color: #93c5fd;
-      text-decoration: none;
-    }
-
+    #msg { margin-top: 1rem; text-align: center; font-size: .9rem; min-height: 1.1rem; }
+    .footer { margin-top: 1.2rem; text-align: center; font-size: .85rem; color: var(--text-muted); }
+    .footer a { color: #93c5fd; text-decoration: none; }
     .footer a:hover { text-decoration: underline; }
   </style>
 </head>
@@ -151,32 +84,19 @@
   <div class="card">
     <div class="icon">🛡️</div>
     <h2>เข้าสู่ระบบแอดมิน</h2>
-    <div class="subtitle">
-      สำหรับผู้ดูแลระบบ NexAttend<br>
-    </div>
+    <div class="subtitle">สำหรับผู้ดูแลระบบ NexAttend</div>
 
     <div class="form-group">
       <label for="email">อีเมลแอดมิน</label>
-      <input
-        type="email"
-        id="email"
-        placeholder="admin@nexattend.com"
-        autocomplete="off"
-      />
+      <input type="email" id="email" placeholder="admin@nexattend.com" autocomplete="off" />
     </div>
 
     <div class="form-group">
       <label for="password">รหัสผ่าน</label>
-      <input
-        type="password"
-        id="password"
-        placeholder="••••••••"
-        autocomplete="off"
-      />
+      <input type="password" id="password" placeholder="••••••••" autocomplete="off" />
     </div>
 
     <button id="loginBtn" class="btn">เข้าสู่ระบบแอดมิน</button>
-
     <div id="msg"></div>
 
     <div class="footer">
@@ -186,8 +106,16 @@
     </div>
   </div>
 
-  <!-- JS แอดมิน -->
-  <script type="module" src="../js/admin-login.js"></script>
+  <!-- JS แอดมิน (ไม่ใช้ module) -->
+  <script src="../js/admin-login.js"></script>
 
+  <!-- รองรับกด Enter -->
+  <script>
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('loginBtn')?.click();
+      }
+    });
+  </script>
 </body>
 </html>
