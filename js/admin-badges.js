@@ -2,6 +2,10 @@
    CONFIG
 ========================= */
 const API_URL = "https://script.google.com/macros/s/XXXXXXXXXXXX/exec"; 
+import { guardAdmin } from "./js/admin-guard.js";
+
+guardAdmin(); // ทุก role เข้าได้
+
 // 👆 เปลี่ยนเป็น Web App ของคุณ
 
 // map TYPE จากชีต → id badge ในหน้า

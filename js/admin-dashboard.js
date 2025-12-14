@@ -5,6 +5,9 @@
 ===================================================== */
 
 import { callApi } from "../js/api.js";
+import { guardAdmin } from "./js/admin-guard.js";
+
+guardAdmin(); // ทุก role เข้าได้
 
 /* =========================
    CONFIG

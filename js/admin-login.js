@@ -1,3 +1,7 @@
+import { guardAdmin } from "./js/admin-guard.js";
+
+guardAdmin(); // ทุก role เข้าได้
+
 const ADMIN_EMAIL = "admin@nexattend.com";
 const ADMIN_PASSWORD = "123456";
 

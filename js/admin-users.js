@@ -1,5 +1,8 @@
 
 import { callApi } from "./api.js";
+import { guardAdmin } from "./js/admin-guard.js";
+
+guardAdmin(); // ทุก role เข้าได้
 
 document.addEventListener("DOMContentLoaded", () => {
   // ---- DOM ----

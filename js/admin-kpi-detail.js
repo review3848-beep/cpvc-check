@@ -1,4 +1,7 @@
 import { callApi } from "./api.js";
+import { guardAdmin } from "./js/admin-guard.js";
+
+guardAdmin(); // ทุก role เข้าได้
 
 /* ===== READ QUERY ===== */
 const params = new URLSearchParams(location.search);
