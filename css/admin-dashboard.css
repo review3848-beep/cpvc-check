@@ -1,0 +1,104 @@
+:root{
+  --bg-main: #020617;
+  --bg-panel: rgba(15,23,42,0.9);
+  --border-soft: rgba(148,163,184,0.25);
+  --text-main: #e5e7eb;
+  --text-dim: #94a3b8;
+  --accent: #2dd4bf; /* เขียวอมฟ้า fintech */
+}
+
+*{ box-sizing:border-box }
+
+body{
+  margin:0;
+  min-height:100vh;
+  font-family: "Inter", system-ui, sans-serif;
+  background:
+    radial-gradient(circle at 0% 0%, #0f766e, transparent 55%),
+    radial-gradient(circle at 100% 0%, #020617, transparent 60%),
+    var(--bg-main);
+  color: var(--text-main);
+}
+
+/* ===== HERO ===== */
+.admin-hero{
+  padding: 3rem 2rem 2rem;
+}
+
+.admin-hero h1{
+  margin:0;
+  font-size:2.2rem;
+  font-weight:700;
+}
+
+.admin-hero p{
+  margin-top:.5rem;
+  color: var(--text-dim);
+}
+
+/* ===== KPI ===== */
+.kpi-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+  gap:1.2rem;
+  padding: 0 2rem 2rem;
+}
+
+.kpi-card{
+  background: var(--bg-panel);
+  border:1px solid var(--border-soft);
+  border-radius:1.2rem;
+  padding:1.4rem 1.5rem;
+}
+
+.kpi-label{
+  font-size:.9rem;
+  color: var(--text-dim);
+}
+
+.kpi-value{
+  display:block;
+  margin-top:.6rem;
+  font-size:2rem;
+  font-weight:700;
+  color: var(--accent);
+}
+
+/* ===== ACTIONS ===== */
+.action-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px,1fr));
+  gap:1.2rem;
+  padding: 0 2rem 3rem;
+}
+
+.action-card{
+  text-decoration:none;
+  color:inherit;
+  background: var(--bg-panel);
+  border:1px solid var(--border-soft);
+  border-radius:1.4rem;
+  padding:1.6rem;
+  transition:.25s ease;
+}
+
+.action-card:hover{
+  transform: translateY(-4px);
+  border-color: var(--accent);
+}
+
+.action-card .icon{
+  font-size:1.8rem;
+  margin-bottom:.8rem;
+}
+
+.action-card h3{
+  margin:0;
+  font-size:1.1rem;
+}
+
+.action-card p{
+  margin-top:.4rem;
+  font-size:.9rem;
+  color: var(--text-dim);
+}

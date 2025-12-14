@@ -1,5 +1,4 @@
-// js/admin-users.js
-// Admin Users: list/search/filter + manage user actions
+
 import { callApi } from "./api.js";
 
 document.addEventListener("DOMContentLoaded", () => {

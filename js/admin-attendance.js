@@ -1,5 +1,3 @@
-// js/admin-attendance.js
-// Admin Attendance: list/search/filter + update status + export CSV
 import { callApi } from "./api.js";
 
 document.addEventListener("DOMContentLoaded", () => {

@@ -1,7 +1,3 @@
-// js/admin-dashboard.js
-// Admin Dashboard: โหลดสถิติภาพรวม
-// ใช้ callApi จาก js/api.js (มาตรฐานโปรเจกต์คุณ)
-
 import { callApi } from "./api.js";
 
 document.addEventListener("DOMContentLoaded", () => {
