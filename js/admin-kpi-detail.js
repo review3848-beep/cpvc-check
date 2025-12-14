@@ -1,44 +1,69 @@
-import { callApi } from "../js/api.js";
+import { callApi } from "./api.js";
 
-const type = new URLSearchParams(location.search).get("type");
+/* ===== READ QUERY ===== */
+const params = new URLSearchParams(location.search);
+const type = params.get("type");
 
+/* ===== TITLE ===== */
 const titleMap = {
-  students:"รายชื่อนักเรียน",
-  teachers:"รายชื่อครู",
-  absent:"ขาดเรียนวันนี้",
-  attendance:"สถิติการเข้าเรียน"
+  students: "รายชื่อนักเรียน",
+  teachers: "รายชื่อครู",
+  absent: "ขาดเรียนวันนี้",
+  attendance: "สถิติการเข้าเรียน"
 };
 
-document.getElementById("title").textContent =
-  titleMap[type] || "รายละเอียด";
+const titleEl = document.getElementById("title");
+if (titleEl) {
+  titleEl.textContent = titleMap[type] || "รายละเอียด";
+}
 
-async function loadDetail(){
-  try{
-    const data = await callApi("adminKpiDetail",{ type });
+/* ===== LOAD DATA ===== */
+async function loadDetail() {
+  try {
+    if (!type) {
+      renderEmpty("ไม่พบประเภทข้อมูล");
+      return;
+    }
+
+    const data = await callApi("adminKpiDetail", { type });
     renderTable(data);
-  }catch{
-    document.getElementById("tbody").innerHTML =
-      "<tr><td>โหลดข้อมูลไม่สำเร็จ</td></tr>";
+
+  } catch (err) {
+    console.error(err);
+    renderEmpty("โหลดข้อมูลไม่สำเร็จ");
   }
 }
 
-function renderTable(data){
+/* ===== RENDER ===== */
+function renderTable(data) {
   const thead = document.getElementById("thead");
   const tbody = document.getElementById("tbody");
+
   thead.innerHTML = "";
   tbody.innerHTML = "";
 
-  if(!data || !data.length){
-    tbody.innerHTML = "<tr><td>ไม่มีข้อมูล</td></tr>";
+  if (!Array.isArray(data) || data.length === 0) {
+    renderEmpty("ไม่มีข้อมูล");
     return;
   }
 
   const keys = Object.keys(data[0]);
-  thead.innerHTML = `<tr>${keys.map(k=>`<th>${k}</th>`).join("")}</tr>`;
 
-  data.forEach(r=>{
-    tbody.innerHTML += `<tr>${keys.map(k=>`<td>${r[k]}</td>`).join("")}</tr>`;
+  thead.innerHTML =
+    `<tr>${keys.map(k => `<th>${k}</th>`).join("")}</tr>`;
+
+  data.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      keys.map(k => `<td>${row[k] ?? "-"}</td>`).join("");
+    tbody.appendChild(tr);
   });
 }
 
+function renderEmpty(text) {
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = `<tr><td class="muted">${text}</td></tr>`;
+}
+
+/* ===== INIT ===== */
 loadDetail();
