@@ -174,5 +174,14 @@
 
   <script type="module" src="../js/admin-dashboard.js"></script>
   <script src="js/admin-guard.js"></script>
+  <button id="logoutBtn">ออกจากระบบ</button>
+
+<script>
+  document.getElementById("logoutBtn").onclick = () => {
+    localStorage.removeItem("adminLoggedIn");
+    window.location.href = "login.html";
+  };
+</script>
+
 </body>
 </html>
