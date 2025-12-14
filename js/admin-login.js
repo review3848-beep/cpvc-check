@@ -1,34 +1,28 @@
-// admin-login.js
 const ADMIN_EMAIL = "admin@nexattend.com";
-const ADMIN_PASSWORD = "admin123";
+const ADMIN_PASSWORD = "123456";
 
-const form = document.getElementById("adminLoginForm");
-const errorMsg = document.getElementById("errorMsg");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const msg = document.getElementById("msg");
 
-form.addEventListener("submit", (e) => {
-  e.preventDefault();
+loginBtn.addEventListener("click", () => {
+  msg.textContent = "";
 
-  const email = form.email.value.trim();
-  const password = form.password.value.trim();
-  const btn = form.querySelector("button");
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
 
-  btn.disabled = true;
-  btn.textContent = "⏳ กำลังตรวจสอบ...";
+  if (!email || !password) {
+    msg.textContent = "กรุณากรอกอีเมลและรหัสผ่าน";
+    msg.style.color = "#f87171";
+    return;
+  }
 
-  try {
-    if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-      throw new Error("อีเมลหรือรหัสผ่านแอดมินไม่ถูกต้อง");
-    }
-
-    // login success
-    localStorage.setItem("admin_login", "true");
+  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+    localStorage.setItem("adminLoggedIn", "true");
     window.location.href = "dashboard.html";
-
-  } catch (err) {
-    console.error("loginAdmin error:", err);
-    errorMsg.textContent = err.message;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "🔐 เข้าสู่ระบบแอดมิน";
+  } else {
+    msg.textContent = "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+    msg.style.color = "#f87171";
   }
 });
