@@ -1,5 +1,5 @@
 // student/login.js
-import { callApi } from "../js/api.js";
+import { callApi } from "api.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const idInput  = document.getElementById("studentId");
