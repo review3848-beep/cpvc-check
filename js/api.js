@@ -1,44 +1,39 @@
-function doPost(e) {
-  try {
-    if (!e || !e.postData || !e.postData.contents) {
-      return output({
-        success: false,
-        message: "No payload"
-      });
-    }
+// js/api.js
+export const API_BASE =
+  "https://script.google.com/macros/s/AKfycbwLJrbFU5c2gPb6_c6TKH7ul7lE6MuCF52x5mnsZu6DPVYO8yWJ5p-QOvFSm45MNgDeMQ/exec";
 
-    const payload = JSON.parse(e.postData.contents);
-    const action = payload.action;
+export async function callApi(action, payload = {}) {
+  const res = await fetch(API_BASE, {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8"   // ✅ ต้องเป็นแบบนี้
+    },
+    body: JSON.stringify({
+      action,
+      ...payload
+    })
+  });
 
-    let result;
-
-    switch (action) {
-      case "teacherLogin":
-        result = teacherLogin_(payload);
-        break;
-
-      case "teacherRegister":
-        result = teacherRegister_(payload);
-        break;
-
-      case "studentLogin":
-        result = studentLogin_(payload);
-        break;
-
-      // 👉 เพิ่ม action อื่นตรงนี้
-      default:
-        result = {
-          success: false,
-          message: "Unknown action: " + action
-        };
-    }
-
-    return output(result);
-
-  } catch (err) {
-    return output({
-      success: false,
-      message: err.message
-    });
+  if (!res.ok) {
+    throw new Error("Server error " + res.status);
   }
+
+  return await res.json();
+}
+
+/* ===== helpers ===== */
+export function getStudentSession() {
+  try { return JSON.parse(localStorage.getItem("cpvc_student")); }
+  catch { return null; }
+}
+
+export function getTeacherSession() {
+  try { return JSON.parse(localStorage.getItem("cpvc_teacher")); }
+  catch { return null; }
+}
+
+export function clearAllSession() {
+  localStorage.removeItem("cpvc_student");
+  localStorage.removeItem("cpvc_teacher");
+  sessionStorage.clear();
 }
