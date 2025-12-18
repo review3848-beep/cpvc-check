@@ -1,63 +1,69 @@
 // student/login.js
-import { callApi } from "./api.js";
+import { callApi } from "../js/api.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const idInput  = document.getElementById("studentId");
-  const pwInput  = document.getElementById("password");
-  const btn      = document.getElementById("loginBtn");
-  const msgEl    = document.getElementById("msg");
+/* ================= DOM ================= */
+const idInput = document.getElementById("studentId");
+const pwInput = document.getElementById("password");
+const btn     = document.getElementById("loginBtn");
+const msgEl   = document.getElementById("msg");
 
-  btn.addEventListener("click", login);
-  pwInput.addEventListener("keydown", e => {
-    if (e.key === "Enter") login();
-  });
+/* ================= INIT ================= */
+btn.addEventListener("click", login);
 
-  async function login() {
-    const studentId = idInput.value.trim();
-    const password  = pwInput.value.trim();
+pwInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") login();
+});
 
-    msgEl.textContent = "";
-    if (!studentId || !password) {
-      msgEl.textContent = "⚠️ กรุณากรอกข้อมูลให้ครบ";
-      msgEl.style.color = "#fbbf24";
-      return;
-    }
+idInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") login();
+});
 
-    btn.disabled = true;
-    btn.textContent = "กำลังเข้าสู่ระบบ...";
+/* ================= LOGIN ================= */
+async function login(){
+  const studentId = idInput.value.trim();
+  const password  = pwInput.value.trim();
 
-    let res;
-    try {
-      res = await callApi("studentLogin", {
-        studentId,
-        password
-      });
-    } catch (e) {
-      msgEl.textContent = "❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์";
-      msgEl.style.color = "#f87171";
-      resetBtn();
-      return;
-    }
+  msg("");
 
-    if (!res.success) {
-      msgEl.textContent = res.message || "❌ รหัสไม่ถูกต้อง";
-      msgEl.style.color = "#f87171";
-      resetBtn();
-      return;
-    }
-
-    // ✅ เก็บ session นักเรียน
-    localStorage.setItem("cpvc_student", JSON.stringify({
-      studentId: res.studentId,
-      name: res.name
-    }));
-
-    // ✅ ไป dashboard
-    window.location.href = "dashboard.html";
+  if (!studentId || !password){
+    msg("⚠️ กรุณากรอกรหัสนักเรียนและรหัสผ่านให้ครบ", "#fbbf24");
+    return;
   }
 
-  function resetBtn() {
+  btn.disabled = true;
+  btn.textContent = "กำลังเข้าสู่ระบบ...";
+
+  try{
+    const res = await callApi("studentLogin", {
+      studentId,
+      password
+    });
+
+    if (!res || !res.success){
+      throw new Error(res?.message || "เข้าสู่ระบบไม่สำเร็จ");
+    }
+
+    // 🔐 เก็บ session นักเรียน
+    localStorage.setItem("cpvc_student", JSON.stringify({
+      studentId: res.student.studentId,
+      name: res.student.name
+    }));
+
+    msg("✅ เข้าสู่ระบบสำเร็จ กำลังพาไปหน้า Dashboard...", "#4ade80");
+
+    setTimeout(()=>{
+      location.href = "dashboard.html";
+    }, 600);
+
+  }catch(err){
+    msg("❌ " + err.message, "#f87171");
     btn.disabled = false;
     btn.textContent = "เข้าสู่ระบบ";
   }
-});
+}
+
+/* ================= HELPERS ================= */
+function msg(text, color){
+  msgEl.textContent = text || "";
+  msgEl.style.color = color || "#e5e7eb";
+}

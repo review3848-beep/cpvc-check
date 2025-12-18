@@ -1,94 +1,111 @@
 // student/scan.js
 import { callApi } from "../js/api.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const pillNameEl = document.getElementById("pillUserName");
-  const tokenInput = document.getElementById("tokenInput");
-  const submitBtn  = document.getElementById("submitTokenBtn");
-  const msgEl      = document.getElementById("scanMsg");
+/* ================= DOM ================= */
+const tokenInput = document.getElementById("tokenInput");
+const submitBtn  = document.getElementById("submitTokenBtn");
+const msgEl      = document.getElementById("scanMsg");
 
-  const dotEl  = document.getElementById("sessionStatusDot");
-  const textEl = document.getElementById("sessionStatusText");
+const pillName   = document.getElementById("pillUserName");
+const statusDot  = document.getElementById("sessionStatusDot");
+const statusText = document.getElementById("sessionStatusText");
 
-  // ===== AUTH =====
-  const raw = localStorage.getItem("cpvc_student");
-  if (!raw) {
+/* ================= INIT ================= */
+document.addEventListener("DOMContentLoaded", init);
+
+function init(){
+  const student = getStudentSession();
+  if (!student){
     location.href = "login.html";
     return;
   }
 
-  const student = JSON.parse(raw);
-  const studentId = student.studentId;
-  pillNameEl.textContent = student.name || "นักเรียน";
+  pillName.textContent = student.name || "นักเรียน";
 
-  // ===== INIT STATUS =====
-  setStatus("ready", "รอกรอก TOKEN เพื่อเช็คชื่อ");
-
-  submitBtn.addEventListener("click", submit);
-  tokenInput.addEventListener("keydown", e => {
-    if (e.key === "Enter") submit();
+  submitBtn.addEventListener("click", submitToken);
+  tokenInput.addEventListener("keydown", e=>{
+    if (e.key === "Enter") submitToken();
   });
 
-  async function submit() {
-    const token = tokenInput.value.trim().toUpperCase();
-    msgEl.textContent = "";
-    msgEl.classList.remove("scanMsg-success");
+  setIdle();
+}
 
-    if (!token) {
-      showError("กรุณากรอก TOKEN");
-      return;
+/* ================= SESSION ================= */
+function getStudentSession(){
+  try{
+    return JSON.parse(localStorage.getItem("cpvc_student"));
+  }catch(e){
+    return null;
+  }
+}
+
+/* ================= MAIN ================= */
+async function submitToken(){
+  const token = tokenInput.value.trim().toUpperCase();
+  msg("");
+
+  if (!token){
+    setError("⚠️ กรุณากรอก TOKEN");
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "กำลังตรวจสอบ TOKEN...";
+  setChecking();
+
+  try{
+    const student = getStudentSession();
+
+    const res = await callApi("studentCheckin", {
+      studentId: student.studentId,
+      token
+    });
+
+    if (!res || !res.success){
+      throw new Error(res?.message || "เช็คชื่อไม่สำเร็จ");
     }
 
-    submitBtn.disabled = true;
-    submitBtn.textContent = "กำลังบันทึก...";
-
-    let res;
-    try {
-      res = await callApi("studentCheckIn", {
-        studentId,
-        token
-      });
-    } catch (e) {
-      setStatus("error", "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้");
-      showError("❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์");
-      resetBtn();
-      return;
-    }
-
-    if (!res.success) {
-      setStatus("error", res.message || "TOKEN ไม่ถูกต้อง");
-      showError(res.message || "TOKEN ไม่ถูกต้อง");
-      resetBtn();
-      return;
-    }
-
-    // ✅ SUCCESS
-    setStatus("open", "บันทึกเวลาเข้าเรียนเรียบร้อย");
-    msgEl.textContent = "✅ เช็คชื่อสำเร็จ";
-    msgEl.classList.add("scanMsg-success");
-
+    setSuccess(`✅ เช็คชื่อสำเร็จ (${res.status || "OK"})`);
     tokenInput.value = "";
 
-    setTimeout(() => {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "ยืนยันเช็คชื่อ";
+    // UX: เด้งไป dashboard หลังสำเร็จ
+    setTimeout(()=>{
+      location.href = "dashboard.html";
     }, 1200);
-  }
 
-  function setStatus(type, text) {
-    dotEl.classList.remove("open", "error");
-    if (type === "open") dotEl.classList.add("open");
-    if (type === "error") dotEl.classList.add("error");
-    textEl.textContent = text;
-  }
-
-  function showError(text) {
-    msgEl.textContent = text;
-    msgEl.classList.remove("scanMsg-success");
-  }
-
-  function resetBtn() {
+  }catch(err){
+    setError("❌ " + err.message);
+  }finally{
     submitBtn.disabled = false;
     submitBtn.textContent = "ยืนยันเช็คชื่อ";
   }
-});
+}
+
+/* ================= STATUS UI ================= */
+function setIdle(){
+  statusDot.className = "scan-status-dot";
+  statusText.textContent = "รอกรอก TOKEN เพื่อเช็คชื่อ";
+}
+
+function setChecking(){
+  statusDot.className = "scan-status-dot open";
+  statusText.textContent = "กำลังตรวจสอบ TOKEN...";
+}
+
+function setSuccess(text){
+  statusDot.className = "scan-status-dot open";
+  statusText.textContent = "เช็คชื่อสำเร็จ";
+  msg(text, true);
+}
+
+function setError(text){
+  statusDot.className = "scan-status-dot error";
+  statusText.textContent = "เกิดข้อผิดพลาด";
+  msg(text, false);
+}
+
+/* ================= MESSAGE ================= */
+function msg(text, success){
+  msgEl.textContent = text || "";
+  msgEl.classList.toggle("scanMsg-success", !!success);
+}

@@ -1,12 +1,12 @@
-// student/register.js
-import { callApi } from "../js/api.js";
+// js/teacher-register.js
+import { callApi } from "./api.js";
 
 /* ================= DOM ================= */
-const idInput   = document.getElementById("studentId");
-const nameInput = document.getElementById("name");
-const pwInput   = document.getElementById("password");
-const btn       = document.getElementById("registerBtn");
-const msgEl     = document.getElementById("msg");
+const nameInput  = document.getElementById("name");
+const emailInput = document.getElementById("email");
+const pwInput    = document.getElementById("password");
+const btn        = document.getElementById("registerBtn");
+const msgEl      = document.getElementById("msg");
 
 /* ================= INIT ================= */
 btn.addEventListener("click", register);
@@ -14,16 +14,22 @@ btn.addEventListener("click", register);
 pwInput.addEventListener("keydown", e => {
   if (e.key === "Enter") register();
 });
+emailInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") register();
+});
+nameInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") register();
+});
 
 /* ================= REGISTER ================= */
 async function register(){
-  const studentId = idInput.value.trim();
-  const name      = nameInput.value.trim();
-  const password  = pwInput.value.trim();
+  const name     = nameInput.value.trim();
+  const email    = emailInput.value.trim();
+  const password = pwInput.value.trim();
 
   setMsg("");
 
-  if (!studentId || !name || !password){
+  if (!name || !email || !password){
     setMsg("⚠️ กรุณากรอกข้อมูลให้ครบทุกช่อง", "#fbbf24");
     return;
   }
@@ -37,9 +43,9 @@ async function register(){
   btn.textContent = "กำลังสมัครใช้งาน...";
 
   try{
-    const res = await callApi("studentRegister", {
-      studentId,
+    const res = await callApi("teacherRegister", {
       name,
+      email,
       password
     });
 
@@ -47,7 +53,7 @@ async function register(){
       throw new Error(res?.message || "สมัครใช้งานไม่สำเร็จ");
     }
 
-    setMsg("✅ สมัครสำเร็จ กำลังพาไปหน้าเข้าสู่ระบบ...", "#4ade80");
+    setMsg("✅ สมัครครูสำเร็จ กำลังพาไปหน้าเข้าสู่ระบบ...", "#4ade80");
 
     setTimeout(()=>{
       location.href = "login.html";

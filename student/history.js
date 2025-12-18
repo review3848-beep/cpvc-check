@@ -1,204 +1,290 @@
 // student/history.js
 import { callApi } from "../js/api.js";
 
-let allRows = [];
-let filteredRows = [];
+/* =========================
+   DOM
+========================= */
+const nameEl = document.getElementById("studentNameDisplay");
+const idEl   = document.getElementById("studentIdDisplay");
 
-let dateFilter = "ALL";    // ALL | TODAY | WEEK
-let statusFilter = "ALL";  // ALL | OK | LATE | ABSENT
-let searchText = "";
+const tbody  = document.getElementById("historyBody");
+const msgEl  = document.getElementById("historyMsg");
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const nameEl = document.getElementById("studentNameDisplay");
-  const idEl   = document.getElementById("studentIdDisplay");
-  const tbody  = document.getElementById("historyBody");
-  const msgEl  = document.getElementById("historyMsg");
+const searchInput = document.getElementById("searchInput");
 
-  // ===== AUTH =====
-  const raw = localStorage.getItem("cpvc_student");
-  if (!raw) {
+const btnExportCSV  = document.getElementById("btnExportCSV");
+const btnExportXLSX = document.getElementById("btnExportXLSX");
+
+const dateBtns   = document.querySelectorAll('[data-date]');
+const statusBtns = document.querySelectorAll('[data-status]');
+
+const countAll    = document.getElementById("countAll");
+const countOK     = document.getElementById("countOK");
+const countLATE   = document.getElementById("countLATE");
+const countABSENT = document.getElementById("countABSENT");
+
+/* =========================
+   STATE
+========================= */
+let rawData = [];
+let viewData = [];
+
+let activeDate   = "ALL";   // ALL | TODAY | WEEK
+let activeStatus = "ALL";   // ALL | OK | LATE | ABSENT
+
+/* =========================
+   INIT
+========================= */
+document.addEventListener("DOMContentLoaded", init);
+
+async function init(){
+  const student = getStudentSession();
+  if (!student){
     location.href = "login.html";
     return;
   }
 
-  const student = JSON.parse(raw);
-  const studentId = student.studentId;
-
   nameEl.textContent = student.name || "-";
-  idEl.textContent   = studentId || "-";
+  idEl.textContent   = student.studentId || "-";
 
-  // ===== LOAD DATA =====
-  let res;
-  try {
-    res = await callApi("studentGetHistory", { studentId });
-  } catch (e) {
-    msgEl.textContent = "❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้";
-    return;
+  bindEvents();
+  await loadHistory(student.studentId);
+}
+
+/* =========================
+   SESSION
+========================= */
+function getStudentSession(){
+  try{
+    return JSON.parse(localStorage.getItem("cpvc_student"));
+  }catch(e){
+    return null;
   }
+}
 
-  if (!res.success) {
-    msgEl.textContent = res.message || "โหลดข้อมูลไม่สำเร็จ";
-    return;
-  }
+/* =========================
+   LOAD DATA
+========================= */
+async function loadHistory(studentId){
+  setMsg("กำลังโหลดข้อมูล...");
+  try{
+    const res = await callApi("studentGetHistory", { studentId });
 
-  allRows = res.rows || [];
-  applyFilters();
-
-  // ===== EVENTS =====
-  setupDateFilters();
-  setupStatusFilters();
-  setupSearch();
-  setupExport();
-});
-
-// ==========================
-// FILTER LOGIC
-// ==========================
-function applyFilters() {
-  filteredRows = allRows.filter(r => {
-    if (!matchDate(r.date)) return false;
-    if (statusFilter !== "ALL" && r.status !== statusFilter) return false;
-    if (searchText) {
-      const t = searchText.toLowerCase();
-      if (
-        !(r.subject || "").toLowerCase().includes(t) &&
-        !(r.teacher || "").toLowerCase().includes(t)
-      ) return false;
+    if (!res || !res.success){
+      throw new Error(res?.message || "โหลดข้อมูลไม่สำเร็จ");
     }
+
+    rawData = res.records || [];
+    applyFilters();
+
+    setMsg(`โหลดข้อมูลทั้งหมด ${rawData.length} รายการ`);
+  }catch(err){
+    rawData = [];
+    applyFilters();
+    setMsg("❌ " + err.message);
+  }
+}
+
+/* =========================
+   FILTERS
+========================= */
+function bindEvents(){
+  // date filter
+  dateBtns.forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      dateBtns.forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      activeDate = btn.dataset.date;
+      applyFilters();
+    });
+  });
+
+  // status filter
+  statusBtns.forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      statusBtns.forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      activeStatus = btn.dataset.status;
+      applyFilters();
+    });
+  });
+
+  // search
+  searchInput.addEventListener("input", ()=>{
+    applyFilters();
+  });
+
+  // export
+  btnExportCSV.addEventListener("click", exportCSV);
+  btnExportXLSX.addEventListener("click", exportXLSX);
+}
+
+function applyFilters(){
+  const keyword = searchInput.value.trim().toLowerCase();
+  const now = new Date();
+
+  viewData = rawData.filter(r=>{
+    // ---- date ----
+    if (activeDate !== "ALL"){
+      const d = new Date(r.time);
+      if (activeDate === "TODAY"){
+        if (!isSameDay(d, now)) return false;
+      }
+      if (activeDate === "WEEK"){
+        if (!isSameWeek(d, now)) return false;
+      }
+    }
+
+    // ---- status ----
+    if (activeStatus !== "ALL"){
+      if ((r.status || "").toUpperCase() !== activeStatus) return false;
+    }
+
+    // ---- search ----
+    if (keyword){
+      const hay = `
+        ${r.subject || ""}
+        ${r.teacher || ""}
+        ${r.room || ""}
+      `.toLowerCase();
+      if (!hay.includes(keyword)) return false;
+    }
+
     return true;
   });
 
-  renderTable();
   updateBadges();
+  renderTable();
 }
 
-function matchDate(dateStr) {
-  if (dateFilter === "ALL") return true;
-  const d = new Date(dateStr);
-  const now = new Date();
-
-  if (dateFilter === "TODAY") {
-    return d.toDateString() === now.toDateString();
-  }
-
-  if (dateFilter === "WEEK") {
-    const start = new Date(now);
-    start.setDate(now.getDate() - 7);
-    return d >= start && d <= now;
-  }
-
-  return true;
-}
-
-// ==========================
-// RENDER
-// ==========================
-function renderTable() {
-  const tbody = document.getElementById("historyBody");
+/* =========================
+   TABLE
+========================= */
+function renderTable(){
   tbody.innerHTML = "";
 
-  if (!filteredRows.length) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty">ไม่พบข้อมูล</td></tr>`;
+  if (!viewData.length){
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="empty">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</td>
+      </tr>
+    `;
     return;
   }
 
-  filteredRows.forEach(r => {
+  viewData.forEach(r=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="time-col">${r.time || "-"}</td>
-      <td>${r.subject || "-"}</td>
-      <td>${r.room || "-"}</td>
-      <td class="status-${(r.status || "").toLowerCase()}">${r.status || "-"}</td>
-      <td>${r.teacher || "-"}</td>
+      <td class="time-col">${fmtTime(r.time)}</td>
+      <td>${safe(r.subject)}</td>
+      <td>${safe(r.room)}</td>
+      <td class="${statusClass(r.status)}">${safe(r.status)}</td>
+      <td>${safe(r.teacher)}</td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-function updateBadges() {
-  const count = s =>
-    filteredRows.filter(r => s === "ALL" || r.status === s).length;
+/* =========================
+   BADGES
+========================= */
+function updateBadges(){
+  const total = viewData.length;
+  const ok    = viewData.filter(r=>r.status==="OK").length;
+  const late  = viewData.filter(r=>r.status==="LATE").length;
+  const abs   = viewData.filter(r=>r.status==="ABSENT").length;
 
-  document.getElementById("countAll").textContent    = filteredRows.length;
-  document.getElementById("countOK").textContent     = count("OK");
-  document.getElementById("countLATE").textContent   = count("LATE");
-  document.getElementById("countABSENT").textContent = count("ABSENT");
+  countAll.textContent    = total;
+  countOK.textContent     = ok;
+  countLATE.textContent   = late;
+  countABSENT.textContent = abs;
 }
 
-// ==========================
-// UI EVENTS
-// ==========================
-function setupDateFilters() {
-  document.querySelectorAll('[data-date]').forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll('[data-date]').forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      dateFilter = btn.dataset.date;
-      applyFilters();
-    });
-  });
-}
+/* =========================
+   EXPORT
+========================= */
+function exportCSV(){
+  if (!viewData.length) return;
 
-function setupStatusFilters() {
-  document.querySelectorAll('[data-status]').forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll('[data-status]').forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      statusFilter = btn.dataset.status;
-      applyFilters();
-    });
-  });
-}
-
-function setupSearch() {
-  const input = document.getElementById("searchInput");
-  input.addEventListener("input", () => {
-    searchText = input.value.trim();
-    applyFilters();
-  });
-}
-
-// ==========================
-// EXPORT
-// ==========================
-function setupExport() {
-  document.getElementById("btnExportCSV").onclick = () => exportCSV();
-  document.getElementById("btnExportXLSX").onclick = () => exportXLSX();
-}
-
-function exportCSV() {
-  const header = ["เวลา", "วิชา", "ห้อง", "สถานะ", "ครู"];
-  const rows = filteredRows.map(r => [
-    r.time, r.subject, r.room, r.status, r.teacher
+  const header = ["เวลา","วิชา","ห้อง","สถานะ","ครู"];
+  const rows = viewData.map(r=>[
+    fmtTime(r.time),
+    r.subject || "",
+    r.room || "",
+    r.status || "",
+    r.teacher || ""
   ]);
 
   const csv = [header, ...rows]
-    .map(r => r.map(v => `"${v || ""}"`).join(","))
+    .map(r=>r.map(v=>`"${v}"`).join(","))
     .join("\n");
 
-  download(csv, "history.csv", "text/csv");
+  downloadFile(csv, "history.csv", "text/csv");
 }
 
-function exportXLSX() {
-  const ws = XLSX.utils.json_to_sheet(
-    filteredRows.map(r => ({
-      เวลา: r.time,
-      วิชา: r.subject,
-      ห้อง: r.room,
-      สถานะ: r.status,
-      ครู: r.teacher
-    }))
-  );
+function exportXLSX(){
+  if (!viewData.length) return;
+
+  const rows = viewData.map(r=>({
+    เวลา: fmtTime(r.time),
+    วิชา: r.subject || "",
+    ห้อง: r.room || "",
+    สถานะ: r.status || "",
+    ครู: r.teacher || ""
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "History");
   XLSX.writeFile(wb, "history.xlsx");
 }
 
-function download(content, filename, type) {
+/* =========================
+   HELPERS
+========================= */
+function fmtTime(ts){
+  if (!ts) return "-";
+  const d = new Date(ts);
+  return d.toLocaleString("th-TH", {
+    dateStyle:"short",
+    timeStyle:"short"
+  });
+}
+
+function statusClass(s){
+  s = (s || "").toUpperCase();
+  if (s === "OK") return "status-ok";
+  if (s === "LATE") return "status-late";
+  if (s === "ABSENT") return "status-absent";
+  return "";
+}
+
+function isSameDay(a,b){
+  return a.toDateString() === b.toDateString();
+}
+
+function isSameWeek(a,b){
+  const start = new Date(b);
+  start.setDate(b.getDate() - b.getDay());
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  return a >= start && a <= end;
+}
+
+function safe(v){
+  return v ?? "-";
+}
+
+function setMsg(t){
+  msgEl.textContent = t || "";
+}
+
+function downloadFile(content, filename, type){
   const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
+  a.href = url;
   a.download = filename;
   a.click();
-  URL.revokeObjectURL(a.href);
+  URL.revokeObjectURL(url);
 }
