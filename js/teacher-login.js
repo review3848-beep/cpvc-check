@@ -1,5 +1,4 @@
-// js/teacher-login.js
-import { callApi } from "./api.js"; // ❗ สำคัญ: path แบบนี้เพราะเราเรียกจาก /js/
+import { callApi } from "./api.js";
 
 const emailInput = document.getElementById("email");
 const pwInput    = document.getElementById("password");
@@ -26,21 +25,22 @@ async function login(){
   btn.disabled = true;
   btn.textContent = "กำลังเข้าสู่ระบบ...";
 
-  try{
+  try {
+    // ✅ ต้องส่ง { email, password } เท่านั้น
     const res = await callApi("teacherLogin", { email, password });
     console.log("LOGIN RES =", res);
 
-    if (!res.success){
+    if (!res.success) {
       throw new Error(res.message);
     }
 
     localStorage.setItem("cpvc_teacher", JSON.stringify(res.teacher));
     location.href = "dashboard.html";
 
-  }catch(err){
+  } catch (err) {
     msgEl.textContent = "❌ " + err.message;
     msgEl.style.color = "#f87171";
-  }finally{
+  } finally {
     btn.disabled = false;
     btn.textContent = "เข้าสู่ระบบ";
   }
