@@ -1,5 +1,6 @@
 // js/teacher-login.js
-import { callApi } from "./api.js";
+import { callApi } from "../js/api.js";
+
 
 /* ================= DOM ================= */
 const emailInput = document.getElementById("email");
