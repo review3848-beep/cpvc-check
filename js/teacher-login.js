@@ -26,7 +26,7 @@ async function login(){
   btn.textContent = "กำลังเข้าสู่ระบบ...";
 
   try {
-    // ✅ ต้องส่ง { email, password } เท่านั้น
+    // ✅ ตรงนี้ต้องเป็น password เท่านั้น
     const res = await callApi("teacherLogin", { email, password });
     console.log("LOGIN RES =", res);
 
