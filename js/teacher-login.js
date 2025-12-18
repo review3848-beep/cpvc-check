@@ -1,32 +1,25 @@
 // js/teacher-login.js
-import { callApi } from "../js/api.js";
+import { callApi } from "./api.js"; // ❗ สำคัญ: path แบบนี้เพราะเราเรียกจาก /js/
 
-
-/* ================= DOM ================= */
 const emailInput = document.getElementById("email");
 const pwInput    = document.getElementById("password");
 const btn        = document.getElementById("loginBtn");
 const msgEl      = document.getElementById("msg");
 
-/* ================= INIT ================= */
 btn.addEventListener("click", login);
-
 pwInput.addEventListener("keydown", e => {
   if (e.key === "Enter") login();
 });
-emailInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") login();
-});
 
-/* ================= LOGIN ================= */
 async function login(){
-  const email    = emailInput.value.trim();
+  const email = emailInput.value.trim();
   const password = pwInput.value.trim();
 
-  setMsg("");
+  msgEl.textContent = "";
 
   if (!email || !password){
-    setMsg("⚠️ กรุณากรอกอีเมลและรหัสผ่านให้ครบ", "#fbbf24");
+    msgEl.textContent = "กรุณากรอกข้อมูลให้ครบ";
+    msgEl.style.color = "#f87171";
     return;
   }
 
@@ -34,37 +27,21 @@ async function login(){
   btn.textContent = "กำลังเข้าสู่ระบบ...";
 
   try{
-    const res = await callApi("teacherLogin", {
-      email,
-      password
-    });
+    const res = await callApi("teacherLogin", { email, password });
+    console.log("LOGIN RES =", res);
 
-    if (!res || !res.success){
-      throw new Error(res?.message || "เข้าสู่ระบบไม่สำเร็จ");
+    if (!res.success){
+      throw new Error(res.message);
     }
 
-    // 🔐 เก็บ session ครู
-    localStorage.setItem("cpvc_teacher", JSON.stringify({
-      teacherId: res.teacher.teacherId,
-      name: res.teacher.name,
-      email: res.teacher.email
-    }));
-
-    setMsg("✅ เข้าสู่ระบบสำเร็จ กำลังพาไปหน้า Dashboard...", "#4ade80");
-
-    setTimeout(()=>{
-      location.href = "dashboard.html";
-    }, 600);
+    localStorage.setItem("cpvc_teacher", JSON.stringify(res.teacher));
+    location.href = "dashboard.html";
 
   }catch(err){
-    setMsg("❌ " + err.message, "#f87171");
+    msgEl.textContent = "❌ " + err.message;
+    msgEl.style.color = "#f87171";
+  }finally{
     btn.disabled = false;
     btn.textContent = "เข้าสู่ระบบ";
   }
-}
-
-/* ================= HELPERS ================= */
-function setMsg(text, color){
-  msgEl.textContent = text || "";
-  msgEl.style.color = color || "#e5e7eb";
 }
