@@ -1,72 +1,44 @@
-// js/api.js
-// 🔧 แก้เป็น URL Web App ของ Google Apps Script ที่ Deploy แล้ว
-export const API_BASE =
-  "https://script.google.com/macros/s/AKfycbyjeoKm1wIbUJqRnvA4_siM-C5el3CRkkR5VxjGSK3D2ncZQqX2bIHNIbrEslBDoxK6wg/exec";
-
-/* =========================
-   CORE API CALL
-========================= */
-export async function callApi(action, payload = {}) {
-  const body = {
-    action,
-    ...payload
-  };
-
-  let res;
+function doPost(e) {
   try {
-    res = await fetch(API_BASE, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
-      body: JSON.stringify(body),
-      redirect: "follow"
-    });
+    if (!e || !e.postData || !e.postData.contents) {
+      return output({
+        success: false,
+        message: "No payload"
+      });
+    }
+
+    const payload = JSON.parse(e.postData.contents);
+    const action = payload.action;
+
+    let result;
+
+    switch (action) {
+      case "teacherLogin":
+        result = teacherLogin_(payload);
+        break;
+
+      case "teacherRegister":
+        result = teacherRegister_(payload);
+        break;
+
+      case "studentLogin":
+        result = studentLogin_(payload);
+        break;
+
+      // 👉 เพิ่ม action อื่นตรงนี้
+      default:
+        result = {
+          success: false,
+          message: "Unknown action: " + action
+        };
+    }
+
+    return output(result);
+
   } catch (err) {
-    throw new Error("เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ");
+    return output({
+      success: false,
+      message: err.message
+    });
   }
-
-  if (!res.ok) {
-    throw new Error(`Server error (${res.status})`);
-  }
-
-  let data;
-  try {
-    data = await res.json();
-  } catch (e) {
-    throw new Error("ข้อมูลตอบกลับไม่ถูกต้อง");
-  }
-
-  return data;
-}
-
-/* =========================
-   OPTIONAL HELPERS
-========================= */
-
-// ตรวจ session นักเรียน
-export function getStudentSession() {
-  try {
-    return JSON.parse(localStorage.getItem("cpvc_student"));
-  } catch {
-    return null;
-  }
-}
-
-// ตรวจ session ครู
-export function getTeacherSession() {
-  try {
-    return JSON.parse(localStorage.getItem("cpvc_teacher"));
-  } catch {
-    return null;
-  }
-}
-
-// ล้าง session ทั้งหมด (ใช้ตอน logout)
-export function clearAllSession() {
-  try {
-    localStorage.removeItem("cpvc_student");
-    localStorage.removeItem("cpvc_teacher");
-    sessionStorage.clear();
-  } catch {}
 }
