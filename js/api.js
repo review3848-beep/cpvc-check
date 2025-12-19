@@ -1,6 +1,6 @@
 // js/api.js
 export const API_BASE =
-  "https://script.google.com/macros/s/AKfycby89C_lsHgk0YFj3gh5bo8i3OyMeFJw6Z-pttZ7gYdA6KlK_IEgkps9sFNMIxLgWRXTqQ/exec";
+  "https://script.google.com/macros/s/AKfycbxNpOWBi0WbHY7V4bljXS8K4LeedWx6slNQ8lE7WZrV8V6soqvT0j57UYWiAluAHivkAQ/exec";
 
 export async function callApi(action, payload = {}) {
   const res = await fetch(API_BASE, {
