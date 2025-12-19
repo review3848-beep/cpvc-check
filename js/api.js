@@ -1,6 +1,6 @@
 // js/api.js
 export const API_BASE =
-  "https://script.google.com/macros/s/AKfycbxNpOWBi0WbHY7V4bljXS8K4LeedWx6slNQ8lE7WZrV8V6soqvT0j57UYWiAluAHivkAQ/exec";
+  "https://script.google.com/macros/s/AKfycbwWi-So50oa7NRnbc-IWZVflIOFqcG247ZC_HEdH-nAe3ESivDDHQk80otWR_wEQAHX4Q/exec";
 
 export async function callApi(action, params = {}) {
   const query = new URLSearchParams({
@@ -11,7 +11,6 @@ export async function callApi(action, params = {}) {
   const res = await fetch(`${API_BASE}?${query}`);
   return await res.json();
 }
-
 
 /* ===== helpers ===== */
 export function getStudentSession() {
