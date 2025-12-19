@@ -1,198 +1,170 @@
-// student/dashboard.js
+// teacher-open-session.js
 import { callApi } from "../js/api.js";
 
-/* =========================
-   DOM
-========================= */
-const nameEl   = document.getElementById("studentNameDisplay");
-const idEl     = document.getElementById("studentIdDisplay");
+/* ================== STATE ================== */
+let currentSession = null;
+let isClosingSession = false;
 
-const totalEl  = document.getElementById("totalRecords");
-const okEl     = document.getElementById("okCount");
-const lateEl   = document.getElementById("lateCount");
-const okPctEl  = document.getElementById("okPercent");
-const latePctEl= document.getElementById("latePercent");
-const rateEl   = document.getElementById("ratePercent");
+/* ================== DOM ================== */
+const subjectInput = document.getElementById("subject");
+const roomInput    = document.getElementById("room");
 
-const tbody    = document.getElementById("recentTableBody");
-const msgEl    = document.getElementById("msg");
+const openBtn  = document.getElementById("openSessionBtn");
+const closeBtn = document.getElementById("closeSessionBtn");
 
-let chart; // Chart.js instance
+const statusEl = document.getElementById("sessionStatus");
+const tokenEl  = document.getElementById("tokenDisplay");
 
-/* =========================
-   INIT
-========================= */
-document.addEventListener("DOMContentLoaded", init);
+/* ================== INIT ================== */
+document.addEventListener("DOMContentLoaded", () => {
+  loadCurrentSession();
+  openBtn?.addEventListener("click", openSession);
+  closeBtn?.addEventListener("click", confirmCloseSession);
+});
 
-async function init(){
-  const student = getStudentSession();
-  if (!student){
-    location.href = "login.html";
+/* ================== LOAD SESSION ================== */
+async function loadCurrentSession() {
+  const res = await callApi("teacherGetCurrentSession", {});
+  if (res.success && res.session) {
+    currentSession = res.session;
+    renderSession();
+  }
+}
+
+/* ================== OPEN SESSION ================== */
+async function openSession() {
+  const subject = subjectInput.value.trim();
+  const room    = roomInput.value.trim();
+
+  if (!subject || !room) {
+    alert("กรุณากรอกวิชาและห้องให้ครบ");
     return;
   }
 
-  nameEl.textContent = student.name || "-";
-  idEl.textContent   = student.studentId || "-";
+  openBtn.disabled = true;
+  openBtn.textContent = "กำลังเปิดคาบ...";
 
-  await loadDashboard(student.studentId);
-}
+  const res = await callApi("teacherOpenSession", { subject, room });
 
-/* =========================
-   SESSION
-========================= */
-function getStudentSession(){
-  try{
-    return JSON.parse(localStorage.getItem("cpvc_student"));
-  }catch(e){
-    return null;
+  openBtn.disabled = false;
+  openBtn.textContent = "เปิดคาบเรียน";
+
+  if (res.success) {
+    currentSession = res.session;
+    renderSession();
+  } else {
+    alert(res.message || "เปิดคาบไม่สำเร็จ");
   }
 }
 
-/* =========================
-   LOAD DATA
-========================= */
-async function loadDashboard(studentId){
-  setMsg("");
-  try{
-    const res = await callApi("studentGetDashboard", { studentId });
-
-    if (!res || !res.success){
-      throw new Error(res?.message || "โหลดข้อมูลไม่สำเร็จ");
-    }
-
-    renderStats(res.stats);
-    renderTable(res.recent || []);
-    renderChart(res.stats);
-
-  }catch(err){
-    setMsg("❌ " + err.message);
-    renderEmpty();
-  }
+/* ================== CONFIRM CLOSE ================== */
+function confirmCloseSession() {
+  showConfirmPopup(
+    "ปิดคาบเรียน?",
+    "ระบบจะสรุปผลการเข้าเรียนทันที",
+    closeSession
+  );
 }
 
-/* =========================
-   RENDER STATS
-========================= */
-function renderStats(stats){
-  const total  = stats.total || 0;
-  const ok     = stats.ok || 0;
-  const late   = stats.late || 0;
-  const absent = stats.absent || 0;
+/* ================== CLOSE SESSION ================== */
+async function closeSession() {
+  if (!currentSession) return;
 
-  totalEl.textContent = total;
-  okEl.textContent    = ok;
-  lateEl.textContent  = late;
+  isClosingSession = true;
+  closeBtn.disabled = true;
+  closeBtn.textContent = "กำลังปิดคาบ...";
 
-  okPctEl.textContent   = total ? Math.round(ok / total * 100) + "%" : "0%";
-  latePctEl.textContent = total ? Math.round(late / total * 100) + "%" : "0%";
-
-  const rate = total ? Math.round((ok + late) / total * 100) : 0;
-  rateEl.textContent = rate + "%";
-}
-
-/* =========================
-   TABLE
-========================= */
-function renderTable(rows){
-  tbody.innerHTML = "";
-
-  if (!rows.length){
-    renderEmpty();
-    return;
-  }
-
-  rows.slice(0,10).forEach(r=>{
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${fmtTime(r.time)}</td>
-      <td>${safe(r.subject)}</td>
-      <td>${safe(r.token)}</td>
-      <td>${statusBadge(r.status)}</td>
-      <td>${safe(r.teacher)}</td>
-    `;
-    tbody.appendChild(tr);
+  const res = await callApi("teacherCloseSession", {
+    sessionId: currentSession.id
   });
+
+  closeBtn.disabled = false;
+  closeBtn.textContent = "ปิดคาบเรียน";
+
+  if (res.success) {
+    currentSession.status = "CLOSED";
+    renderSession();
+    showSummaryPopup(res.summary);
+  } else {
+    alert(res.message || "ปิดคาบไม่สำเร็จ");
+  }
 }
 
-function renderEmpty(){
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="5" class="empty">ยังไม่มีข้อมูลการเช็คชื่อ</td>
-    </tr>
+/* ================== RENDER ================== */
+function renderSession() {
+  if (!currentSession) return;
+
+  tokenEl.textContent = currentSession.token || "-";
+
+  if (currentSession.status === "OPEN") {
+    statusEl.textContent = "สถานะคาบ: เปิดอยู่";
+    statusEl.style.color = "#22c55e";
+    closeBtn.style.display = "inline-flex";
+  } else {
+    statusEl.textContent = "สถานะคาบ: ปิดแล้ว";
+    statusEl.style.color = "#f87171";
+    closeBtn.style.display = "none";
+  }
+}
+
+/* ================== POPUPS ================== */
+function showConfirmPopup(title, desc, onConfirm) {
+  const html = `
+    <div class="popup-backdrop">
+      <div class="popup-card">
+        <h3>${title}</h3>
+        <p>${desc}</p>
+        <div class="popup-actions">
+          <button class="btn ghost" onclick="closePopup()">ยกเลิก</button>
+          <button class="btn danger" onclick="popupConfirm()">ยืนยัน</button>
+        </div>
+      </div>
+    </div>
   `;
+  injectPopup(html, onConfirm);
 }
 
-/* =========================
-   CHART
-========================= */
-function renderChart(stats){
-  const ctx = document.getElementById("statusChart");
-  if (!ctx) return;
-
-  const data = [
-    stats.ok || 0,
-    stats.late || 0,
-    stats.absent || 0
-  ];
-
-  if (chart) chart.destroy();
-
-  chart = new Chart(ctx, {
-    type: "doughnut",
-    data: {
-      labels: ["OK", "LATE", "ABSENT"],
-      datasets: [{
-        data,
-        backgroundColor: [
-          "#4ade80",
-          "#fb923c",
-          "#fca5a5"
-        ],
-        borderWidth: 0
-      }]
-    },
-    options: {
-      responsive: true,
-      cutout: "65%",
-      plugins: {
-        legend: {
-          position: "bottom",
-          labels: {
-            color: "#e5e7eb",
-            boxWidth: 12,
-            font: { size: 12, weight: "600" }
-          }
-        }
-      }
-    }
-  });
+function showSummaryPopup(summary) {
+  const html = `
+    <div class="popup-backdrop">
+      <div class="popup-card">
+        <h3>📊 สรุปการเข้าเรียน</h3>
+        <ul class="summary-list">
+          <li>✅ มาเรียน: <b>${summary.ok}</b></li>
+          <li>⏰ สาย: <b>${summary.late}</b></li>
+          <li>❌ ขาด: <b>${summary.absent}</b></li>
+        </ul>
+        <div class="popup-actions">
+          <button class="btn" onclick="stayHere()">อยู่หน้านี้</button>
+          <button class="btn primary" onclick="goDashboard()">กลับ Dashboard</button>
+        </div>
+      </div>
+    </div>
+  `;
+  injectPopup(html);
 }
 
-/* =========================
-   HELPERS
-========================= */
-function fmtTime(ts){
-  if (!ts) return "-";
-  const d = new Date(ts);
-  return d.toLocaleString("th-TH", {
-    dateStyle:"short",
-    timeStyle:"short"
-  });
+/* ================== POPUP HELPERS ================== */
+let popupCallback = null;
+
+function injectPopup(html, cb) {
+  popupCallback = cb || null;
+  document.body.insertAdjacentHTML("beforeend", html);
 }
 
-function statusBadge(status){
-  const s = (status || "").toUpperCase();
-  if (s === "OK")     return `<span style="color:#4ade80;font-weight:700">OK</span>`;
-  if (s === "LATE")   return `<span style="color:#fb923c;font-weight:700">LATE</span>`;
-  if (s === "ABSENT") return `<span style="color:#fca5a5;font-weight:700">ABSENT</span>`;
-  return "-";
+function closePopup() {
+  document.querySelector(".popup-backdrop")?.remove();
 }
 
-function safe(v){
-  return v ?? "-";
+function popupConfirm() {
+  closePopup();
+  popupCallback && popupCallback();
 }
 
-function setMsg(t){
-  msgEl.textContent = t || "";
+function goDashboard() {
+  window.location.href = "dashboard.html";
+}
+
+function stayHere() {
+  closePopup(); // ไม่ redirect 😎
 }
