@@ -1,170 +1,297 @@
-// teacher-open-session.js
-import { callApi } from "../js/api.js";
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>เปิดคาบเรียน | NexAttend</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-/* ================== STATE ================== */
-let currentSession = null;
-let isClosingSession = false;
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <script type="module" src="../js/teacher-open-session.js" defer></script>
 
-/* ================== DOM ================== */
-const subjectInput = document.getElementById("subject");
-const roomInput    = document.getElementById("room");
+  <style>
+    body {
+      margin:0;
+      min-height:100vh;
+      background: radial-gradient(circle at 30% 15%, #1e293b, #020617 78%);
+      font-family:"Inter",system-ui,sans-serif;
+      color:#e5e7eb;
+    }
 
-const openBtn  = document.getElementById("openSessionBtn");
-const closeBtn = document.getElementById("closeSessionBtn");
+    .wrap {
+      max-width:560px;
+      margin:2.2rem auto;
+      padding:2.2rem 2rem 2.5rem;
+      border-radius:1.5rem;
+      background:rgba(15,23,42,.94);
+      border:1px solid rgba(148,163,184,.35);
+      box-shadow:0 22px 60px rgba(15,23,42,.94);
+    }
 
-const statusEl = document.getElementById("sessionStatus");
-const tokenEl  = document.getElementById("tokenDisplay");
+    .header {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      margin-bottom:1.4rem;
+    }
 
-/* ================== INIT ================== */
-document.addEventListener("DOMContentLoaded", () => {
-  loadCurrentSession();
-  openBtn?.addEventListener("click", openSession);
-  closeBtn?.addEventListener("click", confirmCloseSession);
-});
+    .title-box h2 {
+      margin:0;
+      font-size:1.6rem;
+      color:#f9fafb;
+    }
 
-/* ================== LOAD SESSION ================== */
-async function loadCurrentSession() {
-  const res = await callApi("teacherGetCurrentSession", {});
-  if (res.success && res.session) {
-    currentSession = res.session;
-    renderSession();
-  }
+    .title-box p {
+      margin:.25rem 0 0 0;
+      font-size:.9rem;
+      color:#94a3b8;
+    }
+
+    .teacher-chip {
+      font-size:.85rem;
+      padding:.45rem .9rem;
+      border-radius:999px;
+      background:rgba(30,64,175,.8);
+      border:1px solid rgba(129,140,248,.7);
+      color:#e5e7eb;
+    }
+
+    label {
+      font-size:.85rem;
+      color:#cbd5f5;
+      display:block;
+      margin-bottom:.35rem;
+    }
+
+    input {
+      width:100%;
+      padding:.9rem;
+      border-radius:.9rem;
+      border:1px solid rgba(148,163,184,.35);
+      background:rgba(15,23,42,.98);
+      color:#e5e7eb;
+      margin-bottom:1.1rem;
+      outline:none;
+      font-size:.95rem;
+    }
+
+    input:focus {
+      border-color:#6366f1;
+      box-shadow:0 0 0 1px rgba(99,102,241,.6);
+    }
+
+    .btn-row {
+      display:flex;
+      gap:.7rem;
+      margin-top:.3rem;
+      margin-bottom:1.1rem;
+    }
+
+    .btn {
+      flex:1;
+      padding:.9rem;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      font-weight:600;
+      font-size:.95rem;
+      color:white;
+      transition:.16s;
+    }
+
+    .btn-open {
+      background:linear-gradient(135deg,#4f46e5,#22c55e);
+      box-shadow:0 16px 38px rgba(34,197,94,.48);
+    }
+
+    .btn-close {
+      background:linear-gradient(135deg,#f97316,#dc2626);
+      box-shadow:0 16px 38px rgba(248,113,113,.4);
+    }
+
+    .btn:disabled {
+      opacity:.6;
+      cursor:default;
+      box-shadow:none;
+    }
+
+    .token-box {
+      margin-top:.8rem;
+      padding:1.2rem 1rem 1.4rem;
+      border-radius:1.1rem;
+      background:rgba(15,23,42,.98);
+      border:1px solid rgba(148,163,184,.35);
+      text-align:center;
+      display:none;
+    }
+
+    .token-label {
+      font-size:.9rem;
+      color:#cbd5f5;
+      margin-bottom:.3rem;
+    }
+
+    #token {
+      font-size:2.1rem;
+      letter-spacing:0.3em;
+      font-weight:700;
+      color:#38bdf8;
+      text-shadow:0 0 14px rgba(56,189,248,.7);
+      margin-bottom:.8rem;
+    }
+
+    #qrCanvas {
+      width:220px;
+      height:220px;
+      max-width:100%;
+      margin:0 auto .6rem;
+      display:block;
+      background:#020617;
+      border-radius:.75rem;
+      padding:.4rem;
+    }
+
+    .qr-hint {
+      font-size:.8rem;
+      color:#9ca3af;
+    }
+
+    .session-status {
+      font-size:.85rem;
+      margin-top:.4rem;
+      color:#e5e7eb;
+    }
+
+    #msg {
+      margin-top:.6rem;
+      text-align:center;
+      font-size:.9rem;
+    }
+    .modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(2,6,23,.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
 }
 
-/* ================== OPEN SESSION ================== */
-async function openSession() {
-  const subject = subjectInput.value.trim();
-  const room    = roomInput.value.trim();
+.modal-backdrop.show{ display:flex; }
 
-  if (!subject || !room) {
-    alert("กรุณากรอกวิชาและห้องให้ครบ");
-    return;
-  }
-
-  openBtn.disabled = true;
-  openBtn.textContent = "กำลังเปิดคาบ...";
-
-  const res = await callApi("teacherOpenSession", { subject, room });
-
-  openBtn.disabled = false;
-  openBtn.textContent = "เปิดคาบเรียน";
-
-  if (res.success) {
-    currentSession = res.session;
-    renderSession();
-  } else {
-    alert(res.message || "เปิดคาบไม่สำเร็จ");
-  }
+.modal-card{
+  width:90%;
+  max-width:360px;
+  background:rgba(15,23,42,.96);
+  border-radius:1.4rem;
+  padding:1.4rem 1.3rem;
+  text-align:center;
+  box-shadow:0 30px 80px rgba(0,0,0,.9);
+  animation:popup .25s ease-out;
 }
 
-/* ================== CONFIRM CLOSE ================== */
-function confirmCloseSession() {
-  showConfirmPopup(
-    "ปิดคาบเรียน?",
-    "ระบบจะสรุปผลการเข้าเรียนทันที",
-    closeSession
-  );
+@keyframes popup{
+  from{transform:scale(.9);opacity:0}
+  to{transform:scale(1);opacity:1}
 }
 
-/* ================== CLOSE SESSION ================== */
-async function closeSession() {
-  if (!currentSession) return;
-
-  isClosingSession = true;
-  closeBtn.disabled = true;
-  closeBtn.textContent = "กำลังปิดคาบ...";
-
-  const res = await callApi("teacherCloseSession", {
-    sessionId: currentSession.id
-  });
-
-  closeBtn.disabled = false;
-  closeBtn.textContent = "ปิดคาบเรียน";
-
-  if (res.success) {
-    currentSession.status = "CLOSED";
-    renderSession();
-    showSummaryPopup(res.summary);
-  } else {
-    alert(res.message || "ปิดคาบไม่สำเร็จ");
-  }
+.modal-card h3{
+  margin:0 0 .4rem;
+  font-size:1.2rem;
 }
 
-/* ================== RENDER ================== */
-function renderSession() {
-  if (!currentSession) return;
-
-  tokenEl.textContent = currentSession.token || "-";
-
-  if (currentSession.status === "OPEN") {
-    statusEl.textContent = "สถานะคาบ: เปิดอยู่";
-    statusEl.style.color = "#22c55e";
-    closeBtn.style.display = "inline-flex";
-  } else {
-    statusEl.textContent = "สถานะคาบ: ปิดแล้ว";
-    statusEl.style.color = "#f87171";
-    closeBtn.style.display = "none";
-  }
+.modal-card p{
+  margin:0 0 .8rem;
+  font-size:.85rem;
+  color:#94a3b8;
 }
 
-/* ================== POPUPS ================== */
-function showConfirmPopup(title, desc, onConfirm) {
-  const html = `
-    <div class="popup-backdrop">
-      <div class="popup-card">
-        <h3>${title}</h3>
-        <p>${desc}</p>
-        <div class="popup-actions">
-          <button class="btn ghost" onclick="closePopup()">ยกเลิก</button>
-          <button class="btn danger" onclick="popupConfirm()">ยืนยัน</button>
-        </div>
+.modal-summary{
+  font-size:.85rem;
+  margin-bottom:1rem;
+  line-height:1.6;
+}
+
+.modal-actions{
+  display:flex;
+  gap:.6rem;
+}
+
+.modal-actions button{
+  flex:1;
+  padding:.7rem;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.btn-outline{
+  background:#020617;
+  border:1px solid rgba(148,163,184,.6);
+  color:#e5e7eb;
+}
+
+.btn-danger{
+  background:linear-gradient(135deg,#ef4444,#b91c1c);
+  color:white;
+}
+
+  </style>
+</head>
+
+<body>
+
+  <div class="wrap">
+    <div class="header">
+      <div class="title-box">
+        <h2>จัดการคาบเรียน</h2>
+        <p>กดเปิดคาบ → ระบบสร้าง TOKEN พร้อมใช้ทันที</p>
+      </div>
+      <div class="teacher-chip">
+        👩‍🏫 <span id="teacherName">-</span>
       </div>
     </div>
-  `;
-  injectPopup(html, onConfirm);
-}
 
-function showSummaryPopup(summary) {
-  const html = `
-    <div class="popup-backdrop">
-      <div class="popup-card">
-        <h3>📊 สรุปการเข้าเรียน</h3>
-        <ul class="summary-list">
-          <li>✅ มาเรียน: <b>${summary.ok}</b></li>
-          <li>⏰ สาย: <b>${summary.late}</b></li>
-          <li>❌ ขาด: <b>${summary.absent}</b></li>
-        </ul>
-        <div class="popup-actions">
-          <button class="btn" onclick="stayHere()">อยู่หน้านี้</button>
-          <button class="btn primary" onclick="goDashboard()">กลับ Dashboard</button>
-        </div>
-      </div>
+    <label>รหัสวิชา / รายวิชา</label>
+    <input type="text" id="subjectCode" placeholder="เช่น CPVC101, ระบบเช็คชื่อ">
+
+    <label>ห้อง / กลุ่มเรียน</label>
+    <input type="text" id="room" placeholder="เช่น ปวช.2/1">
+
+    <div class="session-status" id="sessionStatus">
+      สถานะคาบ: ยังไม่เปิดคาบ
     </div>
-  `;
-  injectPopup(html);
-}
 
-/* ================== POPUP HELPERS ================== */
-let popupCallback = null;
+    <div class="btn-row">
+      <button id="openSessionBtn" class="btn btn-open">
+        เปิดคาบเรียน
+      </button>
+      <button id="closeSessionBtn" class="btn btn-close" disabled>
+        ปิดคาบเรียน
+      </button>
+    </div>
 
-function injectPopup(html, cb) {
-  popupCallback = cb || null;
-  document.body.insertAdjacentHTML("beforeend", html);
-}
+    <div id="tokenBox" class="token-box">
+      <div class="token-label">TOKEN สำหรับคาบนี้</div>
+      <div id="token">------</div>
 
-function closePopup() {
-  document.querySelector(".popup-backdrop")?.remove();
-}
+    <div id="msg"></div>
+  </div>
+<!-- iOS Style Modal -->
+<div id="closeModal" class="modal-backdrop">
+  <div class="modal-card">
+    <h3>ปิดคาบเรียน?</h3>
+    <p>นักเรียนจะไม่สามารถเช็คชื่อได้อีก</p>
 
-function popupConfirm() {
-  closePopup();
-  popupCallback && popupCallback();
-}
+    <div id="modalSummary" class="modal-summary"></div>
 
-function goDashboard() {
-  window.location.href = "dashboard.html";
-}
+    <div class="modal-actions">
+      <button id="cancelClose" class="btn-outline">ยกเลิก</button>
+      <button id="confirmClose" class="btn-danger">ปิดคาบ</button>
+    </div>
+  </div>
+</div>
 
-function stayHere() {
-  closePopup(); // ไม่ redirect 😎
-}
+</body>
+</html>

@@ -88,63 +88,57 @@ async function openSession(){
     openBtn.textContent = "เปิดคาบเรียน";
   }
 }
-function teacherCloseSession_({ sessionId }) {
-  const shSess = ss(SHEET_SESSIONS);
-  const shAtt  = ss(SHEET_ATTENDANCE);
+async function closeSession(){
+  if (!currentSessionId) return;
 
-  const sessRows = shSess.getDataRange().getValues();
-  let sess;
+  const modal = document.getElementById("closeModal");
+  const summaryBox = document.getElementById("modalSummary");
+  const btnConfirm = document.getElementById("confirmClose");
+  const btnCancel  = document.getElementById("cancelClose");
 
-  for (let i = 1; i < sessRows.length; i++) {
-    if (sessRows[i][0] === sessionId) {
-      sess = { row: i + 1, data: sessRows[i] };
-      break;
-    }
-  }
+  modal.classList.add("show");
 
-  if (!sess) return fail("ไม่พบคาบ");
-
-  const startTime = new Date(sess.data[6]);
-  const closeTime = new Date();
-
-  // ⏰ กำหนดเวลา
-  const LATE_MIN   = 10; // นาที
-  const ABSENT_MIN = 30;
-
-  const lateTime   = new Date(startTime.getTime() + LATE_MIN * 60000);
-  const absentTime = new Date(startTime.getTime() + ABSENT_MIN * 60000);
-
-  // ปิดคาบ
-  shSess.getRange(sess.row, 6).setValue("CLOSED");
-
-  // หานักเรียนที่เช็คชื่อแล้ว
-  const attRows = shAtt.getDataRange().getValues();
-  const checked = attRows.slice(1)
-    .filter(r => r[0] === sessionId)
-    .map(r => String(r[1]));
-
-  // preload STUDENTS
-  const stuRows = ss(SHEET_STUDENTS).getDataRange().getValues().slice(1);
-
-  stuRows.forEach(stu => {
-    const studentId = String(stu[0]);
-    if (checked.includes(studentId)) return;
-
-    let status = "OK";
-    if (closeTime >= absentTime) status = "ABSENT";
-    else if (closeTime >= lateTime) status = "LATE";
-
-    shAtt.appendRow([
-      sessionId,
-      studentId,
-      sess.data[3], // subject
-      sess.data[2], // token
-      sess.data[1], // teacher
-      status,
-      closeTime,
-      sess.data[4]  // room
-    ]);
+  // 📊 โหลดสรุปล่วงหน้า
+  const detail = await callApi("teacherGetSessionDetail", {
+    sessionId: currentSessionId
   });
 
-  return ok({ closed: true });
+  if (detail.success){
+    const s = detail.stats;
+    summaryBox.innerHTML = `
+      ✅ มาเรียน: ${s.ok}<br>
+      ⏰ สาย: ${s.late}<br>
+      ❌ ขาด: ${s.absent}
+    `;
+  }
+
+  btnCancel.onclick = () => modal.classList.remove("show");
+
+  btnConfirm.onclick = async () => {
+    btnConfirm.disabled = true;
+    btnConfirm.textContent = "กำลังปิดคาบ...";
+
+    // ปิดคาบ
+    await callApi("teacherCloseSession", { sessionId: currentSessionId });
+
+    // 📥 export CSV อัตโนมัติ
+    const csvRes = await callApi("teacherExportSession", {
+      sessionId: currentSessionId
+    });
+
+    if (csvRes.success){
+      downloadCSV(csvRes.csv, "attendance-session.csv");
+    }
+
+    // ล้างสถานะ
+    localStorage.removeItem("cpvc_open_session");
+
+    modal.classList.remove("show");
+
+    setMsg("🔒 ปิดคาบแล้ว กำลังกลับ Dashboard...", "#fca5a5");
+
+    setTimeout(()=>{
+      location.href = "dashboard.html";
+    }, 2000);
+  };
 }
