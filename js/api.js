@@ -2,24 +2,16 @@
 export const API_BASE =
   "https://script.google.com/macros/s/AKfycbxNpOWBi0WbHY7V4bljXS8K4LeedWx6slNQ8lE7WZrV8V6soqvT0j57UYWiAluAHivkAQ/exec";
 
-export async function callApi(action, payload = {}) {
-  const res = await fetch(API_BASE, {
-    method: "POST",
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8"   // ✅ ต้องเป็นแบบนี้
-    },
-    body: JSON.stringify({
-      action,
-      ...payload
-    })
-  });
+export async function callApi(action, params = {}) {
+  const query = new URLSearchParams({
+    action,
+    ...params
+  }).toString();
 
-  if (!res.ok) {
-    throw new Error("Server error " + res.status);
-  }
-
+  const res = await fetch(`${API_BASE}?${query}`);
   return await res.json();
 }
+
 
 /* ===== helpers ===== */
 export function getStudentSession() {
