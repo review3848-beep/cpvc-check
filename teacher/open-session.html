@@ -167,6 +167,76 @@
       text-align:center;
       font-size:.9rem;
     }
+    .modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(2,6,23,.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+
+.modal-backdrop.show{ display:flex; }
+
+.modal-card{
+  width:90%;
+  max-width:360px;
+  background:rgba(15,23,42,.96);
+  border-radius:1.4rem;
+  padding:1.4rem 1.3rem;
+  text-align:center;
+  box-shadow:0 30px 80px rgba(0,0,0,.9);
+  animation:popup .25s ease-out;
+}
+
+@keyframes popup{
+  from{transform:scale(.9);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+
+.modal-card h3{
+  margin:0 0 .4rem;
+  font-size:1.2rem;
+}
+
+.modal-card p{
+  margin:0 0 .8rem;
+  font-size:.85rem;
+  color:#94a3b8;
+}
+
+.modal-summary{
+  font-size:.85rem;
+  margin-bottom:1rem;
+  line-height:1.6;
+}
+
+.modal-actions{
+  display:flex;
+  gap:.6rem;
+}
+
+.modal-actions button{
+  flex:1;
+  padding:.7rem;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.btn-outline{
+  background:#020617;
+  border:1px solid rgba(148,163,184,.6);
+  color:#e5e7eb;
+}
+
+.btn-danger{
+  background:linear-gradient(135deg,#ef4444,#b91c1c);
+  color:white;
+}
+
   </style>
 </head>
 
@@ -208,6 +278,20 @@
 
     <div id="msg"></div>
   </div>
+<!-- iOS Style Modal -->
+<div id="closeModal" class="modal-backdrop">
+  <div class="modal-card">
+    <h3>ปิดคาบเรียน?</h3>
+    <p>นักเรียนจะไม่สามารถเช็คชื่อได้อีก</p>
+
+    <div id="modalSummary" class="modal-summary"></div>
+
+    <div class="modal-actions">
+      <button id="cancelClose" class="btn-outline">ยกเลิก</button>
+      <button id="confirmClose" class="btn-danger">ปิดคาบ</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

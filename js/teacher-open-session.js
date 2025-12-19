@@ -88,47 +88,63 @@ async function openSession(){
     openBtn.textContent = "เปิดคาบเรียน";
   }
 }
+function teacherCloseSession_({ sessionId }) {
+  const shSess = ss(SHEET_SESSIONS);
+  const shAtt  = ss(SHEET_ATTENDANCE);
 
-/* ================= CLOSE SESSION ================= */
-async function closeSession(){
-  if (!currentSessionId) return;
+  const sessRows = shSess.getDataRange().getValues();
+  let sess;
 
-  closeBtn.disabled = true;
-  closeBtn.textContent = "กำลังปิดคาบ...";
-
-  try{
-    const res = await callApi("teacherCloseSession", {
-      sessionId: currentSessionId
-    });
-
-    if (!res || !res.success){
-      throw new Error(res?.message || "ปิดคาบไม่สำเร็จ");
+  for (let i = 1; i < sessRows.length; i++) {
+    if (sessRows[i][0] === sessionId) {
+      sess = { row: i + 1, data: sessRows[i] };
+      break;
     }
-
-    statusEl.textContent = "สถานะคาบ: ปิดแล้ว";
-    statusEl.style.color = "#fca5a5";
-
-    setMsg("🔒 ปิดคาบเรียนเรียบร้อย", "#fca5a5");
-
-    tokenBox.style.display = "none";
-    currentSessionId = null;
-
-  }catch(err){
-    setMsg("❌ " + err.message, "#f87171");
-    closeBtn.disabled = false;
-    closeBtn.textContent = "ปิดคาบเรียน";
   }
-}
 
-/* ================= UI HELPERS ================= */
-function setIdle(){
-  statusEl.textContent = "สถานะคาบ: ยังไม่เปิดคาบ";
-  statusEl.style.color = "#e5e7eb";
-  tokenBox.style.display = "none";
-  closeBtn.disabled = true;
-}
+  if (!sess) return fail("ไม่พบคาบ");
 
-function setMsg(text, color){
-  msgEl.textContent = text || "";
-  msgEl.style.color = color || "#e5e7eb";
+  const startTime = new Date(sess.data[6]);
+  const closeTime = new Date();
+
+  // ⏰ กำหนดเวลา
+  const LATE_MIN   = 10; // นาที
+  const ABSENT_MIN = 30;
+
+  const lateTime   = new Date(startTime.getTime() + LATE_MIN * 60000);
+  const absentTime = new Date(startTime.getTime() + ABSENT_MIN * 60000);
+
+  // ปิดคาบ
+  shSess.getRange(sess.row, 6).setValue("CLOSED");
+
+  // หานักเรียนที่เช็คชื่อแล้ว
+  const attRows = shAtt.getDataRange().getValues();
+  const checked = attRows.slice(1)
+    .filter(r => r[0] === sessionId)
+    .map(r => String(r[1]));
+
+  // preload STUDENTS
+  const stuRows = ss(SHEET_STUDENTS).getDataRange().getValues().slice(1);
+
+  stuRows.forEach(stu => {
+    const studentId = String(stu[0]);
+    if (checked.includes(studentId)) return;
+
+    let status = "OK";
+    if (closeTime >= absentTime) status = "ABSENT";
+    else if (closeTime >= lateTime) status = "LATE";
+
+    shAtt.appendRow([
+      sessionId,
+      studentId,
+      sess.data[3], // subject
+      sess.data[2], // token
+      sess.data[1], // teacher
+      status,
+      closeTime,
+      sess.data[4]  // room
+    ]);
+  });
+
+  return ok({ closed: true });
 }
