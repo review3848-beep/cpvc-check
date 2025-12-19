@@ -1,138 +1,126 @@
-// js/teacher-session-detail.js
-import { callApi } from "./api.js";
+// teacher-session-detail.js
+import { callApi } from "../js/api.js";
+
+/* ================= PARAM ================= */
+const params = new URLSearchParams(window.location.search);
+const sessionId = params.get("id");
 
 /* ================= DOM ================= */
-const teacherNameEl  = document.getElementById("teacherName");
-const teacherEmailEl = document.getElementById("teacherEmail");
+const navTokenEl      = document.getElementById("navToken");
+const teacherNameEl   = document.getElementById("teacherName");
+const teacherEmailEl  = document.getElementById("teacherEmail");
 
-const navTokenEl = document.getElementById("navToken");
+const subjEl          = document.getElementById("sessSubject");
+const roomEl          = document.getElementById("sessRoom");
+const statusEl        = document.getElementById("sessStatus");
+const startTimeEl     = document.getElementById("sessStartTime");
 
-const subjectEl   = document.getElementById("sessSubject");
-const roomEl      = document.getElementById("sessRoom");
-const statusEl    = document.getElementById("sessStatus");
-const startTimeEl = document.getElementById("sessStartTime");
+const sumTotalEl      = document.getElementById("sumTotal");
+const sumOkEl         = document.getElementById("sumOk");
+const sumLateEl       = document.getElementById("sumLate");
+const sumAbsentEl     = document.getElementById("sumAbsent");
 
-const sumTotalEl  = document.getElementById("sumTotal");
-const sumOkEl     = document.getElementById("sumOk");
-const sumLateEl   = document.getElementById("sumLate");
-const sumAbsentEl = document.getElementById("sumAbsent");
-
-const tableBody = document.getElementById("attTable");
-const msgEl     = document.getElementById("msg");
+const tableBody       = document.getElementById("attTable");
+const msgEl           = document.getElementById("msg");
 
 /* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", init);
 
-async function init(){
+async function init() {
   const teacher = getTeacherSession();
-  if (!teacher){
+  if (!teacher) {
     location.href = "login.html";
     return;
   }
 
-  teacherNameEl.textContent  = teacher.name || "-";
+  teacherNameEl.textContent  = teacher.name  || "-";
   teacherEmailEl.textContent = teacher.email || "-";
 
-  const sessionId = getSessionIdFromURL();
-  if (!sessionId){
-    setMsg("❌ ไม่พบ sessionId", "#f87171");
+  if (!sessionId) {
+    msgEl.textContent = "❌ ไม่พบ sessionId";
+    msgEl.style.color = "#f87171";
+    tableBody.innerHTML =
+      `<tr><td colspan="4" class="empty">ไม่สามารถแสดงข้อมูลได้</td></tr>`;
     return;
   }
 
-  await loadSessionDetail(sessionId);
+  await loadSessionDetail();
 }
 
 /* ================= SESSION ================= */
-function getTeacherSession(){
-  try{
+function getTeacherSession() {
+  try {
     return JSON.parse(localStorage.getItem("cpvc_teacher"));
-  }catch(e){
+  } catch {
     return null;
   }
 }
 
-/* ================= URL ================= */
-function getSessionIdFromURL(){
-  const p = new URLSearchParams(location.search);
-  return p.get("sessionId");
-}
-
-/* ================= LOAD ================= */
-async function loadSessionDetail(sessionId){
-  setMsg("");
+/* ================= LOAD DETAIL ================= */
+async function loadSessionDetail() {
   tableBody.innerHTML =
     `<tr><td colspan="4" class="empty">กำลังโหลดข้อมูล...</td></tr>`;
 
-  try{
-    const res = await callApi("teacherGetSessionDetail", { sessionId });
+  const res = await callApi("teacherGetSessionDetail", { sessionId });
 
-    if (!res || !res.success){
-      throw new Error(res?.message || "โหลดข้อมูลคาบไม่สำเร็จ");
-    }
-
-    renderSummary(res.session, res.stats);
-    renderTable(res.records || []);
-
-  }catch(err){
-    tableBody.innerHTML =
-      `<tr><td colspan="4" class="empty" style="color:#f87171;">${err.message}</td></tr>`;
-    setMsg("❌ " + err.message, "#f87171");
-  }
-}
-
-/* ================= RENDER ================= */
-function renderSummary(session, stats){
-  subjectEl.textContent   = session.subject || "-";
-  roomEl.textContent      = session.room || "-";
-  statusEl.textContent    = session.status || "-";
-  startTimeEl.textContent = fmtTime(session.startTime);
-  navTokenEl.textContent  = session.token || "-";
-
-  sumTotalEl.textContent  = stats.total || 0;
-  sumOkEl.textContent     = stats.ok || 0;
-  sumLateEl.textContent   = stats.late || 0;
-  sumAbsentEl.textContent = stats.absent || 0;
-}
-
-function renderTable(rows){
-  tableBody.innerHTML = "";
-
-  if (!rows.length){
-    tableBody.innerHTML =
-      `<tr><td colspan="4" class="empty">ไม่มีข้อมูลการเช็คชื่อ</td></tr>`;
+  if (!res.success) {
+    msgEl.textContent = res.message || "ไม่สามารถโหลดข้อมูลคาบเรียนได้";
+    msgEl.style.color = "#f87171";
     return;
   }
 
-  rows.forEach(r=>{
+  const s = res.session;
+
+  /* header / summary */
+  navTokenEl.textContent = s.token || "-";
+
+  subjEl.textContent      = s.subject || "-";
+  roomEl.textContent      = s.room || "-";
+  statusEl.textContent    = s.status || "-";
+  startTimeEl.textContent = formatDate(s.startTime);
+
+  /* summary counts */
+  sumTotalEl.textContent  = res.stats.total ?? 0;
+  sumOkEl.textContent     = res.stats.ok ?? 0;
+  sumLateEl.textContent   = res.stats.late ?? 0;
+  sumAbsentEl.textContent = res.stats.absent ?? 0;
+
+  renderTable(res.records || []);
+}
+
+/* ================= TABLE ================= */
+function renderTable(records) {
+  tableBody.innerHTML = "";
+
+  if (records.length === 0) {
+    tableBody.innerHTML =
+      `<tr><td colspan="4" class="empty">ยังไม่มีนักเรียนเช็คชื่อ</td></tr>`;
+    return;
+  }
+
+  records.forEach(r => {
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
-      <td>${r.studentId}</td>
-      <td>${r.name || "-"}</td>
-      <td>${fmtTime(r.time)}</td>
+      <td>${r.studentId || "-"}</td>
+      <td>${r.studentName || "-"}</td>
+      <td>${formatDate(r.time)}</td>
       <td class="${statusClass(r.status)}">${r.status}</td>
     `;
+
     tableBody.appendChild(tr);
   });
 }
 
 /* ================= HELPERS ================= */
-function fmtTime(ts){
+function formatDate(ts) {
   if (!ts) return "-";
-  const d = new Date(ts);
-  return d.toLocaleString("th-TH", {
-    dateStyle: "short",
-    timeStyle: "short"
-  });
+  return new Date(ts).toLocaleString("th-TH");
 }
 
-function statusClass(s){
-  if (s === "OK") return "status-ok";
-  if (s === "LATE") return "status-late";
-  if (s === "ABSENT") return "status-absent";
+function statusClass(status) {
+  if (status === "OK") return "status-ok";
+  if (status === "LATE") return "status-late";
+  if (status === "ABSENT") return "status-absent";
   return "";
-}
-
-function setMsg(text, color){
-  msgEl.textContent = text || "";
-  msgEl.style.color = color || "#e5e7eb";
 }

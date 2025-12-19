@@ -1,22 +1,28 @@
-// teacher-dashboard.js (REALTIME)
+// teacher-open-session.js
 import { callApi } from "../js/api.js";
 
-/* ================= CONFIG ================= */
-const REFRESH_INTERVAL = 5000; // 5 วิ (กำลังดี ไม่ถี่ ไม่หน่วง)
+/* ================= STATE ================= */
+let currentSession = null;
 
 /* ================= DOM ================= */
-const nameEl   = document.getElementById("teacherName");
-const emailEl  = document.getElementById("teacherEmail");
+const teacherNameEl   = document.getElementById("teacherName");
 
-const statTotalEl  = document.getElementById("statTotalSessions");
-const statOpenEl   = document.getElementById("statOpenSessions");
-const statAttendEl = document.getElementById("statTotalAttendance");
+const subjectInput   = document.getElementById("subjectCode");
+const roomInput      = document.getElementById("room");
 
-const tableBody = document.getElementById("recentSessionsBody");
+const openBtn        = document.getElementById("openSessionBtn");
+const closeBtn       = document.getElementById("closeSessionBtn");
 
-/* ================= STATE ================= */
-let lastSnapshot = null;
-let refreshTimer = null;
+const statusEl       = document.getElementById("sessionStatus");
+const tokenBox       = document.getElementById("tokenBox");
+const tokenEl        = document.getElementById("token");
+const msgEl          = document.getElementById("msg");
+
+/* modal */
+const closeModal     = document.getElementById("closeModal");
+const cancelCloseBtn = document.getElementById("cancelClose");
+const confirmCloseBtn= document.getElementById("confirmClose");
+const modalSummary   = document.getElementById("modalSummary");
 
 /* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", init);
@@ -28,14 +34,14 @@ async function init(){
     return;
   }
 
-  nameEl.textContent  = teacher.name  || "-";
-  emailEl.textContent = teacher.email || "-";
+  teacherNameEl.textContent = teacher.name || "-";
 
-  await loadDashboard(true);
+  openBtn.addEventListener("click", openSession);
+  closeBtn.addEventListener("click", showCloseModal);
+  cancelCloseBtn.addEventListener("click", hideCloseModal);
+  confirmCloseBtn.addEventListener("click", closeSession);
 
-  refreshTimer = setInterval(() => {
-    loadDashboard(false);
-  }, REFRESH_INTERVAL);
+  await loadCurrentSession();
 }
 
 /* ================= SESSION ================= */
@@ -47,71 +53,99 @@ function getTeacherSession(){
   }
 }
 
-/* ================= LOAD ================= */
-async function loadDashboard(force){
-  const res = await callApi("teacherGetDashboard", {});
-  if(!res.success) return;
-
-  const snapshot = JSON.stringify(res);
-
-  // ถ้าไม่เปลี่ยน ไม่ต้อง render ใหม่ (กันกระพริบ)
-  if(!force && snapshot === lastSnapshot) return;
-  lastSnapshot = snapshot;
-
-  statTotalEl.textContent  = res.stats.totalSessions ?? 0;
-  statOpenEl.textContent   = res.stats.openSessions ?? 0;
-  statAttendEl.textContent = res.stats.totalAttendance ?? 0;
-
-  renderTable(res.sessions || []);
+/* ================= LOAD CURRENT ================= */
+async function loadCurrentSession(){
+  const res = await callApi("teacherGetCurrentSession", {});
+  if(res.success && res.session){
+    currentSession = res.session;
+    renderSession();
+  }
 }
 
-/* ================= TABLE ================= */
-function renderTable(sessions){
-  tableBody.innerHTML = "";
+/* ================= OPEN ================= */
+async function openSession(){
+  const subject = subjectInput.value.trim();
+  const room    = roomInput.value.trim();
 
-  if(sessions.length === 0){
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="5" style="text-align:center;opacity:.6">
-          ยังไม่มีข้อมูลคาบเรียน
-        </td>
-      </tr>
-    `;
+  msgEl.textContent = "";
+
+  if(!subject || !room){
+    msgEl.textContent = "⚠️ กรุณากรอกวิชาและห้องเรียน";
+    msgEl.style.color = "#fbbf24";
     return;
   }
 
-  sessions.forEach(s => {
-    const tr = document.createElement("tr");
+  openBtn.disabled = true;
+  openBtn.textContent = "กำลังเปิดคาบ...";
 
-    tr.innerHTML = `
-      <td>${s.subject || "-"}</td>
-      <td>${s.token || "-"}</td>
-      <td>${formatDate(s.startTime)}</td>
-      <td>${renderStatus(s.status)}</td>
-      <td>
-        <button class="btn small" onclick="goDetail('${s.id}')">
-          ดูรายละเอียด
-        </button>
-      </td>
+  const res = await callApi("teacherOpenSession", { subject, room });
+
+  openBtn.disabled = false;
+  openBtn.textContent = "เปิดคาบเรียน";
+
+  if(res.success){
+    currentSession = res.session;
+    renderSession();
+  }else{
+    msgEl.textContent = res.message || "เปิดคาบไม่สำเร็จ";
+    msgEl.style.color = "#f87171";
+  }
+}
+
+/* ================= CLOSE ================= */
+function showCloseModal(){
+  closeModal.classList.add("show");
+}
+
+function hideCloseModal(){
+  closeModal.classList.remove("show");
+}
+
+async function closeSession(){
+  if(!currentSession) return;
+
+  confirmCloseBtn.disabled = true;
+  confirmCloseBtn.textContent = "กำลังปิดคาบ...";
+
+  const res = await callApi("teacherCloseSession", {
+    sessionId: currentSession.id
+  });
+
+  confirmCloseBtn.disabled = false;
+  confirmCloseBtn.textContent = "ปิดคาบ";
+
+  if(res.success){
+    currentSession.status = "CLOSED";
+
+    modalSummary.innerHTML = `
+      ✅ มาเรียน: <b>${res.summary.ok}</b><br>
+      ⏰ สาย: <b>${res.summary.late}</b><br>
+      ❌ ขาด: <b>${res.summary.absent}</b>
     `;
 
-    tableBody.appendChild(tr);
-  });
+    setTimeout(() => {
+      hideCloseModal();
+      renderSession();
+    }, 1200);
+  }
 }
 
-/* ================= HELPERS ================= */
-function renderStatus(status){
-  if(status === "OPEN")   return `<span style="color:#22c55e">เปิดอยู่</span>`;
-  if(status === "CLOSED") return `<span style="color:#f87171">ปิดแล้ว</span>`;
-  return "-";
-}
+/* ================= RENDER ================= */
+function renderSession(){
+  if(!currentSession) return;
 
-function formatDate(ts){
-  if(!ts) return "-";
-  return new Date(ts).toLocaleString("th-TH");
-}
+  if(currentSession.status === "OPEN"){
+    statusEl.textContent = "สถานะคาบ: เปิดอยู่";
+    statusEl.style.color = "#22c55e";
 
-/* ================= ACTIONS ================= */
-window.goDetail = function(id){
-  location.href = `session-detail.html?id=${id}`;
-};
+    tokenBox.style.display = "block";
+    tokenEl.textContent = currentSession.token;
+
+    closeBtn.disabled = false;
+  }else{
+    statusEl.textContent = "สถานะคาบ: ปิดแล้ว";
+    statusEl.style.color = "#f87171";
+
+    closeBtn.disabled = true;
+  }
+}
