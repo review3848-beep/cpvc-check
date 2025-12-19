@@ -1,4 +1,4 @@
-// teacher-dashboard.js (REALTIME - CLEAN)
+// teacher-dashboard.js
 import { callApi } from "../js/api.js";
 
 /* ================= CONFIG ================= */
@@ -8,21 +8,39 @@ const REFRESH_INTERVAL = 5000;
 const nameEl   = document.getElementById("teacherName");
 const emailEl  = document.getElementById("teacherEmail");
 
-const statTotalEl  = document.getElementById("statTotalSessions");
-const statOpenEl   = document.getElementById("statOpenSessions");
-const statAttendEl = document.getElementById("statTotalAttendance");
+const totalSessionsEl   = document.getElementById("totalSessions");
+const openSessionsEl    = document.getElementById("openSessions");
+const totalAttendEl     = document.getElementById("totalAttendance");
 
-const tableBody = document.getElementById("recentSessionsBody");
+const exportAllBtn      = document.getElementById("exportAllBtn");
+
+const subjectFilterEl   = document.getElementById("subjectFilter");
+const subjectChipsEl    = document.getElementById("subjectSummaryChips");
+const tableBody         = document.getElementById("sessionTable");
+
+const msgEl             = document.getElementById("msg");
+
+/* modal */
+const modalBackdrop     = document.getElementById("sessionModal");
+const modalCloseBtn     = document.getElementById("modalCloseBtn");
+const modalTitleEl      = document.getElementById("modalTitle");
+const modalSubtitleEl   = document.getElementById("modalSubtitle");
+const modalStatsEl      = document.getElementById("modalStats");
+const modalTableBody    = document.getElementById("modalTableBody");
+const modalFooterInfo   = document.getElementById("modalFooterInfo");
+const exportSessionBtn  = document.getElementById("exportSessionBtn");
 
 /* ================= STATE ================= */
+let teacher = null;
+let allSessions = [];
 let lastSnapshot = null;
 
 /* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", init);
 
-async function init(){
-  const teacher = getTeacherSession();
-  if(!teacher){
+async function init() {
+  teacher = getTeacherSession();
+  if (!teacher) {
     location.href = "login.html";
     return;
   }
@@ -30,81 +48,170 @@ async function init(){
   nameEl.textContent  = teacher.name  || "-";
   emailEl.textContent = teacher.email || "-";
 
-  await loadDashboard(true);
+  exportAllBtn.addEventListener("click", exportAllCSV);
+  subjectFilterEl.addEventListener("change", renderTable);
+  modalCloseBtn.addEventListener("click", closeModal);
 
+  await loadDashboard(true);
   setInterval(() => loadDashboard(false), REFRESH_INTERVAL);
 }
 
 /* ================= SESSION ================= */
-function getTeacherSession(){
-  try{
+function getTeacherSession() {
+  try {
     return JSON.parse(localStorage.getItem("cpvc_teacher"));
-  }catch{
+  } catch {
     return null;
   }
 }
 
-/* ================= LOAD ================= */
-async function loadDashboard(force){
+/* ================= LOAD DASHBOARD ================= */
+async function loadDashboard(force) {
   const res = await callApi("teacherGetDashboard", {});
-  if(!res.success) return;
+  if (!res.success) return;
 
   const snapshot = JSON.stringify(res);
-  if(!force && snapshot === lastSnapshot) return;
+  if (!force && snapshot === lastSnapshot) return;
   lastSnapshot = snapshot;
 
-  statTotalEl.textContent  = res.stats.totalSessions ?? 0;
-  statOpenEl.textContent   = res.stats.openSessions ?? 0;
-  statAttendEl.textContent = res.stats.totalAttendance ?? 0;
+  totalSessionsEl.textContent = res.stats.totalSessions ?? 0;
+  openSessionsEl.textContent  = res.stats.openSessions ?? 0;
+  totalAttendEl.textContent   = res.stats.totalAttendance ?? 0;
 
-  renderTable(res.sessions || []);
+  allSessions = res.sessions || [];
+
+  buildSubjectFilter(allSessions);
+  renderSubjectChips(allSessions);
+  renderTable();
+}
+
+/* ================= SUBJECT FILTER ================= */
+function buildSubjectFilter(sessions) {
+  const subjects = [...new Set(sessions.map(s => s.subject).filter(Boolean))];
+  subjectFilterEl.innerHTML = `<option value="">ทั้งหมด</option>`;
+  subjects.forEach(sub => {
+    const opt = document.createElement("option");
+    opt.value = sub;
+    opt.textContent = sub;
+    subjectFilterEl.appendChild(opt);
+  });
+}
+
+function renderSubjectChips(sessions) {
+  subjectChipsEl.innerHTML = "";
+  const map = {};
+  sessions.forEach(s => {
+    if (!map[s.subject]) map[s.subject] = 0;
+    map[s.subject]++;
+  });
+
+  Object.entries(map).forEach(([sub, count]) => {
+    const div = document.createElement("div");
+    div.className = "chip";
+    div.innerHTML = `${sub} <span class="highlight">${count}</span>`;
+    subjectChipsEl.appendChild(div);
+  });
 }
 
 /* ================= TABLE ================= */
-function renderTable(sessions){
+function renderTable() {
+  const filter = subjectFilterEl.value;
+  const sessions = filter
+    ? allSessions.filter(s => s.subject === filter)
+    : allSessions;
+
   tableBody.innerHTML = "";
 
-  if(sessions.length === 0){
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="5" style="text-align:center;opacity:.6">
-          ยังไม่มีข้อมูลคาบเรียน
-        </td>
-      </tr>
-    `;
+  if (sessions.length === 0) {
+    tableBody.innerHTML =
+      `<tr><td colspan="5" class="empty">ยังไม่มีข้อมูลคาบ</td></tr>`;
     return;
   }
 
   sessions.forEach(s => {
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
-      <td>${s.subject || "-"}</td>
+      <td>
+        <div class="session-subject">${s.subject || "-"}</div>
+        <div class="session-room">${s.room || "-"}</div>
+      </td>
       <td>${s.token || "-"}</td>
       <td>${formatDate(s.startTime)}</td>
       <td>${renderStatus(s.status)}</td>
       <td>
-        <button class="btn small" onclick="goDetail('${s.id}')">
+        <button class="btn-small" onclick="openSessionDetail('${s.id}')">
           ดูรายละเอียด
         </button>
       </td>
     `;
+
     tableBody.appendChild(tr);
   });
 }
 
-/* ================= HELPERS ================= */
-function renderStatus(status){
-  if(status === "OPEN")   return `<span style="color:#22c55e">เปิดอยู่</span>`;
-  if(status === "CLOSED") return `<span style="color:#f87171">ปิดแล้ว</span>`;
+function renderStatus(status) {
+  if (status === "OPEN")
+    return `<span class="status-pill status-open">OPEN</span>`;
+  if (status === "CLOSED")
+    return `<span class="status-pill status-closed">CLOSED</span>`;
   return "-";
 }
 
-function formatDate(ts){
-  if(!ts) return "-";
-  return new Date(ts).toLocaleString("th-TH");
+/* ================= MODAL ================= */
+window.openSessionDetail = async function (sessionId) {
+  modalBackdrop.classList.add("open");
+  modalTableBody.innerHTML =
+    `<tr><td colspan="4" style="text-align:center;color:#9ca3af;">กำลังโหลด...</td></tr>`;
+
+  const res = await callApi("teacherGetSessionDetail", { sessionId });
+  if (!res.success) return;
+
+  modalTitleEl.textContent = res.session.subject;
+  modalSubtitleEl.textContent =
+    `${res.session.room} • TOKEN ${res.session.token}`;
+
+  modalStatsEl.innerHTML = `
+    <span class="badge ok">OK ${res.stats.ok}</span>
+    <span class="badge late">LATE ${res.stats.late}</span>
+    <span class="badge absent">ABSENT ${res.stats.absent}</span>
+  `;
+
+  modalFooterInfo.innerHTML =
+    `นักเรียนทั้งหมด ${res.stats.total} คน`;
+
+  modalTableBody.innerHTML = "";
+  res.records.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.studentId}</td>
+      <td>${r.studentName}</td>
+      <td>${formatDate(r.time)}</td>
+      <td>${r.status}</td>
+    `;
+    modalTableBody.appendChild(tr);
+  });
+
+  exportSessionBtn.onclick = () =>
+    exportSessionCSV(sessionId);
+};
+
+function closeModal() {
+  modalBackdrop.classList.remove("open");
 }
 
-/* ================= ACTION ================= */
-window.goDetail = function(id){
-  location.href = `session-detail.html?id=${id}`;
-};
+/* ================= EXPORT ================= */
+function exportAllCSV() {
+  window.location.href = `${API_BASE}?action=teacherExportAll&token=${teacher.token}`;
+}
+
+function exportSessionCSV(sessionId) {
+  window.location.href =
+    `${API_BASE}?action=teacherExportSession&sessionId=${sessionId}`;
+}
+
+/* ================= HELPERS ================= */
+function formatDate(ts) {
+  if (!ts) return "-";
+  return new Date(ts).toLocaleString("th-TH");
+}
