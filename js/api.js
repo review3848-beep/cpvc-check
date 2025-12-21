@@ -1,6 +1,6 @@
 // js/api.js
 export const API_BASE =
-  "https://script.google.com/macros/s/AKfycbwWi-So50oa7NRnbc-IWZVflIOFqcG247ZC_HEdH-nAe3ESivDDHQk80otWR_wEQAHX4Q/exec";
+  "https://script.google.com/macros/s/AKfycbyMW1Rlfp4ewVMO-L1-k8Hes0VQYAbD8XuAO1HrMQ747bFOfhbCBQ0uiMQ8k3-9Pe6G8A/exec";
 
 export async function callApi(action, params = {}) {
   const query = new URLSearchParams({
