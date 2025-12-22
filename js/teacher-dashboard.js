@@ -139,11 +139,6 @@ function renderTable() {
       <td>${s.token || "-"}</td>
       <td>${formatDate(s.startTime)}</td>
       <td>${renderStatus(s.status)}</td>
-      <td>
-        <button class="btn-small" onclick="openSessionDetail('${s.id}')">
-          ดูรายละเอียด
-        </button>
-      </td>
     `;
 
     tableBody.appendChild(tr);
