@@ -607,3 +607,20 @@ table.recent-table td {
   font-weight: 600;
 }
 
+.btn-close {
+  padding: .35rem .9rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: .8rem;
+  font-weight: 600;
+  background: linear-gradient(135deg,#ef4444,#dc2626);
+  color: #fff;
+}
+
+.btn-close:hover {
+  opacity: .9;
+  transform: translateY(-1px);
+}
+
+
