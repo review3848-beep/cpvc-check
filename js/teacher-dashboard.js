@@ -117,29 +117,39 @@ function renderSubjectChips(sessions) {
 function renderTable(sessions = []) {
   tableBody.innerHTML = "";
 
+  if (!sessions.length) {
+    tableBody.innerHTML =
+      `<tr><td colspan="5" class="empty">ยังไม่มีข้อมูลคาบเรียน</td></tr>`;
+    return;
+  }
+
   sessions.forEach(s => {
     const tr = document.createElement("tr");
 
-tr.innerHTML = `
-  <td>
-    <div class="session-subject">${s.subject || "-"}</div>
-    <div class="session-room">${s.room || "-"}</div>
-  </td>
-  <td>${s.token || "-"}</td>
-  <td>${formatDate(s.startTime)}</td>
-  <td>${renderStatus(s.status)}</td>
-  <td>
-    ${
-      s.status === "OPEN"
-        ? `<button class="btn-close"
-             onclick="closeSession('${s.sessionId}')">
-             ปิดคาบ
-           </button>`
-        : "-"
-    }
-  </td>
-`;
+    tr.innerHTML = `
+      <td>
+        <div class="session-subject">${s.subject || "-"}</div>
+        <div class="session-room">${s.room || "-"}</div>
+      </td>
+      <td>${s.token || "-"}</td>
+      <td>${formatDate(s.startTime)}</td>
+      <td>${renderStatus(s.status)}</td>
+      <td>
+        ${
+          s.status === "OPEN"
+            ? `<button class="btn-close"
+                 onclick="closeSession('${s.sessionId}')">
+                 ปิดคาบ
+               </button>`
+            : "-"
+        }
+      </td>
+    `;
 
+    // ✅ จุดนี้แหละที่ขาด
+    tableBody.appendChild(tr);
+  });
+}
 
 
 function renderStatus(status) {
