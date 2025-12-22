@@ -121,20 +121,25 @@ function renderTable(sessions = []) {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>
-        <div class="session-subject">${s.subject || "-"}</div>
-        <div class="session-room">${s.room || "-"}</div>
-      </td>
-      <td>${s.token || "-"}</td>
-      <td>${formatDate(s.startTime)}</td>
-      <td>${renderStatus(s.status)}</td>
-    `;
+  <td>
+    <div class="session-subject">${s.subject || "-"}</div>
+    <div class="session-room">${s.room || "-"}</div>
+  </td>
+  <td>${s.token || "-"}</td>
+  <td>${formatDate(s.startTime)}</td>
+  <td>${renderStatus(s.status)}</td>
+  <td>
+    ${
+      s.status === "OPEN"
+        ? `<button class="btn-close"
+             onclick="closeSession('${s.sessionId}')">
+             ปิดคาบ
+           </button>`
+        : "-"
+    }
+  </td>
+`;
 
-    tableBody.appendChild(tr);
-  });
-}
-
-    // ✅ ปิด renderTable
 
 
 function renderStatus(status) {
