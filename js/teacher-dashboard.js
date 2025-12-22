@@ -1,6 +1,47 @@
 // teacher-dashboard.js
 import { callApi } from "../js/api.js";
 
+const modal = document.getElementById("closeModal");
+const btnConfirm = document.getElementById("btnConfirm");
+const btnCancel = document.getElementById("btnCancel");
+const modalText = document.getElementById("closeModalText");
+
+let currentSessionId = null;
+let currentButton = null;
+
+function openCloseModal(sessionId, btn) {
+  currentSessionId = sessionId;
+  currentButton = btn;
+  modalText.textContent = "ยืนยันการปิดคาบนี้?";
+  modal.classList.remove("hidden");
+}
+
+btnCancel.onclick = () => {
+  modal.classList.add("hidden");
+};
+
+btnConfirm.onclick = async () => {
+  btnConfirm.classList.add("loading");
+  btnConfirm.textContent = "กำลังปิดคาบ...";
+
+  const res = await callApi("teacherCloseSession", {
+    sessionId: currentSessionId
+  });
+
+  btnConfirm.classList.remove("loading");
+  btnConfirm.textContent = "ยืนยันปิดคาบ";
+  modal.classList.add("hidden");
+
+  if (!res.success) {
+    alert(res.message || "ปิดคาบไม่สำเร็จ");
+    return;
+  }
+
+  // โหลดใหม่ + ได้สรุป OK/LATE/ABSENT อัตโนมัติ
+  await loadDashboard(true);
+};
+
+
 /* ================= CONFIG ================= */
 const REFRESH_INTERVAL = 5000;
 
@@ -137,19 +178,25 @@ function renderTable(sessions = []) {
       <td>
         ${
           s.status === "OPEN"
-            ? `<button class="btn-close"
-                 onclick="closeSession('${s.sessionId}')">
-                 ปิดคาบ
-               </button>`
+            ? `<button class="btn-close" data-id="${s.sessionId}">ปิดคาบ</button>`
             : "-"
         }
       </td>
     `;
 
-    // ✅ จุดนี้แหละที่ขาด
     tableBody.appendChild(tr);
   });
+
+  bindCloseButtons();
 }
+function bindCloseButtons() {
+  document.querySelectorAll(".btn-close").forEach(btn => {
+    btn.addEventListener("click", () => {
+      openCloseModal(btn.dataset.id, btn);
+    });
+  });
+}
+
 
 
 function renderStatus(status) {
