@@ -219,8 +219,18 @@ function formatDate(ts) {
 }
 
 async function closeSession(sessionId) {
-  alert("กดปิดคาบ: " + sessionId);
+  if (!confirm("ยืนยันปิดคาบนี้?")) return;
+
+  const res = await callApi("teacherCloseSession", { sessionId });
+
+  if (!res.success) {
+    alert(res.message || "ปิดคาบไม่สำเร็จ");
+    return;
+  }
+
+  await loadDashboard(true); // รีเฟรชตาราง
 }
+
 
 async function exportSession(sessionId) {
   alert("Export คาบ: " + sessionId);
