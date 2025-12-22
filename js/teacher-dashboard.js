@@ -131,19 +131,22 @@ function renderTable() {
   sessions.forEach(s => {
     const tr = document.createElement("tr");
 
-    tr.innerHTML = `
-      <td>
-        <div class="session-subject">${s.subject || "-"}</div>
-        <div class="session-room">${s.room || "-"}</div>
-      </td>
-      <td>${s.token || "-"}</td>
-      <td>${formatDate(s.startTime)}</td>
-      <td>${renderStatus(s.status)}</td>
-    `;
+    const isOpen = s.status === "OPEN";
 
+tr.innerHTML = `
+  <td>
+    <div class="session-subject">${s.subject || "-"}</div>
+    <div class="session-room">${s.room || "-"}</div>
+  </td>
+  <td>${s.token || "-"}</td>
+  <td>${formatDate(s.startTime)}</td>
+  <td>${renderStatus(s.status)}</td>
+  <td>
+    ${isOpen ? `<button onclick="closeSession('${s.sessionId}')">ปิดคาบ</button>` : ""}
+    <button onclick="exportSession('${s.sessionId}')">Export</button>
+  </td>
+`;
     tableBody.appendChild(tr);
-  });
-}
 
 function renderStatus(status) {
   if (status === "OPEN")
@@ -209,4 +212,12 @@ function exportSessionCSV(sessionId) {
 function formatDate(ts) {
   if (!ts) return "-";
   return new Date(ts).toLocaleString("th-TH");
+}
+
+async function closeSession(sessionId) {
+  alert("กดปิดคาบ: " + sessionId);
+}
+
+async function exportSession(sessionId) {
+  alert("Export คาบ: " + sessionId);
 }
