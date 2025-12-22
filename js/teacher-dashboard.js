@@ -114,7 +114,9 @@ function renderSubjectChips(sessions) {
 }
 
 /* ================= TABLE ================= */
-function renderTable() {
+function renderTable(sessions) {
+  tableBody.innerHTML = "";
+
   sessions.forEach(s => {
     const tr = document.createElement("tr");
 
@@ -126,17 +128,12 @@ function renderTable() {
       <td>${s.token || "-"}</td>
       <td>${formatDate(s.startTime)}</td>
       <td>${renderStatus(s.status)}</td>
-      <td style="display:flex;gap:.4rem;">
-        ${s.status === "OPEN"
-          ? `<button class="btn-small" onclick="closeSession('${s.sessionId}')">ปิดคาบ</button>`
-          : ""}
-        <button class="btn-outline" onclick="exportSession('${s.sessionId}')">Export</button>
-      </td>
     `;
 
     tableBody.appendChild(tr);
-  }); // ✅ ปิด forEach
-}     // ✅ ปิด renderTable
+  });
+}
+    // ✅ ปิด renderTable
 
 
 function renderStatus(status) {
