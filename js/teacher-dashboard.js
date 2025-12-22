@@ -270,17 +270,36 @@ async function exportSession(sessionId) {
 }
 
 async function closeSession(sessionId) {
-  if (!confirm("ยืนยันปิดคาบนี้?")) return;
+  const modal = document.getElementById("closeModal");
+  const btnConfirm = document.getElementById("btnConfirm");
+  const btnCancel  = document.getElementById("btnCancel");
 
-  const res = await callApi("teacherCloseSession", { sessionId });
+  // เก็บ sessionId ไว้ใช้
+  modal.dataset.sessionId = sessionId;
 
-  if (!res.success) {
-    alert(res.message || "ปิดคาบไม่สำเร็จ");
-    return;
-  }
+  modal.classList.remove("hidden");
 
-  await loadDashboard(true);
+  btnCancel.onclick = () => {
+    modal.classList.add("hidden");
+  };
+
+  btnConfirm.onclick = async () => {
+    btnConfirm.disabled = true;
+    btnConfirm.textContent = "กำลังปิดคาบ...";
+
+    const res = await callApi("teacherCloseSession", {
+      sessionId: modal.dataset.sessionId
+    });
+
+    btnConfirm.disabled = false;
+    btnConfirm.textContent = "ยืนยันปิดคาบ";
+    modal.classList.add("hidden");
+
+    if (!res.success) {
+      alert(res.message || "ปิดคาบไม่สำเร็จ");
+      return;
+    }
+
+    await loadDashboard(true);
+  };
 }
-
-// ⭐ เพิ่มบรรทัดนี้
-window.closeSession = closeSession;

@@ -463,16 +463,18 @@
 
 <script type="module" src="../js/teacher-dashboard.js"></script>
 <div id="closeModal" class="modal hidden">
-  <div class="modal-card">
-    <h3>ปิดคาบเรียน</h3>
-    <p id="closeModalText">ยืนยันการปิดคาบ?</p>
+  <div class="modal-card danger">
+    <h2>⚠️ ปิดคาบเรียน</h2>
+    <p>คุณต้องการปิดคาบนี้ใช่หรือไม่<br>
+    นักเรียนจะไม่สามารถเช็คชื่อได้อีก</p>
 
     <div class="modal-actions">
-      <button id="btnCancel" class="btn-secondary">ยกเลิก</button>
-      <button id="btnConfirm" class="btn-danger">ยืนยันปิดคาบ</button>
+      <button id="btnCancel" class="btn ghost">ยกเลิก</button>
+      <button id="btnConfirm" class="btn danger">ยืนยันปิดคาบ</button>
     </div>
   </div>
 </div>
+
 
 </body>
 </html>
