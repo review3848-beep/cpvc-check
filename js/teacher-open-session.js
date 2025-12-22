@@ -39,14 +39,7 @@ async function init(){
   await loadCurrentSession();
 }
 
-/* ================= SESSION ================= */
-function getTeacherSession(){
-  try{
-    return JSON.parse(localStorage.getItem("cpvc_teacher"));
-  }catch{
-    return null;
-  }
-}
+
 
 /* ================= LOAD CURRENT ================= */
 async function loadCurrentSession(){
