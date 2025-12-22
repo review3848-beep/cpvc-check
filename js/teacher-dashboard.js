@@ -218,6 +218,10 @@ function formatDate(ts) {
   return new Date(ts).toLocaleString("th-TH");
 }
 
+async function exportSession(sessionId) {
+  alert("Export คาบ: " + sessionId);
+}
+
 async function closeSession(sessionId) {
   if (!confirm("ยืนยันปิดคาบนี้?")) return;
 
@@ -228,10 +232,8 @@ async function closeSession(sessionId) {
     return;
   }
 
-  await loadDashboard(true); // รีเฟรชตาราง
+  await loadDashboard(true);
 }
 
-
-async function exportSession(sessionId) {
-  alert("Export คาบ: " + sessionId);
-}
+// ⭐ เพิ่มบรรทัดนี้
+window.closeSession = closeSession;
