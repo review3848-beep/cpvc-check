@@ -1,28 +1,23 @@
-// teacher-open-session.js
-import { callApi } from "../js/api.js";
+import { callApi, getTeacherSession } from "./api.js";
 
-/* ================= STATE ================= */
-let currentSession = null;
-
-/* ================= DOM ================= */
+/* ===== DOM ===== */
 const teacherNameEl   = document.getElementById("teacherName");
 
-const subjectInput   = document.getElementById("subjectCode");
-const roomInput      = document.getElementById("room");
+const subjectInput    = document.getElementById("subjectCode");
+const roomInput       = document.getElementById("room");
 
-const openBtn        = document.getElementById("openSessionBtn");
-const closeBtn       = document.getElementById("closeSessionBtn");
+const openBtn         = document.getElementById("btnOpenSession");
+const closeBtn        = document.getElementById("closeSessionBtn");
 
-const statusEl       = document.getElementById("sessionStatus");
-const tokenBox       = document.getElementById("tokenBox");
-const tokenEl        = document.getElementById("token");
-const msgEl          = document.getElementById("msg");
+const statusEl        = document.getElementById("sessionStatus");
+const tokenBox        = document.getElementById("tokenBox");
+const tokenEl         = document.getElementById("token");
+const msgEl           = document.getElementById("msg");
 
 /* modal */
-const closeModal     = document.getElementById("closeModal");
-const cancelCloseBtn = document.getElementById("cancelClose");
-const confirmCloseBtn= document.getElementById("confirmClose");
-const modalSummary   = document.getElementById("modalSummary");
+const closeModal      = document.getElementById("closeModal");
+const cancelCloseBtn  = document.getElementById("cancelClose");
+const confirmCloseBtn = document.getElementById("confirmClose");
 
 /* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", init);
