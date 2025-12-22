@@ -139,7 +139,7 @@ tr.innerHTML = `
     }
   </td>
 `;
-    tableBody.appendChild(tr);
+
 
 
 function renderStatus(status) {
