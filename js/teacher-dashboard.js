@@ -82,7 +82,7 @@ async function loadDashboard(force) {
 
   buildSubjectFilter(allSessions);
   renderSubjectChips(allSessions);
-  renderTable();
+  renderTable(allSessions);
 }
 
 /* ================= SUBJECT FILTER ================= */
@@ -114,7 +114,7 @@ function renderSubjectChips(sessions) {
 }
 
 /* ================= TABLE ================= */
-function renderTable(sessions) {
+function renderTable(sessions = []) {
   tableBody.innerHTML = "";
 
   sessions.forEach(s => {
@@ -133,6 +133,7 @@ function renderTable(sessions) {
     tableBody.appendChild(tr);
   });
 }
+
     // ✅ ปิด renderTable
 
 
