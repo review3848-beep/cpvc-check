@@ -38,18 +38,6 @@ async function init(){
 
   await loadCurrentSession();
 }
-
-
-
-/* ================= LOAD CURRENT ================= */
-async function loadCurrentSession(){
-  const res = await callApi("teacherGetCurrentSession", {});
-  if(res.success && res.session){
-    currentSession = res.session;
-    renderSession();
-  }
-}
-
 /* ================= OPEN ================= */
 async function openSession(){
   const subject = subjectInput.value.trim();
