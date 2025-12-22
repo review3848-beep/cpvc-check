@@ -120,7 +120,7 @@ function renderTable(sessions = []) {
   sessions.forEach(s => {
     const tr = document.createElement("tr");
 
-    tr.innerHTML = `
+tr.innerHTML = `
   <td>
     <div class="session-subject">${s.subject || "-"}</div>
     <div class="session-room">${s.room || "-"}</div>
@@ -139,7 +139,7 @@ function renderTable(sessions = []) {
     }
   </td>
 `;
-
+    tableBody.appendChild(tr);
 
 
 function renderStatus(status) {
