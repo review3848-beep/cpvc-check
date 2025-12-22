@@ -115,38 +115,29 @@ function renderSubjectChips(sessions) {
 
 /* ================= TABLE ================= */
 function renderTable() {
-  const filter = subjectFilterEl.value;
-  const sessions = filter
-    ? allSessions.filter(s => s.subject === filter)
-    : allSessions;
-
-  tableBody.innerHTML = "";
-
-  if (sessions.length === 0) {
-    tableBody.innerHTML =
-      `<tr><td colspan="5" class="empty">ยังไม่มีข้อมูลคาบ</td></tr>`;
-    return;
-  }
-
   sessions.forEach(s => {
     const tr = document.createElement("tr");
 
-    const isOpen = s.status === "OPEN";
+    tr.innerHTML = `
+      <td>
+        <div class="session-subject">${s.subject || "-"}</div>
+        <div class="session-room">${s.room || "-"}</div>
+      </td>
+      <td>${s.token || "-"}</td>
+      <td>${formatDate(s.startTime)}</td>
+      <td>${renderStatus(s.status)}</td>
+      <td style="display:flex;gap:.4rem;">
+        ${s.status === "OPEN"
+          ? `<button class="btn-small" onclick="closeSession('${s.sessionId}')">ปิดคาบ</button>`
+          : ""}
+        <button class="btn-outline" onclick="exportSession('${s.sessionId}')">Export</button>
+      </td>
+    `;
 
-tr.innerHTML = `
-  <td>
-    <div class="session-subject">${s.subject || "-"}</div>
-    <div class="session-room">${s.room || "-"}</div>
-  </td>
-  <td>${s.token || "-"}</td>
-  <td>${formatDate(s.startTime)}</td>
-  <td>${renderStatus(s.status)}</td>
-  <td>
-    ${isOpen ? `<button onclick="closeSession('${s.sessionId}')">ปิดคาบ</button>` : ""}
-    <button onclick="exportSession('${s.sessionId}')">Export</button>
-  </td>
-`;
     tableBody.appendChild(tr);
+  }); // ✅ ปิด forEach
+}     // ✅ ปิด renderTable
+
 
 function renderStatus(status) {
   if (status === "OPEN")
