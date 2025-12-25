@@ -22,7 +22,7 @@ const confirmCloseBtn = document.getElementById("confirmClose");
 /* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", init);
 
-async function init(){
+async function init() {
   const teacher = getTeacherSession();
   if(!teacher){
     location.href = "login.html";
