@@ -1,30 +1,24 @@
-import { callApi, getTeacherSession } from "./api.js";
+// teacher-open-session.js
+import { callApi } from "../js/api.js";
 
-/* ===== DOM ===== */
-const teacherNameEl   = document.getElementById("teacherName");
+/* ================= DOM ================= */
+const subjectInput   = document.getElementById("subjectInput");
+const roomInput      = document.getElementById("roomInput");
 
-const subjectInput    = document.getElementById("subjectCode");
-const roomInput       = document.getElementById("room");
+const statusEl       = document.getElementById("sessionStatus");
+const tokenEl        = document.getElementById("tokenDisplay");
 
-const openBtn         = document.getElementById("btnOpenSession");
-const closeBtn        = document.getElementById("closeSessionBtn");
+const openBtn        = document.getElementById("openBtn");
+const closeBtn       = document.getElementById("closeBtn");
 
-const statusEl        = document.getElementById("sessionStatus");
-const tokenBox        = document.getElementById("tokenBox");
-const tokenEl         = document.getElementById("token");
-const msgEl           = document.getElementById("msg");
-
-/* modal */
-const closeModal      = document.getElementById("closeModal");
-const cancelCloseBtn  = document.getElementById("cancelClose");
-const confirmCloseBtn = document.getElementById("confirmClose");
+const teacherNameEl  = document.getElementById("teacherName");
 
 /* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", init);
 
 async function init() {
   const teacher = getTeacherSession();
-  if(!teacher){
+  if (!teacher) {
     location.href = "login.html";
     return;
   }
@@ -32,96 +26,100 @@ async function init() {
   teacherNameEl.textContent = teacher.name || "-";
 
   openBtn.addEventListener("click", openSession);
-  closeBtn.addEventListener("click", showCloseModal);
-  cancelCloseBtn.addEventListener("click", hideCloseModal);
-  confirmCloseBtn.addEventListener("click", closeSession);
+  closeBtn.addEventListener("click", closeSession);
 
   await loadCurrentSession();
 }
-/* ================= OPEN ================= */
-async function openSession(){
+
+/* ================= SESSION ================= */
+
+// ⭐ สำคัญ: ฟังก์ชันนี้ “เคยหาย” ตอนนี้มีแล้ว
+async function loadCurrentSession() {
+  try {
+    const res = await callApi("teacherGetCurrentSession", {});
+    if (!res || !res.active) {
+      setIdleUI();
+      return;
+    }
+
+    tokenEl.textContent  = res.token;
+    statusEl.textContent = "สถานะคาบ: กำลังเปิดเรียน";
+
+    openBtn.disabled  = true;
+    closeBtn.disabled = false;
+  } catch (err) {
+    console.warn("loadCurrentSession failed", err);
+    setIdleUI();
+  }
+}
+
+async function openSession() {
+  if (!subjectInput || !roomInput) {
+    alert("DOM not ready");
+    return;
+  }
+
   const subject = subjectInput.value.trim();
   const room    = roomInput.value.trim();
 
-  msgEl.textContent = "";
-
-  if(!subject || !room){
-    msgEl.textContent = "⚠️ กรุณากรอกวิชาและห้องเรียน";
-    msgEl.style.color = "#fbbf24";
+  if (!subject || !room) {
+    alert("กรุณากรอกข้อมูลให้ครบ");
     return;
   }
 
   openBtn.disabled = true;
   openBtn.textContent = "กำลังเปิดคาบ...";
 
-  const res = await callApi("teacherOpenSession", { subject, room });
+  try {
+    const res = await callApi("teacherOpenSession", {
+      subject,
+      room
+    });
 
-  openBtn.disabled = false;
-  openBtn.textContent = "เปิดคาบเรียน";
-
-  if(res.success){
-    currentSession = res.session;
-    renderSession();
-  }else{
-    msgEl.textContent = res.message || "เปิดคาบไม่สำเร็จ";
-    msgEl.style.color = "#f87171";
-  }
-}
-
-/* ================= CLOSE ================= */
-function showCloseModal(){
-  closeModal.classList.add("show");
-}
-
-function hideCloseModal(){
-  closeModal.classList.remove("show");
-}
-
-async function closeSession(){
-  if(!currentSession) return;
-
-  confirmCloseBtn.disabled = true;
-  confirmCloseBtn.textContent = "กำลังปิดคาบ...";
-
-  const res = await callApi("teacherCloseSession", {
-    sessionId: currentSession.id
-  });
-
-  confirmCloseBtn.disabled = false;
-  confirmCloseBtn.textContent = "ปิดคาบ";
-
-  if(res.success){
-    currentSession.status = "CLOSED";
-
-    modalSummary.innerHTML = `
-      ✅ มาเรียน: <b>${res.summary.ok}</b><br>
-      ⏰ สาย: <b>${res.summary.late}</b><br>
-      ❌ ขาด: <b>${res.summary.absent}</b>
-    `;
-
-    setTimeout(() => {
-      hideCloseModal();
-      renderSession();
-    }, 1200);
-  }
-}
-
-/* ================= RENDER ================= */
-function renderSession(){
-  if(!currentSession) return;
-
-  if(currentSession.status === "OPEN"){
-    statusEl.textContent = "สถานะคาบ: เปิดอยู่";
-    statusEl.style.color = "#22c55e";
-
-    tokenBox.style.display = "block";
-    tokenEl.textContent = currentSession.token;
+    tokenEl.textContent  = res.token;
+    statusEl.textContent = "สถานะคาบ: กำลังเปิดเรียน";
 
     closeBtn.disabled = false;
-  }else{
-    statusEl.textContent = "สถานะคาบ: ปิดแล้ว";
-    statusEl.style.color = "#f87171";
+  } catch (err) {
+    alert("เปิดคาบไม่สำเร็จ");
+    console.error(err);
+    openBtn.disabled = false;
+  } finally {
+    openBtn.textContent = "เปิดคาบเรียน";
+  }
+}
 
-    closeBtn.disabled = true;
+async function closeSession() {
+  if (!confirm("ยืนยันปิดคาบเรียน?")) return;
+
+  closeBtn.disabled = true;
+
+  try {
+    await callApi("teacherCloseSession", {});
+    setIdleUI();
+  } catch (err) {
+    alert("ปิดคาบไม่สำเร็จ");
+    console.error(err);
+    closeBtn.disabled = false;
+  }
+}
+
+/* ================= UI ================= */
+
+function setIdleUI() {
+  tokenEl.textContent  = "-";
+  statusEl.textContent = "สถานะคาบ: ยังไม่เปิดคาบ";
+
+  openBtn.disabled  = false;
+  closeBtn.disabled = true;
+}
+
+/* ================= SESSION STORAGE ================= */
+
+function getTeacherSession() {
+  try {
+    return JSON.parse(localStorage.getItem("teacherSession"));
+  } catch {
+    return null;
   }
 }
