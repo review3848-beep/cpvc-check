@@ -2,16 +2,17 @@
 import { callApi } from "../js/api.js";
 
 /* ================= DOM ================= */
-const subjectInput   = document.getElementById("subjectInput");
-const roomInput      = document.getElementById("roomInput");
+const subjectInput = document.getElementById("subject");
+const roomInput    = document.getElementById("room");
 
-const statusEl       = document.getElementById("sessionStatus");
-const tokenEl        = document.getElementById("tokenDisplay");
+const openBtn      = document.getElementById("btnOpenSession");
+const closeBtn     = document.getElementById("closeSessionBtn");
 
-const openBtn        = document.getElementById("openBtn");
-const closeBtn       = document.getElementById("closeBtn");
+const tokenBox     = document.getElementById("tokenBox");
+const tokenEl      = document.getElementById("token");
 
-const teacherNameEl  = document.getElementById("teacherName");
+const statusEl     = document.getElementById("sessionStatus");
+const teacherNameEl= document.getElementById("teacherName");
 
 /* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", init);
@@ -33,7 +34,6 @@ async function init() {
 
 /* ================= SESSION ================= */
 
-// ⭐ สำคัญ: ฟังก์ชันนี้ “เคยหาย” ตอนนี้มีแล้ว
 async function loadCurrentSession() {
   try {
     const res = await callApi("teacherGetCurrentSession", {});
@@ -42,7 +42,9 @@ async function loadCurrentSession() {
       return;
     }
 
-    tokenEl.textContent  = res.token;
+    tokenBox.style.display = "block";
+    tokenEl.textContent = res.token;
+
     statusEl.textContent = "สถานะคาบ: กำลังเปิดเรียน";
 
     openBtn.disabled  = true;
@@ -54,11 +56,6 @@ async function loadCurrentSession() {
 }
 
 async function openSession() {
-  if (!subjectInput || !roomInput) {
-    alert("DOM not ready");
-    return;
-  }
-
   const subject = subjectInput.value.trim();
   const room    = roomInput.value.trim();
 
@@ -76,7 +73,9 @@ async function openSession() {
       room
     });
 
-    tokenEl.textContent  = res.token;
+    tokenBox.style.display = "block";
+    tokenEl.textContent = res.token;
+
     statusEl.textContent = "สถานะคาบ: กำลังเปิดเรียน";
 
     closeBtn.disabled = false;
@@ -107,7 +106,9 @@ async function closeSession() {
 /* ================= UI ================= */
 
 function setIdleUI() {
-  tokenEl.textContent  = "-";
+  tokenBox.style.display = "none";
+  tokenEl.textContent = "------";
+
   statusEl.textContent = "สถานะคาบ: ยังไม่เปิดคาบ";
 
   openBtn.disabled  = false;
