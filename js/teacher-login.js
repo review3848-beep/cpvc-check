@@ -45,3 +45,13 @@ async function login(){
     btn.textContent = "เข้าสู่ระบบ";
   }
 }
+localStorage.setItem(
+  "teacherSession",
+  JSON.stringify({
+    id: res.teacherId,
+    name: res.name
+  })
+);
+
+location.href = "open-session.html";
+
