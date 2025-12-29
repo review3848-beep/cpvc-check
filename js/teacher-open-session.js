@@ -127,16 +127,12 @@ async function closeSession(){
     alert("❌ ปิดคาบไม่สำเร็จ");
   }
 }
-
-
-
-
   confirmCloseBtn.disabled = false;
   hideCloseModal();
 
 /* ================= UI HELPERS ================= */
 function resetUI(){
-  tokenBox.style.display = "none";
+  tokenBox.style.display = "none"; 
   tokenEl.textContent    = "------";
   statusEl.textContent  = "สถานะคาบ: ยังไม่เปิดคาบ";
 
