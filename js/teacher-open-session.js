@@ -106,22 +106,33 @@ function hideCloseModal(){
 }
 
 async function closeSession(){
-  confirmCloseBtn.disabled = true;
+  if(!confirm("ปิดคาบเรียนใช่ไหม?")) return;
 
   try{
     const res = await callApi("teacherCloseSession", {});
+
     if(!res.success) throw res.message;
 
-    resetUI();
-    showMsg("📌 ปิดคาบเรียนแล้ว", "ok");
+    alert("✅ ปิดคาบเรียนเรียบร้อย");
+
+    // รีเซ็ตหน้า
+    tokenBox.style.display = "none";
+    tokenEl.textContent = "------";
+    statusEl.textContent = "สถานะคาบ: ยังไม่เปิดคาบ";
+
+    openBtn.disabled = false;
+    closeBtn.disabled = true;
 
   }catch(err){
-    showMsg(err || "ปิดคาบไม่สำเร็จ", "err");
+    alert("❌ ปิดคาบไม่สำเร็จ");
   }
+}
+
+
+
 
   confirmCloseBtn.disabled = false;
   hideCloseModal();
-}
 
 /* ================= UI HELPERS ================= */
 function resetUI(){
