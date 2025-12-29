@@ -1,57 +1,68 @@
 import { callApi } from "./api.js";
 
+/* ================= DOM ================= */
 const emailInput = document.getElementById("email");
-const pwInput    = document.getElementById("password");
-const btn        = document.getElementById("loginBtn");
+const passInput  = document.getElementById("password");
+const loginBtn   = document.getElementById("loginBtn");
 const msgEl      = document.getElementById("msg");
 
-btn.addEventListener("click", login);
-pwInput.addEventListener("keydown", e => {
+/* ================= INIT ================= */
+loginBtn.addEventListener("click", login);
+
+passInput.addEventListener("keydown", e => {
   if (e.key === "Enter") login();
 });
 
+/* ================= LOGIN ================= */
 async function login(){
-  const email = emailInput.value.trim();
-  const password = pwInput.value.trim();
+  const email    = emailInput.value.trim();
+  const password = passInput.value.trim();
 
   msgEl.textContent = "";
+  msgEl.style.color = "#facc15";
 
-  if (!email || !password){
-    msgEl.textContent = "กรุณากรอกข้อมูลให้ครบ";
-    msgEl.style.color = "#f87171";
+  if(!email || !password){
+    showMsg("⚠️ กรุณากรอกอีเมลและรหัสผ่าน");
     return;
   }
 
-  btn.disabled = true;
-  btn.textContent = "กำลังเข้าสู่ระบบ...";
+  loginBtn.disabled = true;
+  loginBtn.textContent = "กำลังเข้าสู่ระบบ...";
 
-  try {
-    // ✅ ตรงนี้ต้องเป็น password เท่านั้น
-    const res = await callApi("teacherLogin", { email, password });
-    console.log("LOGIN RES =", res);
+  try{
+    const res = await callApi("teacherLogin", {
+      email,
+      password
+    });
 
-    if (!res.success) {
-      throw new Error(res.message);
-    }
+    if(!res.success) throw res.message;
 
-    localStorage.setItem("cpvc_teacher", JSON.stringify(res.teacher));
-    location.href = "dashboard.html";
+    /* === save session === */
+    localStorage.setItem("teacherSession", JSON.stringify({
+      id:    res.teacher.id,
+      name:  res.teacher.name,
+      email: res.teacher.email
+    }));
 
-  } catch (err) {
-    msgEl.textContent = "❌ " + err.message;
-    msgEl.style.color = "#f87171";
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "เข้าสู่ระบบ";
+    showMsg("✅ เข้าสู่ระบบสำเร็จ", "ok");
+
+    setTimeout(() => {
+      location.href = "open-session.html";
+    }, 700);
+
+  }catch(err){
+    showMsg(err || "อีเมลหรือรหัสผ่านไม่ถูกต้อง", "err");
   }
+
+  loginBtn.disabled = false;
+  loginBtn.textContent = "เข้าสู่ระบบ";
 }
-localStorage.setItem(
-  "teacherSession",
-  JSON.stringify({
-    id: res.teacherId,
-    name: res.name
-  })
-);
 
-location.href = "open-session.html";
-
+/* ================= UI ================= */
+function showMsg(text, type=""){
+  msgEl.textContent = text;
+  msgEl.style.color =
+    type==="ok"  ? "#22c55e" :
+    type==="err" ? "#ef4444" :
+    "#facc15";
+}
