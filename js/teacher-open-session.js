@@ -1,25 +1,30 @@
-// teacher-open-session.js
-import { callApi } from "../js/api.js";
+import { callApi } from "./api.js";
 
 /* ================= DOM ================= */
-const subjectInput = document.getElementById("subject");
-const roomInput    = document.getElementById("room");
+const teacherNameEl   = document.getElementById("teacherName");
+const subjectInput   = document.getElementById("subject");
+const roomInput      = document.getElementById("room");
 
-const openBtn      = document.getElementById("btnOpenSession");
-const closeBtn     = document.getElementById("closeSessionBtn");
+const openBtn        = document.getElementById("btnOpenSession");
+const closeBtn       = document.getElementById("closeSessionBtn");
 
-const tokenBox     = document.getElementById("tokenBox");
-const tokenEl      = document.getElementById("token");
+const tokenBox       = document.getElementById("tokenBox");
+const tokenEl        = document.getElementById("token");
+const statusEl       = document.getElementById("sessionStatus");
+const msgEl          = document.getElementById("msg");
 
-const statusEl     = document.getElementById("sessionStatus");
-const teacherNameEl= document.getElementById("teacherName");
+/* modal */
+const modal          = document.getElementById("closeModal");
+const modalSummary   = document.getElementById("modalSummary");
+const cancelCloseBtn = document.getElementById("cancelClose");
+const confirmCloseBtn= document.getElementById("confirmClose");
 
 /* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", init);
 
-async function init() {
+async function init(){
   const teacher = getTeacherSession();
-  if (!teacher) {
+  if(!teacher){
     location.href = "login.html";
     return;
   }
@@ -27,100 +32,123 @@ async function init() {
   teacherNameEl.textContent = teacher.name || "-";
 
   openBtn.addEventListener("click", openSession);
-  closeBtn.addEventListener("click", closeSession);
+  closeBtn.addEventListener("click", showCloseModal);
+  cancelCloseBtn.addEventListener("click", hideCloseModal);
+  confirmCloseBtn.addEventListener("click", closeSession);
 
   await loadCurrentSession();
 }
 
 /* ================= SESSION ================= */
-
-async function loadCurrentSession() {
-  try {
-    const res = await callApi("teacherGetCurrentSession", {});
-    if (!res || !res.active) {
-      setIdleUI();
-      return;
-    }
-
-    tokenBox.style.display = "block";
-    tokenEl.textContent = res.token;
-
-    statusEl.textContent = "สถานะคาบ: กำลังเปิดเรียน";
-
-    openBtn.disabled  = true;
-    closeBtn.disabled = false;
-  } catch (err) {
-    console.warn("loadCurrentSession failed", err);
-    setIdleUI();
-  }
-}
-
-async function openSession() {
+async function openSession(){
   const subject = subjectInput.value.trim();
   const room    = roomInput.value.trim();
 
-  if (!subject || !room) {
-    alert("กรุณากรอกข้อมูลให้ครบ");
+  if(!subject || !room){
+    showMsg("⚠️ กรุณากรอกข้อมูลให้ครบ", "warn");
     return;
   }
 
   openBtn.disabled = true;
   openBtn.textContent = "กำลังเปิดคาบ...";
 
-  try {
+  try{
     const res = await callApi("teacherOpenSession", {
       subject,
       room
     });
 
-    tokenBox.style.display = "block";
-    tokenEl.textContent = res.token;
+    if(!res.success) throw res.message;
 
-    statusEl.textContent = "สถานะคาบ: กำลังเปิดเรียน";
+    renderSession(res.session);
+    showMsg("✅ เปิดคาบเรียนสำเร็จ", "ok");
 
-    closeBtn.disabled = false;
-  } catch (err) {
-    alert("เปิดคาบไม่สำเร็จ");
-    console.error(err);
-    openBtn.disabled = false;
-  } finally {
-    openBtn.textContent = "เปิดคาบเรียน";
+  }catch(err){
+    showMsg(err || "เกิดข้อผิดพลาด", "err");
   }
+
+  openBtn.disabled = false;
+  openBtn.textContent = "เปิดคาบเรียน";
 }
 
-async function closeSession() {
-  if (!confirm("ยืนยันปิดคาบเรียน?")) return;
-
-  closeBtn.disabled = true;
-
-  try {
-    await callApi("teacherCloseSession", {});
-    setIdleUI();
-  } catch (err) {
-    alert("ปิดคาบไม่สำเร็จ");
-    console.error(err);
-    closeBtn.disabled = false;
-  }
+async function loadCurrentSession(){
+  try{
+    const res = await callApi("teacherGetCurrentSession", {});
+    if(res && res.session){
+      renderSession(res.session);
+    }
+  }catch(e){}
 }
 
-/* ================= UI ================= */
+function renderSession(session){
+  tokenBox.style.display = "block";
+  tokenEl.textContent   = session.token;
+  statusEl.textContent  = "สถานะคาบ: เปิดอยู่";
 
-function setIdleUI() {
+  closeBtn.disabled = false;
+  openBtn.disabled  = true;
+
+  subjectInput.value = session.subject;
+  roomInput.value    = session.room;
+}
+
+/* ================= CLOSE SESSION ================= */
+function showCloseModal(){
+  modalSummary.innerHTML = `
+    <b>วิชา:</b> ${subjectInput.value}<br>
+    <b>ห้อง:</b> ${roomInput.value}
+  `;
+  modal.classList.add("show");
+}
+
+function hideCloseModal(){
+  modal.classList.remove("show");
+}
+
+async function closeSession(){
+  confirmCloseBtn.disabled = true;
+
+  try{
+    const res = await callApi("teacherCloseSession", {});
+    if(!res.success) throw res.message;
+
+    resetUI();
+    showMsg("📌 ปิดคาบเรียนแล้ว", "ok");
+
+  }catch(err){
+    showMsg(err || "ปิดคาบไม่สำเร็จ", "err");
+  }
+
+  confirmCloseBtn.disabled = false;
+  hideCloseModal();
+}
+
+/* ================= UI HELPERS ================= */
+function resetUI(){
   tokenBox.style.display = "none";
-  tokenEl.textContent = "------";
-
-  statusEl.textContent = "สถานะคาบ: ยังไม่เปิดคาบ";
+  tokenEl.textContent    = "------";
+  statusEl.textContent  = "สถานะคาบ: ยังไม่เปิดคาบ";
 
   openBtn.disabled  = false;
   closeBtn.disabled = true;
+
+  subjectInput.value = "";
+  roomInput.value    = "";
+}
+
+function showMsg(text, type=""){
+  msgEl.textContent = text;
+  msgEl.style.color =
+    type==="ok"  ? "#22c55e" :
+    type==="err" ? "#ef4444" :
+    "#facc15";
 }
 
 /* ================= SESSION STORAGE ================= */
-
-function getTeacherSession() {
-  try {
+function getTeacherSession(){
+  try{
     return JSON.parse(localStorage.getItem("teacherSession"));
-  } catch {
+  }catch{
     return null;
   }
 }
