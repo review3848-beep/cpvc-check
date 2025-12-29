@@ -47,7 +47,7 @@ async function login(){
     showMsg("✅ เข้าสู่ระบบสำเร็จ", "ok");
 
     setTimeout(() => {
-      location.href = "open-session.html";
+      location.href = "dashboard.html";
     }, 700);
 
   }catch(err){
