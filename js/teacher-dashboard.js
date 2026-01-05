@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ${
             s.status === "OPEN"
               ? `<button class="btn-small btn-close-session"
-                   data-id="${s.id}">
+                   data-id="${s.token}">
                    ปิดคาบ
                  </button>`
               : `-`
@@ -103,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function bindCloseButtons(){
     document.querySelectorAll(".btn-close-session").forEach(btn => {
       btn.addEventListener("click", () => {
-        currentSessionId = btn.dataset.id;
+        currentSessionToken = btn.dataset.token;
         currentButton    = btn;
 
         modalText.textContent =
