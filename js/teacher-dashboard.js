@@ -102,16 +102,21 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ================= CLOSE SESSION ================= */
   function bindCloseButtons(){
     document.querySelectorAll(".btn-close-session").forEach(btn => {
-      btn.addEventListener("click", () => {
-        currentSessionToken = btn.dataset.token;
-        currentButton    = btn;
+  btn.addEventListener("click", () => {
 
-        modalText.textContent =
-          "คุณต้องการปิดคาบนี้ใช่หรือไม่\nนักเรียนจะไม่สามารถเช็คชื่อได้อีก";
+    // ✅ ตรงนี้คือหัวใจ
+    currentSessionToken = btn.dataset.token;
+    currentButton = btn;
 
-        closeModal.classList.remove("hidden");
-      });
-    });
+    if (!currentSessionToken) {
+      alert("ปุ่มนี้ไม่มี token");
+      return;
+    }
+
+    openCloseModal();
+  });
+});
+
   }
 
   function closeCloseModal(){
