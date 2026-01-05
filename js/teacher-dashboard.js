@@ -119,34 +119,37 @@ document.addEventListener("DOMContentLoaded", () => {
     currentSessionToken = null;
     currentButton = null;
   }
-
-  async function confirmCloseSession(){
-    if(!currentSessionToken) return;
-
-    btnConfirm.disabled = true;
-
-    try{
-      const res = await callApi("teacherCloseSession", {
-        sessionId: currentSessionToken
-      });
-
-      if(!res.success) throw res.message;
-
-      // update UI ทันที
-      currentButton.closest("tr").querySelector(".status-pill")
-        .className = "status-pill status-closed";
-      currentButton.closest("tr").querySelector(".status-pill")
-        .textContent = "CLOSED";
-      currentButton.parentElement.textContent = "-";
-
-      closeCloseModal();
-
-    }catch(err){
-      alert(err || "ปิดคาบไม่สำเร็จ");
-    }
-
-    btnConfirm.disabled = false;
+async function confirmCloseSession(){
+  if(!currentSessionToken){
+    alert("ไม่มี token คาบ");
+    return;
   }
+
+  btnConfirm.disabled = true;
+
+  try{
+    const res = await callApi("teacherCloseSession", {
+      token: currentSessionToken
+    });
+
+    if(!res.success) throw res.message;
+
+    // update UI
+    const row = currentButton.closest("tr");
+    const statusEl = row.querySelector(".status-pill");
+    statusEl.className = "status-pill status-closed";
+    statusEl.textContent = "CLOSED";
+    currentButton.parentElement.textContent = "-";
+
+    closeCloseModal();
+
+  }catch(err){
+    alert(err || "ปิดคาบไม่สำเร็จ");
+  }finally{
+    btnConfirm.disabled = false; // 🔥 สำคัญ
+  }
+}
+
 
   /* ================= SESSION ================= */
   function getTeacherSession(){
