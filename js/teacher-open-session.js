@@ -1,4 +1,4 @@
-import { callApi } from "./api.js";
+import { callApi } from "../api.js";
 
 /* ================= DOM ================= */
 const teacherNameEl   = document.getElementById("teacherName");

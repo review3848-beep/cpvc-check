@@ -1,10 +1,43 @@
-export const API_BASE = "https://script.google.com/macros/s/AKfycbxfPE2-GzbzDKF5kzNV3gaqk2ibitwfBucTe-b2oGu493pao-DKh5lvbLtDrjexOmj6_Q/exec";
+// js/api.js
+export const API_BASE =
+  "https://script.google.com/macros/s/AKfycbw_DR53ILruzyvn-6XNvkocl2Ohitg-XjPhxpcIl2aPY2GK-HDZxgtk2zu5kfCvB2Ewfg/exec";
 
-export async function callApi(action, payload = {}) {
+/* ================= API CALL ================= */
+export async function callApi(action, params = {}) {
   const res = await fetch(API_BASE, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action, ...payload })
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8"
+    },
+    body: JSON.stringify({
+      action,
+      ...params
+    })
   });
-  return res.json();
+
+  return await res.json();
 }
+
+/* ================= helpers ================= */
+export function getStudentSession() {
+  try {
+    return JSON.parse(localStorage.getItem("cpvc_student"));
+  } catch {
+    return null;
+  }
+}
+
+export function getTeacherSession() {
+  try {
+    return JSON.parse(localStorage.getItem("cpvc_teacher"));
+  } catch {
+    return null;
+  }
+}
+
+export function clearAllSession() {
+  localStorage.removeItem("cpvc_student");
+  localStorage.removeItem("cpvc_teacher");
+  sessionStorage.clear();
+}
+

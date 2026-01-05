@@ -1,5 +1,5 @@
 // js/teacher-register.js
-import { callApi } from "./api.js";
+import { callApi } from "../api.js";
 
 /* ================= DOM ================= */
 const nameInput  = document.getElementById("name");

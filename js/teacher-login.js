@@ -1,4 +1,4 @@
-import { callApi } from "./api.js";
+import { callApi } from "../api.js";
 
 /* ================= DOM ================= */
 const emailInput = document.getElementById("email");

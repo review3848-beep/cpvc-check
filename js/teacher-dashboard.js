@@ -1,4 +1,4 @@
-import { callApi } from "./api.js";
+import { callApi } from "../api.js";
 
 document.addEventListener("DOMContentLoaded", () => {
 
