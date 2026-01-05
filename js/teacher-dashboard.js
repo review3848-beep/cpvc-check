@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnCancel       = document.getElementById("btnCancel");
   const btnConfirm      = document.getElementById("btnConfirm");
 
-  let currentSessionId = null;
+  let currentSessionToken = null;
   let currentButton    = null;
 
   /* ================= INIT ================= */
@@ -116,18 +116,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function closeCloseModal(){
     closeModal.classList.add("hidden");
-    currentSessionId = null;
+    currentSessionToken = null;
     currentButton = null;
   }
 
   async function confirmCloseSession(){
-    if(!currentSessionId) return;
+    if(!currentSessionToken) return;
 
     btnConfirm.disabled = true;
 
     try{
       const res = await callApi("teacherCloseSession", {
-        sessionId: currentSessionId
+        sessionId: currentSessionToken
       });
 
       if(!res.success) throw res.message;
