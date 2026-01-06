@@ -159,3 +159,7 @@ function getTeacherSession(){
     return null;
   }
 }
+document.getElementById("backDashboardBtn")
+  .addEventListener("click", () => {
+    location.href = "dashboard.html";
+  });
