@@ -119,6 +119,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
+  function openCloseModal(){
+  closeModal.classList.remove("hidden");
+}
+
+
   function closeCloseModal(){
     closeModal.classList.add("hidden");
     currentSessionToken = null;
