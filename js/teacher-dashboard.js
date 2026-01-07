@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnConfirm      = document.getElementById("btnConfirm");
 
   let currentSessionToken = null;
+  let currentSessionId    = null; 
   let currentButton    = null;
 
   /* ================= INIT ================= */
@@ -83,13 +84,15 @@ document.addEventListener("DOMContentLoaded", () => {
         </td>
         <td>
           ${
-            s.status === "OPEN"
-              ? `<button class="btn-small btn-close-session"
-                   data-token="${s.token}">
-                   ปิดคาบ
-                 </button>`
-              : `-`
-          }
+  s.status === "OPEN"
+    ? `<button class="btn-small btn-close-session"
+         data-token="${s.token}"
+         data-session-id="${s.sessionId}">
+         ปิดคาบ
+       </button>`
+    : `-`
+}
+
         </td>
       `;
 
