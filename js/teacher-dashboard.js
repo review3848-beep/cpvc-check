@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ${
             s.status === "OPEN"
               ? `<button class="btn-small btn-close-session"
-                   data-id="${s.token}">
+                   data-token="${s.token}">
                    ปิดคาบ
                  </button>`
               : `-`
