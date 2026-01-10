@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>CPVC-Check | Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../css/styles.css" />
+  <script type="module" src="../js/admin-dashboard.js" defer></script>
+
+  <!-- ให้โทนเดียวกับครู (ม่วง-ชมพู) -->
+  <style>
+    :root{
+      --accent-main: linear-gradient(90deg,#6d5cf6,#ec4899);
+      --accent-soft: rgba(236,72,153,.18);
+      --dash-border: rgba(148,163,184,.18);
+    }
+  </style>
+</head>
+
+<body class="dash-body">
+  <header class="dash-topbar">
+    <div class="dash-brand">
+      <div class="dash-logo">🛡️</div>
+      <div>
+        <div class="dash-title">Admin Dashboard</div>
+        <div class="dash-subtitle" id="adminName">—</div>
+      </div>
+    </div>
+
+    <div class="dash-actions">
+      <a class="dash-link" href="../index.html">หน้าแรก</a>
+      <button class="dash-btn" id="logoutBtn">Logout</button>
+    </div>
+  </header>
+
+  <main class="dash-shell">
+    <section class="dash-stats">
+      <div class="stat-card">
+        <div class="stat-label">นักเรียน</div>
+        <div class="stat-value" id="stuCount">—</div>
+        <div class="stat-hint">รวมทั้งหมดในระบบ</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ครู</div>
+        <div class="stat-value" id="teaCount">—</div>
+        <div class="stat-hint">บัญชีครูทั้งหมด</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">คาบเรียน</div>
+        <div class="stat-value" id="sessCount">—</div>
+        <div class="stat-hint">ทั้งหมด (เปิด/ปิด)</div>
+      </div>
+    </section>
+
+    <section class="dash-panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">จัดการข้อมูล</div>
+          <div class="panel-sub">เลือกตารางเพื่อดูข้อมูลและ Export</div>
+        </div>
+
+        <div class="panel-actions">
+          <button class="chip" id="btnStudents">นักเรียน</button>
+          <button class="chip" id="btnTeachers">ครู</button>
+          <button class="chip" id="btnSessions">คาบเรียน</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-meta">
+          <div id="tableTitle">ยังไม่ได้เลือกตาราง</div>
+          <button class="ghost-btn" id="exportBtn" disabled>Export CSV</button>
+        </div>
+
+        <div id="msg" class="dash-msg"></div>
+        <div id="table" class="dash-table"></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

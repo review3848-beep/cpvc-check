@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>CPVC-Check | Dashboard นักเรียน</title>
+  <title>CPVC-Check | Dashboard แอดมิน</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -12,348 +12,71 @@
   <link rel="stylesheet" href="../css/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
   <script type="module" src="dashboard.js" defer></script>
-
-
-  <style>
-    :root{
-      --nav-bg: rgba(15,23,42,.95);
-      --card: rgba(15,23,42,.97);
-      --border: rgba(148,163,184,.45);
-      --muted: #9ca3af;
-      --text: #e5e7eb;
-      --ok:#4ade80;
-      --late:#fb923c;
-      --absent:#fecaca;
-    }
-
-    body{
-      margin:0;
-      min-height:100vh;
-      background:
-        radial-gradient(circle at 0 0,#1d2337,transparent 55%),
-        radial-gradient(circle at 100% 0,#312e81,transparent 55%),
-        #020617;
-      color:var(--text);
-      font-family:"Inter",system-ui,sans-serif;
-    }
-
-    header{
-      padding:1.1rem 2rem;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      border-bottom:1px solid rgba(148,163,184,.35);
-      background:var(--nav-bg);
-      backdrop-filter:blur(16px);
-      position:sticky;top:0;z-index:40;
-    }
-    header h2{
-      margin:0;
-      font-size:1.4rem;
-      font-weight:800;
-      letter-spacing:.2px;
-    }
-    .subhead{
-      font-size:.8rem;
-      color:var(--muted);
-      margin-top:.1rem;
-      font-family:"Prompt",system-ui,sans-serif;
-    }
-    .userbox{
-      display:flex;
-      flex-direction:column;
-      align-items:flex-end;
-      font-size:.85rem;
-      color:#c7d2fe;
-    }
-    .userbox span.id{
-      font-size:.78rem;
-      color:var(--muted);
-    }
-
-    /* STATS */
-    .stats{
-      max-width:1100px;
-      margin:1.6rem auto 1.1rem;
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:1rem;
-      padding:0 1.4rem;
-    }
-    .stat{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:1.2rem;
-      padding:1rem 1rem 1.1rem;
-      box-shadow:0 20px 50px rgba(15,23,42,.95);
-      position:relative;
-      overflow:hidden;
-    }
-    .stat::before{
-      content:"";
-      position:absolute;
-      inset:-40%;
-      background:
-        radial-gradient(circle at 0 0, rgba(59,130,246,.22), transparent 60%),
-        radial-gradient(circle at 100% 100%, rgba(16,185,129,.16), transparent 60%);
-      opacity:.9;
-      pointer-events:none;
-    }
-    .stat > *{ position:relative; z-index:1; }
-    .stat-label{font-size:.78rem;color:var(--muted);}
-    .stat-value{font-size:1.6rem;font-weight:800;margin-top:.2rem;}
-    .stat-footer{font-size:.75rem;color:#60a5fa;margin-top:.2rem;font-family:"Prompt",system-ui,sans-serif;}
-
-    /* ACTION BAR */
-    .action-bar{
-      max-width:1100px;
-      margin:0 auto 1.2rem;
-      padding:0 1.4rem;
-      display:flex;
-      justify-content:space-between;
-      gap:.8rem;
-      flex-wrap:wrap;
-    }
-    .btn-main,
-    .btn-outline{
-      padding:.7rem 1.5rem;
-      border-radius:999px;
-      border:none;
-      cursor:pointer;
-      font-weight:700;
-      font-size:.9rem;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      gap:.45rem;
-      white-space:nowrap;
-      transition:.2s;
-    }
-    .btn-main{
-      background:linear-gradient(135deg,#4f46e5,#6366f1);
-      color:white;
-      box-shadow:0 16px 40px rgba(79,70,229,.7);
-    }
-    .btn-main:hover{
-      transform:translateY(-1px);
-      box-shadow:0 18px 46px rgba(79,70,229,.8);
-    }
-    .btn-outline{
-      border:1px solid rgba(148,163,184,.7);
-      background:rgba(15,23,42,.8);
-      color:#e5e7eb;
-    }
-    .btn-outline:hover{
-      background:rgba(148,163,184,.16);
-      transform:translateY(-1px);
-    }
-
-    /* =========================
-       TABLE CARD (แยกซ้าย/ขวา)
-       ========================= */
-    .table-card{
-      max-width:1100px;
-      margin:0 auto 2.4rem;
-      padding:1.3rem 1.2rem 1.5rem;
-      border-radius:1.4rem;
-      background:
-        radial-gradient(circle at 0 0, rgba(59,130,246,.35), transparent 55%),
-        radial-gradient(circle at 100% 0, rgba(16,185,129,.18), transparent 55%),
-        rgba(15,23,42,.98);
-      border:1px solid rgba(148,163,184,.5);
-      box-shadow:0 24px 60px rgba(15,23,42,.95);
-    }
-
-    /* หัวการ์ด */
-    .table-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      gap:1rem;
-      margin-bottom:1rem;
-    }
-    .table-header h3{
-      margin:0;
-      font-size:1rem;
-      font-weight:800;
-    }
-    .hint{
-      font-size:.8rem;
-      color:var(--muted);
-      font-family:"Prompt",system-ui,sans-serif;
-    }
-
-    /* ✅ ตัวแยกซ้าย/ขวา */
-    .table-split{
-      display:grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-      gap: 1.2rem;
-      align-items: start;
-    }
-
-    /* ซ้าย: ตาราง */
-    .table-side{
-      min-width:0;
-    }
-
-    /* ขวา: กราฟ */
-    .chart-side{
-      min-width:0;
-      background: rgba(2,6,23,.28);
-      border: 1px solid rgba(148,163,184,.18);
-      border-radius: 1rem;
-      padding: 1rem;
-      display:flex;
-      flex-direction:column;
-      gap:.75rem;
-      position: sticky; /* อยู่กับที่ตอนเลื่อน (บนจอใหญ่) */
-      top: 88px;        /* เผื่อ header sticky */
-    }
-    .chart-title{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: .6rem;
-    }
-
-    .chart-wrap{
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      min-height:260px;
-    }
-    #statusChart{
-      width:100% !important;
-      max-width:340px;
-      height:auto !important;
-      display:block;
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:.85rem;
-      border-radius: 1rem;
-      overflow:hidden;
-    }
-    thead{
-      background:linear-gradient(90deg,#020617,#1e3a8a);
-    }
-    th,td{
-      padding:.6rem .55rem;
-      border-bottom:1px solid rgba(31,41,55,.85);
-      text-align:left;
-      white-space:nowrap;
-    }
-    th{
-      font-size:.75rem;
-      letter-spacing:.06em;
-      color:#c7d2fe;
-    }
-    tbody tr:nth-child(even){
-      background:rgba(15,23,42,.96);
-    }
-    tbody tr:hover{
-      background:rgba(59,130,246,.15);
-    }
-
-    .empty{
-      text-align:center;
-      padding:1rem 0;
-      color:var(--muted);
-      font-family:"Prompt",system-ui,sans-serif;
-    }
-
-    #msg{
-      max-width:1100px;
-      margin:0 auto 1.0rem;
-      padding:0 1.4rem;
-      font-size:.85rem;
-      text-align:center;
-      color:#f97373;
-      font-family:"Prompt",system-ui,sans-serif;
-    }
-
-    /* มือถือ: เรียงบนล่าง */
-    @media(max-width:900px){
-      .table-split{
-        grid-template-columns: 1fr;
-      }
-      .chart-side{
-        position: relative;
-        top: auto;
-      }
-    }
-
-    @media(max-width:768px){
-      header{padding-inline:1.2rem;}
-      .stats,.action-bar{padding-inline:1.2rem;}
-      .table-card{margin-inline:1.2rem;}
-      .userbox{align-items:flex-start;}
-    }
-  </style>
 </head>
 
 <body>
 <header>
   <div>
-    <h2>🎓 Dashboard นักเรียน</h2>
-    <div class="subhead">ภาพรวมการเข้าเรียนและรายการเช็คชื่อของคุณ</div>
+    <h2>🛠 Dashboard แอดมิน</h2>
+    <div class="subhead">ภาพรวมการใช้งานระบบทั้งหมด</div>
   </div>
   <div class="userbox">
-    <span id="studentNameDisplay">-</span>
-    <span class="id">🆔 <span id="studentIdDisplay">-</span></span>
+    <span id="adminNameDisplay">ADMIN</span>
+    <span class="id">📧 <span id="adminEmailDisplay">-</span></span>
   </div>
 </header>
 
+<!-- ================= STATS ================= -->
 <section class="stats">
   <div class="stat">
-    <div class="stat-label">📌 จำนวนรายการเช็คชื่อทั้งหมด</div>
-    <div class="stat-value" id="totalRecords">0</div>
-    <div class="stat-footer">รวมทุกครั้งที่ถูกบันทึกในระบบ</div>
+    <div class="stat-label">👩‍🏫 จำนวนครูทั้งหมด</div>
+    <div class="stat-value" id="totalTeachers">0</div>
+    <div class="stat-footer">ครูที่มีในระบบ</div>
   </div>
 
   <div class="stat">
-    <div class="stat-label">✅ มาเรียนตรงเวลา (OK)</div>
-    <div class="stat-value"><span id="okCount">0</span> <span style="font-size:.9rem;color:var(--muted);font-weight:700">(<span id="okPercent">0%</span>)</span></div>
-    <div class="stat-footer">สถานะ = OK</div>
+    <div class="stat-label">🎓 จำนวนนักเรียนทั้งหมด</div>
+    <div class="stat-value" id="totalStudents">0</div>
+    <div class="stat-footer">นักเรียนทั้งหมดในระบบ</div>
   </div>
 
   <div class="stat">
-    <div class="stat-label">⏰ มาสาย (LATE)</div>
-    <div class="stat-value"><span id="lateCount">0</span> <span style="font-size:.9rem;color:var(--muted);font-weight:700">(<span id="latePercent">0%</span>)</span></div>
-    <div class="stat-footer">สถานะ = LATE</div>
+    <div class="stat-label">📚 จำนวนคาบทั้งหมด</div>
+    <div class="stat-value" id="totalSessions">0</div>
+    <div class="stat-footer">ทุกคาบที่ถูกสร้าง</div>
   </div>
 
   <div class="stat">
-    <div class="stat-label">📈 อัตราการเข้าเรียน (มา + สาย)</div>
-    <div class="stat-value" id="ratePercent">0%</div>
-    <div class="stat-footer">คิดจาก OK + LATE เทียบกับทั้งหมด</div>
+    <div class="stat-label">🔴 คาบที่เปิดอยู่</div>
+    <div class="stat-value" id="openSessions">0</div>
+    <div class="stat-footer">STATUS = OPEN</div>
   </div>
 </section>
 
+<!-- ================= ACTION BAR ================= -->
 <section class="action-bar">
   <div>
-    <a href="scan.html" class="btn-main">📸 เช็คชื่อเข้าเรียน</a>
+    <a href="sessions.html" class="btn-main">📚 จัดการคาบเรียน</a>
   </div>
   <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
-    <a href="history.html" class="btn-outline">🧾 ดูประวัติทั้งหมด</a>
-    <button class="btn-outline" type="button" onclick="logoutStudent()">🚪 ออกจากระบบ</button>
+    <a href="teachers.html" class="btn-outline">👩‍🏫 จัดการครู</a>
+    <a href="students.html" class="btn-outline">🎓 จัดการนักเรียน</a>
+    <button class="btn-outline" onclick="logoutAdmin()">🚪 ออกจากระบบ</button>
   </div>
 </section>
 
 <div id="msg"></div>
 
+<!-- ================= TABLE + CHART ================= -->
 <section class="table-card">
   <div class="table-header">
     <div>
-      <h3>🧾 รายการเช็คชื่อล่าสุด</h3>
-      <div class="hint">แสดง 10 รายการล่าสุด (เวลา / รายวิชา / TOKEN / สถานะ / ครู)</div>
+      <h3>📋 คาบล่าสุดในระบบ</h3>
+      <div class="hint">แสดงคาบล่าสุดทั้งหมด (ทุกครู)</div>
     </div>
-    <div class="hint">📊 สัดส่วนสถานะ</div>
+    <div class="hint">📊 สถานะคาบ</div>
   </div>
 
-  <!-- ✅ แยกซ้าย/ขวาตรงนี้ -->
   <div class="table-split">
 
     <!-- ซ้าย: ตาราง -->
@@ -361,14 +84,14 @@
       <table>
         <thead>
           <tr>
-            <th>⏱️ เวลา</th>
-            <th>📚 รายวิชา</th>
-            <th>🔑 TOKEN</th>
-            <th>✅ สถานะ</th>
+            <th>📚 วิชา</th>
+            <th>🏫 ห้อง</th>
             <th>👩‍🏫 ครู</th>
+            <th>🔑 TOKEN</th>
+            <th>สถานะ</th>
           </tr>
         </thead>
-        <tbody id="recentTableBody">
+        <tbody id="sessionTable">
           <tr><td colspan="5" class="empty">กำลังโหลดข้อมูล...</td></tr>
         </tbody>
       </table>
@@ -377,11 +100,11 @@
     <!-- ขวา: กราฟ -->
     <aside class="chart-side">
       <div class="chart-title">
-        <div class="hint">📊 สัดส่วนสถานะ</div>
-        <div class="hint">OK / LATE / ABSENT</div>
+        <div class="hint">📊 สถานะคาบ</div>
+        <div class="hint">OPEN / CLOSED</div>
       </div>
       <div class="chart-wrap">
-        <canvas id="statusChart"></canvas>
+        <canvas id="sessionChart"></canvas>
       </div>
     </aside>
 
@@ -389,13 +112,13 @@
 </section>
 
 <script>
-  function logoutStudent() {
-    try {
-      localStorage.removeItem("cpvc_student");
-      sessionStorage.clear();
-    } catch (e) {}
-    window.location.href = "login.html";
-  }
+function logoutAdmin(){
+  try{
+    localStorage.removeItem("adminSession");
+  }catch(e){}
+  location.href = "login.html";
+}
 </script>
+
 </body>
 </html>

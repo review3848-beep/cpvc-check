@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>CPVC-Check | เข้าสู่ระบบแอดมิน</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../css/styles.css" />
+  <script type="module" src="../js/admin-login.js" defer></script>
+
+  <!-- override สีให้เหมือนครู (ม่วง-ชมพู) แต่ยังเป็น admin -->
+  <style>
+    :root{
+      --accent-main: linear-gradient(90deg,#6d5cf6,#ec4899); /* เหมือนครู */
+      --accent-soft: rgba(236,72,153,.18);
+      --border: rgba(148,163,184,.35);
+    }
+    .auth-avatar{
+      background: radial-gradient(circle at 30% 25%, rgba(109,92,246,.32), rgba(236,72,153,.20) 55%, rgba(2,6,23,0) 72%);
+      border: 1px solid rgba(236,72,153,.22);
+    }
+    .auth-avatar__dot{
+      background: conic-gradient(from 180deg, rgba(109,92,246,.55), rgba(236,72,153,.10), rgba(109,92,246,.55));
+    }
+    .auth-btn{
+      background: var(--accent-main);
+      box-shadow: 0 16px 40px rgba(236,72,153,.18);
+      color:#04121f;
+      font-weight: 800;
+    }
+    .auth-link{ color:#c4b5fd; }
+  </style>
+</head>
+
+<body class="auth-body">
+  <main class="auth-shell">
+    <section class="auth-card">
+      <div class="auth-avatar" aria-hidden="true">
+        <span class="auth-avatar__dot"></span>
+        <span class="auth-avatar__icon">🛡️</span>
+      </div>
+
+      <h1 class="auth-title">เข้าสู่ระบบแอดมิน</h1>
+      <p class="auth-subtitle">จัดการผู้ใช้ ครู นักเรียน และคาบเรียน</p>
+
+      <div class="auth-form">
+        <label class="auth-label" for="username">ชื่อผู้ใช้</label>
+        <input id="username" class="auth-input" placeholder="admin" autocomplete="username" />
+
+        <label class="auth-label" for="password">รหัสผ่าน</label>
+        <input id="password" type="password" class="auth-input" placeholder="••••••••" autocomplete="current-password" />
+
+        <button id="loginBtn" class="auth-btn" type="button">เข้าสู่ระบบ</button>
+
+        <div class="auth-row">
+          
+        </div>
+
+        <p id="msg" class="auth-msg" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
