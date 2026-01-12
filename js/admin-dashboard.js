@@ -1,5 +1,5 @@
-// ../js/admin-dashboard.js
-const API_URL = "YOUR_GAS_WEBAPP_URL"; // <-- ใส่ Web App /exec
+import { callApi } from "../api.js";
+
 
 const adminNameEl = document.getElementById("adminName");
 const logoutBtn = document.getElementById("logoutBtn");
