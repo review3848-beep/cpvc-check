@@ -1,5 +1,5 @@
-// ../js/admin-login.js
-const API_URL = "YOUR_GAS_WEBAPP_URL"; // <-- ใส่ URL Web App (ลงท้าย /exec)
+// js/admin-login.js
+import { callApi } from "./api.js";
 
 const userEl = document.getElementById("username");
 const passEl = document.getElementById("password");
@@ -13,17 +13,6 @@ function setMsg(text, type=""){
   msgEl.textContent = text || "";
   msgEl.classList.remove("is-error","is-ok");
   if(type) msgEl.classList.add(type);
-}
-
-async function callApi(action, payload = {}){
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type":"text/plain;charset=utf-8" },
-    body: JSON.stringify({ action, ...payload })
-  });
-  const text = await res.text();
-  try { return JSON.parse(text); }
-  catch { return { success:false, message:"API ตอบกลับไม่ถูกต้อง" }; }
 }
 
 async function login(){
@@ -47,13 +36,14 @@ async function login(){
       return;
     }
 
-    localStorage.setItem("admin", JSON.stringify(r.data || { username }));
-    setMsg("เข้าสู่ระบบสำเร็จ", "is-ok");
+    const admin = r.admin || r.data || { username };
+    localStorage.setItem("admin", JSON.stringify(admin));
 
-    setTimeout(()=> location.href = "dashboard.html", 450);
+    setMsg("เข้าสู่ระบบสำเร็จ", "is-ok");
+    setTimeout(()=> location.href = "dashboard.html", 350);
 
   }catch(err){
-    setMsg("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ (API_URL/เน็ต/สิทธิ์ Web App)", "is-error");
+    setMsg("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ (API/เน็ต/สิทธิ์ Web App)", "is-error");
   }finally{
     btnEl.disabled = false;
     btnEl.textContent = "เข้าสู่ระบบ";
