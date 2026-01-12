@@ -1,135 +1,189 @@
-import { callApi } from "../api.js"; // ถ้า api.js อยู่ root
-// ถ้า api.js อยู่ใน /js ให้ใช้: import { callApi } from "../js/api.js";
+import { callApi } from "../js/api.js";
 
-const statStudents = document.getElementById("statStudents");
-const statTeachers = document.getElementById("statTeachers");
-const statSessions = document.getElementById("statSessions");
+const $ = (id) => document.getElementById(id);
 
-const tableTitle = document.getElementById("tableTitle");
-const tableWrap  = document.getElementById("tableWrap");
-const exportBtn  = document.getElementById("exportBtn");
-const logoutBtn  = document.getElementById("logoutBtn");
+const el = {
+  adminName: $("adminName"),
+  totalTeachers: $("totalTeachers"),
+  totalStudents: $("totalStudents"),
+  todaySessions: $("todaySessions"),
+  totalAttendance: $("totalAttendance"),
+  subTeachers: $("subTeachers"),
+  subStudents: $("subStudents"),
+  subToday: $("subToday"),
+  subAttendance: $("subAttendance"),
+  recentSessions: $("recentSessions"),
+  footerNote: $("footerNote"),
+  q: $("q"),
+  filterStatus: $("filterStatus"),
 
-let currentTab = null;
-let currentData = [];
+  btnRefresh: $("btnRefresh"),
+  btnManage: $("btnManage"),
+  btnViewAll: $("btnViewAll"),
+  btnExport: $("btnExport"),
+  btnAudit: $("btnAudit"),
+};
 
-function guardAdmin(){
-  const admin = localStorage.getItem("admin");
-  if(!admin) location.href = "login.html";
+let state = {
+  dashboard: null,
+  sessions: [],
+};
+
+function nowStamp() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`;
 }
 
-function setLoading(){
-  tableWrap.innerHTML = `<div style="opacity:.7;padding:14px">กำลังโหลดข้อมูล...</div>`;
+function pill(status) {
+  const isOpen = String(status).toUpperCase() === "OPEN";
+  const cls = isOpen ? "open" : "closed";
+  const label = isOpen ? "OPEN" : "CLOSED";
+  return `<span class="pill ${cls}"><span class="dot"></span>${label}</span>`;
 }
 
-function escapeHtml(s){
-  return String(s ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#39;");
+function setLoading(isLoading) {
+  if (!el.btnRefresh) return;
+  el.btnRefresh.disabled = isLoading;
+  el.btnRefresh.style.opacity = isLoading ? "0.6" : "1";
 }
 
-function renderTable(data){
-  if(!data || data.length===0){
-    tableWrap.innerHTML = `<div style="opacity:.7;padding:14px">ไม่มีข้อมูล</div>`;
+function renderHeader() {
+  const stamp = nowStamp();
+  el.footerNote.textContent = `Last sync: ${stamp}`;
+  el.subTeachers.textContent = `อัปเดตล่าสุด: ${stamp}`;
+  el.subStudents.textContent = `อัปเดตล่าสุด: ${stamp}`;
+}
+
+function renderStats() {
+  const d = state.dashboard || {};
+  el.adminName.textContent = d.adminName || "Admin";
+
+  el.totalTeachers.textContent = d.totalTeachers ?? "-";
+  el.totalStudents.textContent = d.totalStudents ?? "-";
+  el.todaySessions.textContent = d.todaySessions ?? "-";
+  el.totalAttendance.textContent = d.totalAttendance ?? "-";
+
+  const openCount = (state.sessions || []).filter(
+    (s) => String(s.status).toUpperCase() === "OPEN"
+  ).length;
+
+  el.subToday.textContent = `กำลังเปิดอยู่: ${openCount}`;
+  el.subAttendance.textContent = `รายการสะสมทั้งระบบ`;
+}
+
+function applyFilterAndSearch() {
+  const q = (el.q?.value || "").trim().toLowerCase();
+  const f = el.filterStatus?.value || "ALL";
+
+  let rows = [...(state.sessions || [])];
+
+  if (f !== "ALL") rows = rows.filter((s) => String(s.status).toUpperCase() === f);
+
+  if (q) {
+    rows = rows.filter((s) => {
+      const subject = (s.subject || "").toLowerCase();
+      const teacher = (s.teacher || "").toLowerCase();
+      const room = String(s.room || "").toLowerCase();
+      const status = String(s.status || "").toLowerCase();
+      const time = String(s.time || "").toLowerCase();
+      return (
+        subject.includes(q) ||
+        teacher.includes(q) ||
+        room.includes(q) ||
+        status.includes(q) ||
+        time.includes(q)
+      );
+    });
+  }
+
+  if (!rows.length) {
+    el.recentSessions.innerHTML = `<tr><td colspan="5" class="empty">ไม่พบข้อมูลตามตัวกรอง/คำค้น</td></tr>`;
     return;
   }
 
-  const cols = Object.keys(data[0]);
-
-  const thead = `<tr>${cols.map(c=>`<th>${escapeHtml(c)}</th>`).join("")}</tr>`;
-  const tbody = data.map(row => {
-    return `<tr>${cols.map(c=>`<td>${escapeHtml(row[c])}</td>`).join("")}</tr>`;
-  }).join("");
-
-  tableWrap.innerHTML = `
-    <div style="overflow:auto">
-      <table class="data-table">
-        <thead>${thead}</thead>
-        <tbody>${tbody}</tbody>
-      </table>
-    </div>
-  `;
+  el.recentSessions.innerHTML = rows
+    .map(
+      (s) => `
+    <tr>
+      <td><b>${escapeHtml(s.subject || "-")}</b></td>
+      <td>${escapeHtml(s.teacher || "-")}</td>
+      <td>${escapeHtml(String(s.room || "-"))}</td>
+      <td>${pill(s.status || "CLOSED")}</td>
+      <td class="right muted">${escapeHtml(s.time || "-")}</td>
+    </tr>
+  `
+    )
+    .join("");
 }
 
-async function loadStats(){
-  const r = await callApi("adminStats");
-  if(!r.success) return;
-
-  statStudents.textContent = r.students ?? "-";
-  statTeachers.textContent = r.teachers ?? "-";
-  const s = r.sessions ?? "-";
-  const o = r.openSessions ?? 0;
-  statSessions.textContent = `${s} (${o} เปิดอยู่)`;
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
-async function loadTab(tab){
-  currentTab = tab;
-  setLoading();
-  exportBtn.disabled = true;
+// ====== โหลดข้อมูลจริงจาก GAS ======
+async function loadDashboard() {
+  setLoading(true);
+  try {
+    // 1) ยิง action ดึงภาพรวม + recent sessions
+    // ฝั่ง GAS จะต้อง return รูปแบบนี้:
+    // { success:true, data:{ adminName, totalTeachers, totalStudents, todaySessions, totalAttendance, recentSessions:[...] } }
+    const res = await callApi("adminGetDashboard", { limit: 12 });
 
-  let action = "";
-  let title = "";
-  if(tab==="students"){ action="adminStudents"; title="นักเรียน"; }
-  if(tab==="teachers"){ action="adminTeachers"; title="ครู"; }
-  if(tab==="sessions"){ action="adminSessions"; title="คาบเรียน"; }
+    if (!res.success) throw new Error(res.message || "Load failed");
 
-  tableTitle.textContent = `ตาราง: ${title}`;
+    const data = res.data || {};
+    state.dashboard = {
+      adminName: data.adminName,
+      totalTeachers: data.totalTeachers,
+      totalStudents: data.totalStudents,
+      todaySessions: data.todaySessions,
+      totalAttendance: data.totalAttendance,
+    };
+    state.sessions = Array.isArray(data.recentSessions) ? data.recentSessions : [];
 
-  const r = await callApi(action);
-  if(!r.success){
-    tableWrap.innerHTML = `<div style="color:#ffb4b4;padding:14px">${escapeHtml(r.message||"โหลดข้อมูลไม่สำเร็จ")}</div>`;
-    return;
+    renderHeader();
+    renderStats();
+    applyFilterAndSearch();
+  } catch (err) {
+    console.error(err);
+    el.recentSessions.innerHTML = `<tr><td colspan="5" class="empty">โหลดข้อมูลไม่สำเร็จ: ${escapeHtml(err.message || "error")}</td></tr>`;
+  } finally {
+    setLoading(false);
   }
-
-  currentData = r.data || [];
-  renderTable(currentData);
-  exportBtn.disabled = currentData.length===0;
 }
 
-function toCSV(rows){
-  if(!rows || !rows.length) return "";
-  const cols = Object.keys(rows[0]);
+// ====== Events ======
+function bindEvents() {
+  el.q?.addEventListener("input", applyFilterAndSearch);
+  el.filterStatus?.addEventListener("change", applyFilterAndSearch);
 
-  const esc = (v) => `"${String(v ?? "").replaceAll('"','""')}"`;
-  const head = cols.map(esc).join(",");
-  const body = rows.map(r => cols.map(c=>esc(r[c])).join(",")).join("\n");
-  return head + "\n" + body;
-}
+  el.btnRefresh?.addEventListener("click", loadDashboard);
 
-function downloadCSV(){
-  const csv = toCSV(currentData);
-  const blob = new Blob([csv], { type:"text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
+  el.btnManage?.addEventListener("click", () => {
+    alert("Manage: ต่อไปลิงก์ไปหน้า admin/manage.html หรือแยกครู/นักเรียน");
+  });
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${currentTab||"data"}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
+  el.btnViewAll?.addEventListener("click", () => {
+    alert("View all: ต่อไปทำหน้า sessions ทั้งหมด + pagination");
+  });
 
-function bindTabs(){
-  document.querySelectorAll("[data-tab]").forEach(btn=>{
-    btn.addEventListener("click", ()=> loadTab(btn.dataset.tab));
+  el.btnExport?.addEventListener("click", () => {
+    alert("Export: ต่อไปทำ action adminExportAll หรือ export รายงาน");
+  });
+
+  el.btnAudit?.addEventListener("click", () => {
+    alert("Audit Log: ต่อไปทำหน้า log events");
   });
 }
 
-function bindActions(){
-  exportBtn.addEventListener("click", downloadCSV);
-  logoutBtn?.addEventListener("click", ()=>{
-    localStorage.removeItem("admin");
-    location.href = "login.html";
-  });
-}
-
-(async function init(){
-  guardAdmin();
-  bindTabs();
-  bindActions();
-  await loadStats();
-})();
+// init
+bindEvents();
+loadDashboard();
