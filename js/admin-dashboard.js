@@ -1,145 +1,135 @@
-import { callApi } from "../api.js";
+import { callApi } from "../api.js"; // ถ้า api.js อยู่ root
+// ถ้า api.js อยู่ใน /js ให้ใช้: import { callApi } from "../js/api.js";
 
-
-const adminNameEl = document.getElementById("adminName");
-const logoutBtn = document.getElementById("logoutBtn");
-
-const stuCount = document.getElementById("stuCount");
-const teaCount = document.getElementById("teaCount");
-const sessCount = document.getElementById("sessCount");
-
-const btnStudents = document.getElementById("btnStudents");
-const btnTeachers = document.getElementById("btnTeachers");
-const btnSessions = document.getElementById("btnSessions");
+const statStudents = document.getElementById("statStudents");
+const statTeachers = document.getElementById("statTeachers");
+const statSessions = document.getElementById("statSessions");
 
 const tableTitle = document.getElementById("tableTitle");
-const exportBtn = document.getElementById("exportBtn");
-const msgEl = document.getElementById("msg");
-const tableEl = document.getElementById("table");
+const tableWrap  = document.getElementById("tableWrap");
+const exportBtn  = document.getElementById("exportBtn");
+const logoutBtn  = document.getElementById("logoutBtn");
 
-let currentRows = [];
-let currentName = "";
+let currentTab = null;
+let currentData = [];
 
-init();
-
-function guard(){
-  const raw = localStorage.getItem("admin");
-  if(!raw){ location.href = "login.html"; return null; }
-  try { return JSON.parse(raw); }
-  catch { localStorage.removeItem("admin"); location.href="login.html"; return null; }
+function guardAdmin(){
+  const admin = localStorage.getItem("admin");
+  if(!admin) location.href = "login.html";
 }
 
-async function callApi(action, payload = {}){
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type":"text/plain;charset=utf-8" },
-    body: JSON.stringify({ action, ...payload })
-  });
-  const text = await res.text();
-  try { return JSON.parse(text); }
-  catch { return { success:false, message:"API ตอบกลับไม่ถูกต้อง" }; }
+function setLoading(){
+  tableWrap.innerHTML = `<div style="opacity:.7;padding:14px">กำลังโหลดข้อมูล...</div>`;
 }
 
-function setMsg(t=""){ msgEl.textContent = t; }
-
-function setActive(btn){
-  [btnStudents, btnTeachers, btnSessions].forEach(b=>b.classList.remove("is-active"));
-  if(btn) btn.classList.add("is-active");
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#39;");
 }
 
-async function init(){
-  const admin = guard();
-  if(!admin) return;
+function renderTable(data){
+  if(!data || data.length===0){
+    tableWrap.innerHTML = `<div style="opacity:.7;padding:14px">ไม่มีข้อมูล</div>`;
+    return;
+  }
 
-  adminNameEl.textContent = admin.name || admin.username || "Admin";
+  const cols = Object.keys(data[0]);
 
-  logoutBtn.addEventListener("click", ()=>{
-    localStorage.removeItem("admin");
-    location.href = "login.html";
-  });
+  const thead = `<tr>${cols.map(c=>`<th>${escapeHtml(c)}</th>`).join("")}</tr>`;
+  const tbody = data.map(row => {
+    return `<tr>${cols.map(c=>`<td>${escapeHtml(row[c])}</td>`).join("")}</tr>`;
+  }).join("");
 
-  btnStudents.addEventListener("click", ()=>loadTable("นักเรียน","adminStudents",btnStudents));
-  btnTeachers.addEventListener("click", ()=>loadTable("ครู","adminTeachers",btnTeachers));
-  btnSessions.addEventListener("click", ()=>loadTable("คาบเรียน","adminSessions",btnSessions));
-  exportBtn.addEventListener("click", exportCSV);
-
-  await loadStats();
+  tableWrap.innerHTML = `
+    <div style="overflow:auto">
+      <table class="data-table">
+        <thead>${thead}</thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    </div>
+  `;
 }
 
 async function loadStats(){
-  setMsg("กำลังโหลดสถิติ...");
   const r = await callApi("adminStats");
+  if(!r.success) return;
 
-  if(!r?.success){ setMsg(r?.message || "โหลดสถิติไม่สำเร็จ"); return; }
-
-  stuCount.textContent  = r.data?.students ?? "—";
-  teaCount.textContent  = r.data?.teachers ?? "—";
-  sessCount.textContent = r.data?.sessions ?? "—";
-  setMsg("");
+  statStudents.textContent = r.students ?? "-";
+  statTeachers.textContent = r.teachers ?? "-";
+  const s = r.sessions ?? "-";
+  const o = r.openSessions ?? 0;
+  statSessions.textContent = `${s} (${o} เปิดอยู่)`;
 }
 
-async function loadTable(title, action, btn){
-  setActive(btn);
-  setMsg("กำลังโหลดตาราง...");
-  tableTitle.textContent = `ตาราง: ${title}`;
+async function loadTab(tab){
+  currentTab = tab;
+  setLoading();
   exportBtn.disabled = true;
-  tableEl.innerHTML = "";
-  currentRows = [];
-  currentName = title;
+
+  let action = "";
+  let title = "";
+  if(tab==="students"){ action="adminStudents"; title="นักเรียน"; }
+  if(tab==="teachers"){ action="adminTeachers"; title="ครู"; }
+  if(tab==="sessions"){ action="adminSessions"; title="คาบเรียน"; }
+
+  tableTitle.textContent = `ตาราง: ${title}`;
 
   const r = await callApi(action);
-  if(!r?.success){ setMsg(r?.message || "โหลดตารางไม่สำเร็จ"); return; }
+  if(!r.success){
+    tableWrap.innerHTML = `<div style="color:#ffb4b4;padding:14px">${escapeHtml(r.message||"โหลดข้อมูลไม่สำเร็จ")}</div>`;
+    return;
+  }
 
-  const rows = r.data || [];
-  if(!rows.length){ setMsg("ไม่มีข้อมูล"); return; }
-
-  currentRows = rows;
-  exportBtn.disabled = false;
-  setMsg("");
-  renderTable(rows);
+  currentData = r.data || [];
+  renderTable(currentData);
+  exportBtn.disabled = currentData.length===0;
 }
 
-function renderTable(rows){
+function toCSV(rows){
+  if(!rows || !rows.length) return "";
   const cols = Object.keys(rows[0]);
-  let html = "<table><thead><tr>";
-  cols.forEach(c => html += `<th>${escapeHtml(c)}</th>`);
-  html += "</tr></thead><tbody>";
 
-  rows.forEach(r=>{
-    html += "<tr>";
-    cols.forEach(c => html += `<td>${escapeHtml(String(r[c] ?? ""))}</td>`);
-    html += "</tr>";
-  });
-
-  html += "</tbody></table>";
-  tableEl.innerHTML = html;
+  const esc = (v) => `"${String(v ?? "").replaceAll('"','""')}"`;
+  const head = cols.map(esc).join(",");
+  const body = rows.map(r => cols.map(c=>esc(r[c])).join(",")).join("\n");
+  return head + "\n" + body;
 }
 
-function exportCSV(){
-  if(!currentRows.length) return;
-
-  const cols = Object.keys(currentRows[0]);
-  const esc = (v) => `"${String(v ?? "").replaceAll('"','""')}"`;
-
-  const lines = [
-    cols.map(esc).join(","),
-    ...currentRows.map(r => cols.map(c => esc(r[c])).join(","))
-  ];
-
-  const blob = new Blob([lines.join("\n")], { type:"text/csv;charset=utf-8" });
+function downloadCSV(){
+  const csv = toCSV(currentData);
+  const blob = new Blob([csv], { type:"text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");
   a.href = url;
-  a.download = `CPVC-${currentName}-${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `${currentTab||"data"}.csv`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
 }
 
-function escapeHtml(s){
-  return s.replace(/[&<>"']/g, (m)=>({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
-  }[m]));
+function bindTabs(){
+  document.querySelectorAll("[data-tab]").forEach(btn=>{
+    btn.addEventListener("click", ()=> loadTab(btn.dataset.tab));
+  });
 }
+
+function bindActions(){
+  exportBtn.addEventListener("click", downloadCSV);
+  logoutBtn?.addEventListener("click", ()=>{
+    localStorage.removeItem("admin");
+    location.href = "login.html";
+  });
+}
+
+(async function init(){
+  guardAdmin();
+  bindTabs();
+  bindActions();
+  await loadStats();
+})();
