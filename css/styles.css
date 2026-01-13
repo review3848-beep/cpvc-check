@@ -2094,3 +2094,254 @@ body{ overflow-x:hidden; }
   .lp-steps{ grid-template-columns: 1fr; }
   .lp-metrics{ grid-template-columns: 1fr; }
 }
+
+/* ===== Compact Hero Tuning ===== */
+
+/* ลดขนาดฝั่งซ้าย */
+.hero-left{
+  padding: 1.1rem 1.1rem .95rem;
+}
+
+.hero-title{
+  font-size: clamp(1.85rem, 2.4vw, 2.25rem);
+  line-height: 1.15;
+}
+
+.hero-subtitle{
+  font-size: .95rem;
+  margin-bottom: 1.2rem;
+  line-height: 1.65;
+}
+
+.hero-kicker{
+  font-size: .72rem;
+  padding: 6px 10px;
+}
+
+.hero-cta .btn-lg-primary,
+.hero-cta .btn-lg-outline{
+  padding: .7rem 1.15rem;
+  font-size: .9rem;
+}
+
+.hero-meta{
+  font-size: .82rem;
+}
+
+.hero-trust{
+  gap: 8px;
+}
+
+.trust-card{
+  padding: 10px;
+}
+
+.trust-card b{
+  font-size: .95rem;
+}
+
+.trust-card span{
+  font-size: .8rem;
+}
+
+/* ลดขนาดฝั่งขวา */
+.hero-card{
+  padding: 1.05rem 1rem 1rem;
+}
+
+.hero-card-title{
+  font-size: .9rem;
+}
+
+.hero-card-sub{
+  font-size: .74rem;
+}
+
+.hero-card-tag{
+  font-size: .72rem;
+  padding: .3rem .6rem;
+}
+
+.hero-stat{
+  padding: .75rem .75rem;
+}
+
+.hero-stat-label{
+  font-size: .74rem;
+}
+
+.hero-stat-value{
+  font-size: 1.25rem;
+}
+
+.hero-stat-foot{
+  font-size: .72rem;
+}
+
+.mini-progress{
+  padding: 8px 10px;
+}
+
+.mini-progress-top{
+  font-size: .75rem;
+}
+
+.hero-card-footer{
+  font-size: .78rem;
+  padding-top: .65rem;
+}
+
+/* ลดความสูงรวมให้บาลานซ์ */
+.hero-left,
+.hero-card{
+  min-height: 460px;
+}
+
+/* =========================
+   Ultra-Compact + Premium
+   (drop-in override)
+========================= */
+
+/* 1) ลดความสูงรวม + ลดช่องว่าง */
+.hero{
+  gap: 1.05rem;
+  margin: 1.7rem auto 1.6rem;
+}
+
+.hero-left,
+.hero-card{
+  min-height: 420px;          /* เดิม 520/460 -> เล็กลง */
+}
+
+/* 2) ซ้าย: ลด headline + ปรับ line-height ให้พอดี */
+.hero-left{
+  padding: 1.0rem 1.0rem .9rem;
+}
+
+.hero-kicker{
+  font-size: .70rem;
+  padding: 6px 10px;
+  margin-bottom: .7rem;
+}
+
+.hero-title{
+  font-size: clamp(1.65rem, 2.1vw, 2.05rem);
+  line-height: 1.12;
+  margin: 0 0 .7rem;
+  letter-spacing: .1px;
+}
+
+.hero-subtitle{
+  font-size: .92rem;
+  line-height: 1.62;
+  margin: 0 0 1.05rem;
+  max-width: 52ch;
+}
+
+/* 3) ปุ่ม: เล็กลง + ดูเนี๊ยบขึ้น */
+.hero-cta{
+  gap: .65rem;
+  margin-bottom: .85rem;
+}
+
+.btn-lg-primary,
+.btn-lg-outline{
+  padding: .66rem 1.05rem;
+  font-size: .88rem;
+  gap: .45rem;
+}
+
+/* 4) chip/meta ให้บางลง ไม่กินพื้นที่ */
+.hero-meta{
+  font-size: .80rem;
+  gap: 8px;
+}
+.chip{
+  padding: 7px 10px;
+  font-size: .80rem;
+}
+
+/* 5) trust cards: ทำให้ “เล็ก+เท่ากัน” */
+.hero-trust{
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding-top: 10px;
+}
+.trust-card{
+  padding: 10px;
+  border-radius: 14px;
+}
+.trust-card b{ font-size: .92rem; }
+.trust-card span{ font-size: .78rem; }
+
+/* 6) ขวา: ลด padding + ลด KPI size */
+.hero-card{
+  padding: 1.0rem .95rem .95rem;
+  border-radius: 18px;
+}
+
+.hero-card-header{
+  margin-bottom: .8rem;
+}
+
+.hero-card-title{
+  font-size: .88rem;
+}
+.hero-card-sub{
+  font-size: .72rem;
+}
+
+.hero-card-tag{
+  font-size: .70rem;
+  padding: .28rem .58rem;
+}
+
+.hero-card-grid{
+  gap: .75rem;
+  margin-bottom: .85rem;
+}
+
+.hero-stat{
+  padding: .72rem .72rem;
+  border-radius: 14px;
+}
+
+.hero-stat-label{
+  font-size: .72rem;
+  margin-bottom: .18rem;
+}
+
+.hero-stat-value{
+  font-size: 1.18rem;
+}
+
+.hero-stat-foot{
+  font-size: .70rem;
+}
+
+/* 7) progress: เตี้ยลง */
+.mini-progress{
+  padding: 8px 10px;
+  border-radius: 14px;
+}
+.mini-progress-top{
+  font-size: .72rem;
+}
+.bar{ height: 9px; }
+
+.hero-card-footer{
+  font-size: .76rem;
+  padding-top: .65rem;
+}
+
+/* 8) เงาให้ดูแพงขึ้น (ไม่ดำทึบ) */
+.hero-left,
+.hero-card{
+  box-shadow: 0 14px 34px rgba(0,0,0,.28);
+}
+
+/* 9) Responsive: บนจอเล็กให้ยัง “compact” */
+@media (max-width: 900px){
+  .hero-left, .hero-card{ min-height: unset; }
+  .hero-trust{ grid-template-columns: 1fr; }
+}

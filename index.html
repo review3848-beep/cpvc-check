@@ -2,259 +2,785 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
+  <title>NexAttend | ระบบเช็คชื่อออนไลน์สำหรับครูและนักเรียน</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CPVC-Check | Attendance Platform</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
+  <!-- ใช้ไฟล์ CSS หลักของโปรเจกต์ (ถ้ามี) -->
   <link rel="stylesheet" href="css/styles.css" />
+
+  <style>
+    html, body{
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+body{
+  position: static !important;
+}
+
+    :root{
+      --bg0:#020617;
+      --bg1:#050b1d;
+
+      --panel: rgba(15,23,42,.78);
+      --panel2: rgba(15,23,42,.92);
+      --border: rgba(148,163,184,.26);
+
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+
+      --primary:#4f46e5;
+      --primary2:#6366f1;
+
+      --good:#34d399;
+      --warn:#fbbf24;
+      --bad:#f87171;
+
+      --r: 18px;
+      --r2: 22px;
+      --shadow: 0 22px 60px rgba(0,0,0,.45);
+      --shadow2: 0 14px 34px rgba(0,0,0,.32);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(900px 520px at 10% 5%, rgba(99,102,241,.16), transparent 60%),
+        radial-gradient(850px 560px at 90% 10%, rgba(56,189,248,.12), transparent 60%),
+        radial-gradient(900px 600px at 50% 90%, rgba(34,197,94,.08), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg0));
+      color: var(--text);
+      font-family: "Inter","Prompt", system-ui, sans-serif;
+    }
+
+    a{ color: inherit; }
+
+    /* ---------------- NAVBAR ---------------- */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .95rem 1.6rem;
+      background: linear-gradient(180deg, rgba(2,6,23,.88), rgba(2,6,23,.62));
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      min-width: 220px;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,.20), transparent 55%),
+        linear-gradient(135deg, rgba(99,102,241,.95), rgba(56,189,248,.70));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 26px rgba(56,189,248,.18);
+      border: 1px solid rgba(255,255,255,.10);
+      font-weight: 900;
+      color: rgba(6,18,31,.95);
+      font-size: 1rem;
+    }
+
+    .brand-text-main {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: .2px;
+      background: linear-gradient(135deg,#f9fafb,#a5b4fc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1.05;
+    }
+
+    .brand-text-sub {
+      font-size: 0.74rem;
+      color: #94a3b8;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      font-size: 0.92rem;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,.18);
+      background: rgba(15,23,42,.35);
+    }
+
+    .nav-link {
+      color: #9ca3af;
+      text-decoration: none;
+      padding: 0.42rem 0.8rem;
+      border-radius: 999px;
+      transition: 0.18s;
+      font-weight: 700;
+    }
+    .nav-link:hover {
+      color: #e5e7eb;
+      background: rgba(148,163,184,0.18);
+    }
+
+    .admin-btn {
+      padding: 0.52rem 1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(135deg, rgba(56,189,248,.95), rgba(99,102,241,.78));
+      color: rgba(6,18,31,.95);
+      text-decoration: none;
+      font-size: 0.80rem;
+      font-weight: 900;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: 0.18s;
+      box-shadow: 0 16px 32px rgba(56,189,248,.14);
+    }
+    .admin-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(56,189,248,.18);
+    }
+
+    /* ---------------- HERO ---------------- */
+    .hero {
+      max-width: 1120px;
+      margin: 2.2rem auto 2rem;
+      padding: 0 1.4rem;
+      display: grid;
+      grid-template-columns: minmax(0,1.05fr) minmax(0,.95fr);
+      gap: 1.4rem;
+      align-items: stretch;
+    }
+
+    .hero-left,
+    .hero-card{
+      min-height: 520px;
+    }
+
+    .hero-left{
+      padding: 1.35rem 1.35rem 1.1rem;
+      border-radius: var(--r2);
+      border: 1px solid var(--border);
+      background:
+        radial-gradient(900px 260px at 20% 0%, rgba(56,189,248,.12), transparent 60%),
+        radial-gradient(900px 260px at 85% 20%, rgba(99,102,241,.10), transparent 60%),
+        rgba(15,23,42,.52);
+      box-shadow: var(--shadow2);
+      display:flex;
+      flex-direction: column;
+    }
+
+    .hero-kicker {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #a5b4fc;
+      margin-bottom: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,.18);
+      background: rgba(15,23,42,.45);
+      width: fit-content;
+    }
+
+    .dot{
+      width: 10px;
+      height: 10px;
+      border-radius: 99px;
+      background: var(--good);
+      box-shadow: 0 0 0 4px rgba(52,211,153,.14);
+    }
+
+    .hero-title {
+      font-size: clamp(2.05rem, 3vw, 2.55rem);
+      line-height: 1.18;
+      font-weight: 800;
+      margin: 0 0 0.85rem;
+      color: #f9fafb;
+      letter-spacing: .2px;
+    }
+
+    .hero-title span.highlight {
+      background: linear-gradient(135deg,#60a5fa,#c4b5fd,#f97316);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1.02rem;
+      color: var(--muted);
+      margin: 0 0 1.55rem;
+      max-width: 36rem;
+      line-height: 1.75;
+    }
+
+    .hero-cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 1.05rem;
+    }
+
+    .btn-lg-primary,
+    .btn-lg-outline {
+      border-radius: 999px;
+      padding: 0.85rem 1.35rem;
+      font-size: 0.95rem;
+      font-weight: 800;
+      border: 1px solid rgba(148,163,184,.18);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      text-decoration: none;
+      transition: 0.18s;
+      white-space: nowrap;
+      user-select:none;
+    }
+
+    .btn-lg-primary {
+      background: linear-gradient(135deg, rgba(99,102,241,.95), rgba(56,189,248,.70));
+      color: rgba(6,18,31,.95);
+      box-shadow: 0 16px 34px rgba(56,189,248,.14);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .btn-lg-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 46px rgba(56,189,248,.18);
+    }
+
+    .btn-lg-outline {
+      background: rgba(15,23,42,0.55);
+      color: #e5e7eb;
+    }
+    .btn-lg-outline:hover {
+      background: rgba(148,163,184,0.14);
+      transform: translateY(-1px);
+    }
+
+    .hero-meta {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      display:flex;
+      gap:10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,.18);
+      background: rgba(2,6,23,.20);
+      font-weight: 700;
+      font-size:.86rem;
+    }
+    .chip i{
+      width:8px;height:8px;border-radius:99px;background:var(--good);
+      box-shadow:0 0 0 4px rgba(52,211,153,.12);
+      display:inline-block;
+    }
+
+    /* Trust cards in left (เติมพื้นที่ให้สมดุล) */
+    .hero-trust{
+      margin-top:auto;
+      padding-top: 14px;
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .trust-card{
+      border-radius: 16px;
+      padding: 12px;
+      border: 1px solid rgba(148,163,184,.18);
+      background: rgba(2,6,23,.20);
+    }
+    .trust-card b{ display:block; font-size:1rem; }
+    .trust-card span{ display:block; margin-top:2px; color:var(--muted); font-size:.86rem; }
+
+    /* ---------------- HERO RIGHT: DASHBOARD CARD ---------------- */
+    .hero-card {
+      border-radius: var(--r2);
+      padding: 1.25rem 1.15rem 1.15rem;
+      background:
+        radial-gradient(700px 260px at 20% 0%, rgba(56,189,248,.16), transparent 60%),
+        rgba(15,23,42,0.82);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow2);
+      display:flex;
+      flex-direction: column;
+      overflow:hidden;
+      position: relative;
+    }
+
+    .hero-card::before{
+      content:"";
+      position:absolute;
+      inset:-60px;
+      background: radial-gradient(500px 180px at 70% 10%, rgba(99,102,241,.16), transparent 60%);
+      opacity:.9;
+      pointer-events:none;
+    }
+
+    .hero-card > * { position: relative; z-index: 1; }
+
+    .hero-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      gap: 10px;
+    }
+
+    .hero-card-title {
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: #e5e7eb;
+      margin-bottom: 2px;
+    }
+    .hero-card-sub{
+      font-size:.80rem;
+      color: var(--muted);
+    }
+
+    .hero-card-tag {
+      font-size: 0.78rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(52,211,153,0.10);
+      color: #b9f6dc;
+      border: 1px solid rgba(52,211,153,0.24);
+      font-weight: 900;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .hero-card-tag::before{
+      content:"";
+      width:8px;height:8px;border-radius:99px;background:var(--good);
+      box-shadow:0 0 0 4px rgba(52,211,153,.12);
+      display:inline-block;
+    }
+
+    .hero-card-grid {
+      display: grid;
+      grid-template-columns: repeat(2,minmax(0,1fr));
+      gap: 0.9rem;
+      margin-bottom: 1.0rem;
+    }
+
+    .hero-stat {
+      padding: 0.95rem 0.95rem;
+      border-radius: 16px;
+      background: rgba(2,6,23,.20);
+      border: 1px solid rgba(148,163,184,0.18);
+      transition: transform .14s ease, border-color .14s ease;
+    }
+    .hero-stat:hover{
+      transform: translateY(-2px);
+      border-color: rgba(56,189,248,.30);
+    }
+
+    .hero-stat-label {
+      font-size: 0.80rem;
+      color: #9ca3af;
+      margin-bottom: 0.25rem;
+      font-weight: 700;
+    }
+    .hero-stat-value {
+      font-size: 1.45rem;
+      font-weight: 900;
+      letter-spacing: .2px;
+    }
+    .hero-stat-foot {
+      font-size: 0.78rem;
+      color: #94f5d2;
+      margin-top: 0.2rem;
+      opacity: .9;
+    }
+
+    /* tiny progress */
+    .mini-progress{
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(148,163,184,0.18);
+      background: rgba(2,6,23,.20);
+    }
+    .mini-progress-top{
+      display:flex; justify-content:space-between; align-items:center;
+      font-size:.82rem; color: var(--muted);
+      font-weight: 800;
+    }
+    .bar{
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(148,163,184,.14);
+      margin-top: 8px;
+      overflow:hidden;
+    }
+    .bar > span{
+      display:block;
+      height:100%;
+      width: 72%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(52,211,153,.95), rgba(56,189,248,.70));
+      box-shadow: 0 10px 24px rgba(56,189,248,.12);
+    }
+
+    .hero-card-footer {
+      margin-top:auto;
+      font-size: 0.86rem;
+      color: #9ca3af;
+      border-top: 1px solid rgba(148,163,184,.16);
+      padding-top: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    /* ---------------- FEATURES SECTION ---------------- */
+    .section {
+      max-width: 1120px;
+      margin: 0 auto 2.8rem;
+      padding: 0 1.4rem;
+    }
+
+    .section-head{
+      display:flex;
+      align-items:flex-end;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 1.1rem;
+    }
+
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 900;
+      margin: 0;
+      letter-spacing: .2px;
+    }
+
+    .section-sub {
+      font-size: 0.95rem;
+      color: #9ca3af;
+      margin: 6px 0 0;
+      line-height: 1.65;
+      max-width: 52rem;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .feature-card {
+      border-radius: var(--r);
+      padding: 1.05rem;
+      background: rgba(15,23,42,0.58);
+      border: 1px solid rgba(148,163,184,0.18);
+      box-shadow: 0 18px 48px rgba(0,0,0,.22);
+      transition: transform .14s ease, border-color .14s ease, background .14s ease;
+    }
+
+    .feature-card:hover{
+      transform: translateY(-2px);
+      border-color: rgba(56,189,248,.28);
+      background: rgba(15,23,42,0.66);
+    }
+
+    .feature-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display:grid;
+      place-items:center;
+      font-size: 1.25rem;
+      background: rgba(2,6,23,.20);
+      border: 1px solid rgba(148,163,184,.18);
+      margin-bottom: 0.7rem;
+    }
+
+    .feature-title {
+      font-size: 1.02rem;
+      font-weight: 900;
+      margin-bottom: 0.35rem;
+      letter-spacing: .1px;
+    }
+
+    .feature-text {
+      font-size: 0.9rem;
+      color: #9ca3af;
+      line-height: 1.65;
+      margin:0;
+    }
+
+    /* ---------------- FOOTER ---------------- */
+    footer {
+      border-top: 1px solid rgba(148,163,184,0.18);
+      padding: 1rem 1.4rem 1.6rem;
+      font-size: 0.86rem;
+      color: #94a3b8;
+      text-align: center;
+      background:
+        radial-gradient(900px 260px at 50% 0%, rgba(99,102,241,.14), transparent 60%),
+        rgba(2,6,23,.65);
+    }
+
+    /* ---------------- Responsive ---------------- */
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: minmax(0,1fr);
+        margin-top: 1.7rem;
+      }
+      .hero-left, .hero-card{
+        min-height: unset;
+      }
+      .hero-trust{ grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .top-nav { padding-inline: 1rem; }
+      .nav-links { display: none; }
+      .hero { padding-inline: 1rem; }
+      .feature-grid { grid-template-columns: minmax(0,1fr); }
+      .hero-card-grid { grid-template-columns: 1fr; }
+      .admin-btn{ padding: .5rem .9rem; }
+    }
+  </style>
 </head>
 
-<body class="lp-body">
-
-  <!-- Topbar -->
-  <header class="lp-topbar">
-    <div class="lp-topbar-inner">
-      <a class="lp-brand" href="index.html" aria-label="CPVC-Check Home">
-        <span class="lp-logo" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2l8.5 5v10L12 22l-8.5-5V7L12 2Z" stroke="rgba(6,18,31,.95)" stroke-width="2"/>
-            <path d="M8 12h8" stroke="rgba(6,18,31,.95)" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </span>
-        <span class="lp-brandtext">
-          <b>CPVC-Check</b>
-          <small>Attendance Platform</small>
-        </span>
-      </a>
-
-      <nav class="lp-nav">
-        <a href="#features">Features</a>
-        <a href="#roles">Roles</a>
-        <a href="#how">How it works</a>
-      </nav>
-
-      <div class="lp-actions">
-        <a class="lp-btn lp-btn-ghost" href="teacher/login.html">Teacher</a>
-        <a class="lp-btn lp-btn-ghost" href="student/login.html">Student</a>
-        <a class="lp-btn lp-btn-primary" href="admin/login.html">Admin</a>
+<body>
+  <!-- NAVBAR -->
+  <header class="top-nav">
+    <div class="brand">
+      <div class="brand-logo">✓</div>
+      <div>
+        <div class="brand-text-main">NexAttend</div>
+        <div class="brand-text-sub">SMART ATTENDANCE SYSTEM</div>
       </div>
+    </div>
+
+    <div class="nav-actions">
+      <div class="nav-links">
+        <a href="#features" class="nav-link">ฟีเจอร์</a>
+        <a href="#roles" class="nav-link">รูปแบบการใช้งาน</a>
+      </div>
+
+      <a href="admin/login.html" class="admin-btn">ADMIN</a>
     </div>
   </header>
 
-  <!-- Hero -->
-  <main class="lp-wrap">
-    <section class="lp-hero">
-      <div class="lp-hero-left">
-        <div class="lp-badge">
-          <span class="lp-dot"></span>
-          Real-time · QR · Token · Dashboard
-        </div>
+  <!-- HERO -->
+  <main>
+    <section class="hero">
 
-        <h1 class="lp-title">
-          ระบบเช็คชื่อที่ “ดูเป็นของจริง”
-          <span class="lp-title-accent">และใช้งานจริงได้</span>
+      <!-- LEFT -->
+      <div class="hero-left">
+        <div class="hero-kicker"><span class="dot"></span> ระบบเช็คชื่อออนไลน์สำหรับครูและนักเรียน</div>
+
+        <h1 class="hero-title">
+          จัดการการเข้าเรียนง่ายขึ้นด้วย
+          <br />
+          <span class="highlight">NexAttend</span>
         </h1>
 
-        <p class="lp-subtitle">
-          สำหรับครู นักเรียน และแอดมิน — เปิดคาบ สแกนเช็คชื่อ สรุปผลทันที พร้อมรายงาน/ส่งออกข้อมูล
-          โทนองค์กร ดาร์กพรีเมียม ไม่ใช่เว็บงานกลุ่มหน้าจืด ๆ (อันนั้นเราปลดระวางแล้ว)
+        <p class="hero-subtitle">
+          NexAttend ช่วยให้ครูเปิดคาบด้วย TOKEN 
+          นักเรียนสามารถกรอก  TOKEN เพื่อเช็คชื่อ
+          ข้อมูลบันทึกลง Google Sheet ทันที
         </p>
 
-        <div class="lp-cta">
-          <a class="lp-btn lp-btn-primary lp-btn-lg" href="#roles">
-            เริ่มใช้งาน
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M8 5l8 7-8 7" stroke="rgba(6,18,31,.95)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </a>
-
-          <a class="lp-btn lp-btn-ghost lp-btn-lg" href="#how">
-            ดูวิธีใช้งาน
-          </a>
+        <div class="hero-cta">
+          <a href="teacher/login.html" class="btn-lg-primary">👩‍🏫 เข้าสู่ระบบครู</a>
+          <a href="student/login.html" class="btn-lg-outline">🧑‍🎓 เข้าสู่ระบบนักเรียน</a>
         </div>
 
-        <div class="lp-metrics">
-          <div class="lp-metric">
-            <b>3 Roles</b>
-            <span>Admin / Teacher / Student</span>
+        <div class="hero-meta">
+          <span class="chip"><i></i> ไม่ต้องติดตั้งโปรแกรม</span>
+          <span class="chip"><i></i> ใช้ได้ทั้งคอมและมือถือ</span>
+          <span class="chip"><i></i> โครงสร้างพร้อมทำรายงาน</span>
+        </div>
+
+        <div class="hero-trust">
+          <div class="trust-card">
+            <b>Fast</b>
+            <span>เช็คชื่อไว ลดเวลาหน้าห้อง</span>
           </div>
-          <div class="lp-metric">
-            <b>6-Token</b>
-            <span>สแกนเร็ว ลดมั่ว</span>
+          <div class="trust-card">
+            <b>Clear</b>
+            <span>สรุปผลชัด ครูดูง่าย</span>
           </div>
-          <div class="lp-metric">
-            <b>Dashboard</b>
-            <span>สรุปแบบผู้บริหาร</span>
+          <div class="trust-card">
+            <b>Pro</b>
+            <span>หน้าตาแบบระบบจริง</span>
           </div>
         </div>
       </div>
 
-      <div class="lp-hero-right" aria-hidden="true">
-        <div class="lp-glass-card">
-          <div class="lp-glass-head">
-            <div class="lp-pill lp-pill-open"><span></span>OPEN</div>
-            <div class="lp-pill lp-pill-closed"><span></span>CLOSED</div>
+      <!-- RIGHT: DASHBOARD PREVIEW -->
+      <aside class="hero-card" aria-label="ตัวอย่างแดชบอร์ด">
+        <div class="hero-card-header">
+          <div>
+            <div class="hero-card-title">Dashboard ตัวอย่าง</div>
+            <div class="hero-card-sub">ข้อมูลจำลองเพื่อแสดงตัวอย่างหน้าจอ</div>
           </div>
-          <div class="lp-glass-body">
-            <div class="lp-mini stat">
-              <div>
-                <small>Sessions today</small>
-                <b>8</b>
-              </div>
-              <div class="lp-mini-icon">🕒</div>
-            </div>
-            <div class="lp-mini stat">
-              <div>
-                <small>Attendance</small>
-                <b>3,421</b>
-              </div>
-              <div class="lp-mini-icon">📊</div>
-            </div>
-            <div class="lp-mini table">
-              <div class="lp-mini-row head">
-                <span>Subject</span><span>Room</span><span>Status</span>
-              </div>
-              <div class="lp-mini-row">
-                <span>Database</span><span>LAB-2</span><span class="ok">OPEN</span>
-              </div>
-              <div class="lp-mini-row">
-                <span>English</span><span>305</span><span class="bad">CLOSED</span>
-              </div>
-              <div class="lp-mini-row">
-                <span>Math</span><span>201</span><span class="ok">OPEN</span>
-              </div>
-            </div>
+          <span class="hero-card-tag">Realtime</span>
+        </div>
+
+        <div class="hero-card-grid">
+          <div class="hero-stat">
+            <div class="hero-stat-label">นักเรียนทั้งหมด</div>
+            <div class="hero-stat-value">240</div>
+            <div class="hero-stat-foot">ลงทะเบียนในระบบ</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label">คาบที่เปิดวันนี้</div>
+            <div class="hero-stat-value">18</div>
+            <div class="hero-stat-foot">กำลังใช้งาน</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label">เช็คชื่อแล้ว</div>
+            <div class="hero-stat-value">712</div>
+            <div class="hero-stat-foot">อัปเดตแบบเรียลไทม์</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label">อัตราการมาเรียน</div>
+            <div class="hero-stat-value">92%</div>
+            <div class="hero-stat-foot">วันนี้ทั้งหมด</div>
           </div>
         </div>
 
-        <div class="lp-orb lp-orb-1"></div>
-        <div class="lp-orb lp-orb-2"></div>
-        <div class="lp-orb lp-orb-3"></div>
+        <div class="mini-progress">
+          <div class="mini-progress-top">
+            <span>Attendance progress</span>
+            <span style="color:#b9f6dc;">72%</span>
+          </div>
+          <div class="bar"><span></span></div>
+        </div>
+
+        <div class="hero-card-footer">
+          <span>ข้อมูลจากชีต SESSIONS &amp; ATTENDANCE</span>
+          <span style="font-size:.82rem;color:#a5b4fc;font-weight:800;">Google Apps Script</span>
+        </div>
+      </aside>
+
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="section">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">ทำไมต้องใช้ NexAttend</h2>
+          <p class="section-sub">ออกแบบมาเพื่อนักเรียน เน้นใช้งานจริงในห้องเรียน และรองรับการทำรายงาน</p>
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature-card">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">เก็บข้อมูลลง Google Sheet อัตโนมัติ</div>
+          <p class="feature-text">
+            ทุกคาบเรียนและทุกการเช็คชื่อถูกบันทึกลงชีต TEACHERS, STUDENTS,
+            SESSIONS และ ATTENDANCE พร้อมนำไปวิเคราะห์หรือทำรายงานต่อได้ทันที
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">🔐</div>
+          <div class="feature-title">ล็อกอินแยกสิทธิ์ ครู / นักเรียน</div>
+          <p class="feature-text">
+            ครูเปิดคาบและดูสรุปเฉพาะของตัวเอง นักเรียนเช็คชื่อด้วยรหัสนักเรียน
+            โครงสร้างชัด แยกบทบาทชัด
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">📱</div>
+          <div class="feature-title">ใช้งานได้ทุกอุปกรณ์</div>
+          <p class="feature-text">
+            รองรับคอมพิวเตอร์ โน้ตบุ๊ก และสมาร์ตโฟน
+            ใช้ผ่านเบราว์เซอร์ ไม่ต้องติดตั้งแอปเพิ่ม
+          </p>
+        </article>
       </div>
     </section>
 
-    <!-- Features -->
-    <section class="lp-section" id="features">
-      <div class="lp-section-head">
-        <h2>Features ที่ทำให้ระบบนี้ “ดูโปร”</h2>
-        <p>ไม่ใช่แค่สวย — แต่ช่วยลดงานครู และเพิ่มความชัดเจนให้ฝ่ายปกครอง</p>
+    <!-- ROLES SHORT SUMMARY -->
+    <section id="roles" class="section">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">รูปแบบการใช้งานตามบทบาท</h2>
+          <p class="section-sub">ออกแบบให้แต่ละหน้าเหมาะกับการใช้งานของแต่ละกลุ่มผู้ใช้</p>
+        </div>
       </div>
 
-      <div class="lp-grid-3">
-        <div class="lp-card">
-          <div class="lp-card-icon">📳</div>
-          <b>Check-in เร็ว</b>
-          <span>Token 6 ตัว + QR ช่วยลดพิมพ์ผิด และลดการโกงแบบเนียน ๆ</span>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-icon">🧠</div>
-          <b>Dashboard จริงจัง</b>
-          <span>สรุปคาบ / สถานะ / จำนวนเช็คชื่อ เห็นภาพรวมแบบผู้บริหาร</span>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-icon">📤</div>
-          <b>Export ได้</b>
-          <span>ส่งออก CSV / (ต่อยอดไป Google Sheet Report ได้) เพื่อทำรายงานทันที</span>
-        </div>
+      <div class="feature-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+        <article class="feature-card">
+          <div class="feature-icon">👩‍🏫</div>
+          <div class="feature-title">สำหรับครูผู้สอน</div>
+          <p class="feature-text">
+            • สมัครและล็อกอินด้วยอีเมล<br>
+            • เปิดคาบด้วยรหัสวิชา / ห้องเรียน<br>
+            • ระบบสุ่ม TOKEN และบันทึกข้อมูลอัตโนมัติ<br>
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">🧑‍🎓</div>
+          <div class="feature-title">สำหรับนักเรียน</div>
+          <p class="feature-text">
+            • สมัครด้วยรหัสนักเรียนที่มีอยู่ในฐานข้อมูลเท่านั้น<br>
+            • เช็คชื่อด้วยการสแกน QR หรือกรอก TOKEN<br>
+            • ระบบกันการเช็คชื่อซ้ำให้อัตโนมัติ<br>
+          </p>
+        </article>
       </div>
     </section>
-
-    <!-- Roles -->
-    <section class="lp-section" id="roles">
-      <div class="lp-section-head">
-        <h2>เลือกบทบาทเพื่อเข้าใช้งาน</h2>
-        <p>แต่ละบทบาทมีหน้าเฉพาะของตัวเอง — แยกชัด งานไม่ปนกัน</p>
-      </div>
-
-      <div class="lp-grid-3">
-        <a class="lp-role lp-role-admin" href="admin/login.html">
-          <div class="lp-role-top">
-            <div class="lp-role-icon">🛡️</div>
-            <div>
-              <b>Admin</b>
-              <span>ภาพรวมระบบ + จัดการข้อมูล</span>
-            </div>
-          </div>
-          <div class="lp-role-bottom">
-            <span class="lp-tag">Overview</span>
-            <span class="lp-tag">Manage</span>
-            <span class="lp-tag">Audit</span>
-          </div>
-        </a>
-
-        <a class="lp-role lp-role-teacher" href="teacher/login.html">
-          <div class="lp-role-top">
-            <div class="lp-role-icon">👨‍🏫</div>
-            <div>
-              <b>Teacher</b>
-              <span>เปิดคาบ / ปิดคาบ / สรุปผล</span>
-            </div>
-          </div>
-          <div class="lp-role-bottom">
-            <span class="lp-tag">Sessions</span>
-            <span class="lp-tag">Export</span>
-            <span class="lp-tag">Realtime</span>
-          </div>
-        </a>
-
-        <a class="lp-role lp-role-student" href="student/login.html">
-          <div class="lp-role-top">
-            <div class="lp-role-icon">🎓</div>
-            <div>
-              <b>Student</b>
-              <span>สแกนเช็คชื่อ + ดูประวัติ</span>
-            </div>
-          </div>
-          <div class="lp-role-bottom">
-            <span class="lp-tag">QR</span>
-            <span class="lp-tag">History</span>
-            <span class="lp-tag">Stats</span>
-          </div>
-        </a>
-      </div>
-    </section>
-
-    <!-- How it works -->
-    <section class="lp-section" id="how">
-      <div class="lp-section-head">
-        <h2>How it works</h2>
-        <p>Flow งานจริง — สั้น ชัด แล้วใช้งานได้</p>
-      </div>
-
-      <div class="lp-steps">
-        <div class="lp-step">
-          <div class="lp-step-no">1</div>
-          <b>ครูเปิดคาบ</b>
-          <span>เลือกวิชา/ห้อง ระบบสร้าง Token + QR</span>
-        </div>
-        <div class="lp-step">
-          <div class="lp-step-no">2</div>
-          <b>นักเรียนเช็คชื่อ</b>
-          <span>สแกน QR หรือกรอก Token → บันทึกทันที</span>
-        </div>
-        <div class="lp-step">
-          <div class="lp-step-no">3</div>
-          <b>สรุปผล & รายงาน</b>
-          <span>ดู Dashboard + Export ได้สำหรับรายงาน</span>
-        </div>
-      </div>
-    </section>
-
-    <footer class="lp-footer">
-      <div>
-        <b>CPVC-Check</b>
-        <span>© 2026 · Attendance Platform</span>
-      </div>
-      <div class="lp-footer-links">
-        <a href="#features">Features</a>
-        <a href="#roles">Roles</a>
-        <a href="#how">How</a>
-      </div>
-    </footer>
   </main>
+
+  <footer>
+    NexAttend · Smart Attendance System · Powered by Google Apps Script &amp; Google Sheets
+  </footer>
 
 </body>
 </html>
