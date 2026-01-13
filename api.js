@@ -41,3 +41,10 @@ export function clearAllSession() {
   sessionStorage.clear();
 }
 
+export function getAdminSession() {
+  try {
+    return JSON.parse(localStorage.getItem("admin"));
+  } catch {
+    return null;
+  }
+}
