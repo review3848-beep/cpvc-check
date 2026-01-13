@@ -2,158 +2,650 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>CPVC-Check | Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <link rel="stylesheet" href="../css/styles.css" />
-  <script type="module" src="./dashboard.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
   <style>
     :root{
-      --bg1:#020617; --bg2:#0b1224;
-      --card: rgba(15,23,42,.92);
+      --bg0:#020617;
+      --bg1:#050b1d;
+      --panel: rgba(15,23,42,.86);
+      --panel2: rgba(15,23,42,.96);
       --border: rgba(148,163,184,.22);
-      --muted:#9ca3af;
+      --border2: rgba(148,163,184,.32);
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+
+      --primary:#38bdf8;
+      --primary2:#60a5fa;
+      --good:#34d399;
+      --bad:#f87171;
+      --warn:#fbbf24;
+
+      --radius: 18px;
+      --radius2: 22px;
+      --shadow: 0 18px 48px rgba(0,0,0,.42);
+      --shadow2: 0 14px 34px rgba(0,0,0,.38);
+
+      --ring: 0 0 0 3px rgba(56,189,248,.18);
     }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
     body{
-      margin:0; min-height:100vh;
+      margin:0;
+      font-family:"Inter","Prompt",system-ui,sans-serif;
+      color:var(--text);
       background:
-        radial-gradient(circle at 20% 10%, #1e293b, transparent 52%),
-        radial-gradient(circle at 80% 10%, #312e81, transparent 52%),
-        linear-gradient(180deg,var(--bg2),var(--bg1));
-      color:#e5e7eb;
-      font-family: Inter, Prompt, system-ui, sans-serif;
+        radial-gradient(1200px 700px at 20% 10%, rgba(56,189,248,.16), transparent 55%),
+        radial-gradient(900px 520px at 80% 15%, rgba(96,165,250,.14), transparent 55%),
+        radial-gradient(850px 650px at 55% 85%, rgba(99,102,241,.10), transparent 58%),
+        linear-gradient(180deg, var(--bg1), var(--bg0));
     }
-    .wrap{max-width:1120px;margin:28px auto;padding:0 16px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-    .brand{display:flex;flex-direction:column;gap:4px}
-    .brand .t{font-weight:900;font-size:20px;letter-spacing:.2px}
-    .brand .s{font-size:12px;color:var(--muted)}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+    /* Layout */
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(2,6,23,.88), rgba(2,6,23,.62));
+      border-bottom:1px solid var(--border);
+    }
+
+    .topbar-inner{
+      max-width:1200px;
+      margin:0 auto;
+      padding: 14px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 220px;
+    }
+
+    .logo{
+      width:38px; height:38px;
+      border-radius: 12px;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,.18), transparent 55%),
+        linear-gradient(135deg, rgba(56,189,248,.85), rgba(99,102,241,.70));
+      box-shadow: 0 10px 22px rgba(56,189,248,.20);
+      border:1px solid rgba(255,255,255,.10);
+      display:grid;
+      place-items:center;
+    }
+
+    .logo svg{ opacity:.95; }
+
+    .brand-title{
+      display:flex;
+      flex-direction:column;
+      line-height:1.1;
+    }
+
+    .brand-title b{
+      font-size: 1.02rem;
+      letter-spacing:.2px;
+    }
+    .brand-title span{
+      color:var(--muted);
+      font-size:.82rem;
+      margin-top:2px;
+    }
+
+    .search{
+      flex: 1;
+      max-width: 520px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(15,23,42,.65);
+      border:1px solid var(--border);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .search:focus-within{
+      border-color: rgba(56,189,248,.55);
+      box-shadow: var(--ring);
+    }
+    .search input{
+      width:100%;
+      border:none;
+      outline:none;
+      background:transparent;
+      color:var(--text);
+      font-size:.92rem;
+    }
+    .search input::placeholder{ color: rgba(148,163,184,.75); }
+
+    .top-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 260px;
+      justify-content:flex-end;
+    }
+
+    .chip{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(15,23,42,.66);
+      border:1px solid var(--border);
+      color: var(--muted);
+      font-size:.85rem;
+    }
+
+    .avatar{
+      width:30px; height:30px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.22), transparent 55%),
+        linear-gradient(135deg, rgba(56,189,248,.75), rgba(96,165,250,.55));
+      box-shadow: 0 10px 18px rgba(56,189,248,.14);
+    }
 
     .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:none;
+      cursor:pointer;
+      border-radius: 999px;
+      padding: 10px 12px;
+      font-weight:600;
+      font-size:.9rem;
+      color: var(--text);
+      background: rgba(15,23,42,.66);
       border:1px solid var(--border);
-      background:rgba(2,6,23,.55);
-      color:#e5e7eb;border-radius:12px;
-      padding:10px 12px;cursor:pointer;text-decoration:none;
-      display:inline-flex;align-items:center;gap:8px;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      user-select:none;
     }
-    .btn.primary{background:linear-gradient(135deg,#2563eb,#7c3aed);border:none}
-    .btn.danger{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.45)}
-    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(56,189,248,.35);
+      background: rgba(15,23,42,.78);
+    }
+    .btn:active{ transform: translateY(0px) scale(.99); }
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(56,189,248,.95), rgba(96,165,250,.75));
+      border:1px solid rgba(255,255,255,.14);
+      color:#06121f;
+      box-shadow: 0 16px 30px rgba(56,189,248,.18);
+    }
+    .btn.primary:hover{ border-color: rgba(255,255,255,.22); }
 
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding: 18px;
+    }
+
+    .hero{
+      margin-top: 14px;
+      padding: 18px;
+      border-radius: var(--radius2);
+      background:
+        radial-gradient(900px 260px at 20% 0%, rgba(56,189,248,.14), transparent 60%),
+        radial-gradient(900px 260px at 85% 20%, rgba(99,102,241,.10), transparent 60%),
+        rgba(15,23,42,.55);
+      border:1px solid var(--border);
+      box-shadow: var(--shadow2);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 14px;
+    }
+    .hero h1{
+      margin:0;
+      font-size: 1.25rem;
+      letter-spacing:.2px;
+    }
+    .hero p{
+      margin:6px 0 0 0;
+      color: var(--muted);
+      font-size: .95rem;
+      line-height: 1.55;
+      max-width: 680px;
+    }
+    .hero-right{
+      display:flex;
+      gap:10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+
+    /* Stat grid */
+    .grid{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+
     .card{
-      background:var(--card);
+      border-radius: var(--radius2);
+      background: rgba(15,23,42,.78);
       border:1px solid var(--border);
-      border-radius:18px;
-      box-shadow:0 12px 30px rgba(0,0,0,.35);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
     }
-    .cardHd{padding:14px 14px;border-bottom:1px solid rgba(148,163,184,.14);display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .cardBd{padding:14px 14px}
-    .muted{color:var(--muted)}
-    .kpi{
-      grid-column: span 3;
-      padding:14px 14px;
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(700px 200px at 20% 0%, rgba(56,189,248,.10), transparent 60%),
+        radial-gradient(700px 220px at 90% 20%, rgba(99,102,241,.08), transparent 60%);
+      pointer-events:none;
+      opacity:.9;
     }
-    .kpi .label{font-size:12px;color:var(--muted);letter-spacing:.3px}
-    .kpi .value{font-size:26px;font-weight:900;margin-top:6px}
-    .kpi .hint{font-size:12px;color:var(--muted);margin-top:4px}
 
-    .panel{grid-column: span 12}
+    .stat{
+      grid-column: span 3;
+      padding: 16px 16px 14px 16px;
+      min-height: 112px;
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+    }
     @media (max-width: 980px){
-      .kpi{grid-column: span 6}
+      .stat{ grid-column: span 6; }
+      .top-actions{ min-width:auto; }
+      .brand{ min-width:auto; }
     }
     @media (max-width: 560px){
-      .kpi{grid-column: span 12}
+      .stat{ grid-column: span 12; }
+      .search{ display:none; }
     }
 
-    table{width:100%;border-collapse:separate;border-spacing:0}
-    th,td{padding:12px 12px;border-bottom:1px solid rgba(148,163,184,.12);text-align:left}
-    th{font-size:12px;color:#a5b4fc;letter-spacing:.4px;text-transform:uppercase}
-    .pill{
-      display:inline-flex;align-items:center;
-      padding:6px 10px;border-radius:999px;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(2,6,23,.45);
-      font-size:12px;
+    .stat-left{
+      position:relative;
+      z-index:1;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
     }
-    .pill.open{border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.12)}
-    .pill.closed{border-color:rgba(148,163,184,.22);background:rgba(148,163,184,.10)}
-    .msg{margin-top:10px;color:var(--muted);font-size:13px}
+    .stat-title{
+      color: rgba(148,163,184,.92);
+      font-size: .88rem;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .stat-value{
+      font-size: 2.05rem;
+      font-weight: 800;
+      letter-spacing: .3px;
+      color: var(--primary);
+      line-height: 1;
+    }
+    .stat-sub{
+      color: rgba(148,163,184,.82);
+      font-size: .82rem;
+    }
+    .stat-icon{
+      position:relative;
+      z-index:1;
+      width: 44px; height: 44px;
+      border-radius: 16px;
+      display:grid;
+      place-items:center;
+      border:1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.14), transparent 60%),
+        rgba(2,6,23,.25);
+      box-shadow: 0 14px 28px rgba(0,0,0,.26);
+    }
+    .stat-icon svg{ opacity:.95; }
+
+    /* Main table card */
+    .main{
+      grid-column: span 12;
+      padding: 14px;
+    }
+
+    .card-head{
+      position:relative;
+      z-index:1;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding: 6px 6px 0 6px;
+    }
+    .card-title{
+      display:flex;
+      flex-direction:column;
+      gap: 4px;
+    }
+    .card-title b{
+      font-size: 1.02rem;
+      letter-spacing:.2px;
+    }
+    .card-title span{
+      color: var(--muted);
+      font-size: .86rem;
+    }
+
+    .mini-actions{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+
+    .select{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(15,23,42,.65);
+      border:1px solid var(--border);
+      color: var(--muted);
+      font-size: .88rem;
+    }
+    .select select{
+      border:none;
+      outline:none;
+      background:transparent;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    table{
+      width:100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: .92rem;
+      overflow:hidden;
+      border-radius: 16px;
+      border:1px solid var(--border);
+      background: rgba(2,6,23,.20);
+      position:relative;
+      z-index:1;
+    }
+    thead th{
+      text-align:left;
+      padding: 12px 12px;
+      color: rgba(148,163,184,.92);
+      font-weight: 600;
+      background: rgba(15,23,42,.55);
+      border-bottom: 1px solid var(--border);
+      position:sticky;
+      top: 0;
+      z-index: 2;
+    }
+    tbody td{
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(148,163,184,.14);
+      color: rgba(229,231,235,.96);
+    }
+    tbody tr:hover td{
+      background: rgba(56,189,248,.06);
+    }
+    tbody tr:last-child td{ border-bottom:none; }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 800;
+      letter-spacing: .2px;
+      font-size: .78rem;
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .dot{
+      width:8px; height:8px;
+      border-radius: 99px;
+      box-shadow: 0 0 0 3px rgba(255,255,255,.06);
+    }
+    .open{
+      background: rgba(52,211,153,.10);
+      color: #b9f6dc;
+      border-color: rgba(52,211,153,.26);
+    }
+    .open .dot{ background: var(--good); }
+    .closed{
+      background: rgba(248,113,113,.10);
+      color: #ffd1d1;
+      border-color: rgba(248,113,113,.26);
+    }
+    .closed .dot{ background: var(--bad); }
+
+    .muted{ color: var(--muted); }
+    .right{ text-align:right; }
+
+    .empty{
+      padding: 18px;
+      text-align:center;
+      color: rgba(148,163,184,.88);
+    }
+
+    .footer-note{
+      margin-top: 14px;
+      color: rgba(148,163,184,.78);
+      font-size: .86rem;
+      text-align:center;
+    }
+
+    /* subtle animation */
+    .float-in{
+      animation: floatIn .5s ease both;
+    }
+    @keyframes floatIn{
+      from{ transform: translateY(8px); opacity:0; }
+      to{ transform: translateY(0); opacity:1; }
+    }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="topbar">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-inner">
       <div class="brand">
-        <div class="t">Admin Dashboard</div>
-        <div class="s">CPVC-Check • <span id="adminName">-</span></div>
-      </div>
-
-      <div class="row">
-        <a class="btn" href="./teachers.html">👩‍🏫 Teachers</a>
-        <a class="btn" href="./students.html">👨‍🎓 Students</a>
-        <button class="btn" id="btnRefresh">🔄 Refresh</button>
-        <button class="btn danger" id="btnLogout">Logout</button>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="card kpi">
-        <div class="label">Teachers</div>
-        <div class="value" id="kTeachers">0</div>
-        <div class="hint">จำนวนครูทั้งหมด</div>
-      </div>
-
-      <div class="card kpi">
-        <div class="label">Students</div>
-        <div class="value" id="kStudents">0</div>
-        <div class="hint">จำนวนนักเรียนทั้งหมด</div>
-      </div>
-
-      <div class="card kpi">
-        <div class="label">Today Sessions</div>
-        <div class="value" id="kToday">0</div>
-        <div class="hint">คาบที่เปิด “วันนี้”</div>
-      </div>
-
-      <div class="card kpi">
-        <div class="label">Open Sessions</div>
-        <div class="value" id="kOpen">0</div>
-        <div class="hint">คาบที่ยัง OPEN</div>
-      </div>
-
-      <div class="card panel">
-        <div class="cardHd">
-          <div>
-            <div style="font-weight:900">Recent Sessions</div>
-            <div class="muted" style="font-size:12px">รายการคาบล่าสุด (Audit / ตรวจสอบ)</div>
-          </div>
-          <span class="pill muted" id="kAttendance">Attendance: 0</span>
+        <div class="logo" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2l8.5 5v10L12 22l-8.5-5V7L12 2Z" stroke="rgba(6,18,31,.95)" stroke-width="2"/>
+            <path d="M8 12h8" stroke="rgba(6,18,31,.95)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </div>
-
-        <div style="overflow:auto">
-          <table>
-            <thead>
-              <tr>
-                <th>Subject</th>
-                <th>Teacher</th>
-                <th>Room</th>
-                <th>Status</th>
-                <th style="width:90px">Time</th>
-              </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
+        <div class="brand-title">
+          <b>Admin Dashboard</b>
+          <span>CPVC-Check · System Overview</span>
         </div>
+      </div>
 
-        <div class="cardBd">
-          <div class="msg" id="msg"></div>
+      <div class="search" title="ค้นหาคาบเรียน / ห้อง / ครู">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="rgba(148,163,184,.9)" stroke-width="2"/>
+          <path d="M16.5 16.5 21 21" stroke="rgba(148,163,184,.9)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input id="q" placeholder="Search: วิชา, ครู, ห้อง, สถานะ..." />
+      </div>
+
+      <div class="top-actions">
+        <div class="chip">
+          <div class="avatar" aria-hidden="true"></div>
+          <span id="adminName">Admin</span>
         </div>
+        <button class="btn" id="btnRefresh" type="button" title="รีเฟรชข้อมูล">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 12a9 9 0 0 1-15.6 6.3" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M3 12a9 9 0 0 1 15.6-6.3" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M6 19v-4h4" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18 5v4h-4" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Refresh
+        </button>
+        <button class="btn primary" id="btnManage" type="button" title="ไปหน้าจัดการ">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="rgba(6,18,31,.95)" stroke-width="2"/>
+            <path d="M19.4 15a7.97 7.97 0 0 0 .1-6l2-1.2-2-3.5-2.3 1a8 8 0 0 0-5.2-3L11.5 0h-4L7 2.3a8 8 0 0 0-5.2 3l-2.3-1-2 3.5 2 1.2a8 8 0 0 0 0 6l-2 1.2 2 3.5 2.3-1a8 8 0 0 0 5.2 3L7.5 24h4l.5-2.3a8 8 0 0 0 5.2-3l2.3 1 2-3.5-2-1.2Z"
+                  stroke="rgba(6,18,31,.95)" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+          Manage
+        </button>
       </div>
     </div>
   </div>
+
+  <div class="wrap">
+    <!-- Hero -->
+    <div class="hero float-in">
+      <div>
+        <h1>ภาพรวมระบบวันนี้</h1>
+        <p>หน้าจอแอดมินสำหรับดูสถิติภาพรวม + รายการคาบล่าสุด (ดึงข้อมูลจริงจาก Google Apps Script)</p>
+      </div>
+      <div class="hero-right">
+        <button class="btn" type="button" id="btnExport" title="Export CSV จากตารางที่กำลังเห็น">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 3v10" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 9l4 4 4-4" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 17v3h16v-3" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Export CSV
+        </button>
+        <button class="btn" type="button" id="btnAudit" title="เผื่อทำ audit ทีหลัง">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 7h10M7 12h10M7 17h6" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M5 3h14a2 2 0 0 1 2 2v14l-4-2-4 2-4-2-4 2V5a2 2 0 0 1 2-2Z"
+                  stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+          Audit (เร็วๆนี้)
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats + Table -->
+    <div class="grid">
+      <!-- Stat 1 -->
+      <div class="card stat float-in" style="animation-delay:.04s">
+        <div class="stat-left">
+          <div class="stat-title"><span>ครูทั้งหมด</span></div>
+          <div class="stat-value" id="totalTeachers">-</div>
+          <div class="stat-sub" id="subTeachers">อัปเดตล่าสุด: -</div>
+        </div>
+        <div class="stat-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="rgba(229,231,235,.95)" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Stat 2 -->
+      <div class="card stat float-in" style="animation-delay:.08s">
+        <div class="stat-left">
+          <div class="stat-title"><span>นักเรียนทั้งหมด</span></div>
+          <div class="stat-value" id="totalStudents">-</div>
+          <div class="stat-sub" id="subStudents">อัปเดตล่าสุด: -</div>
+        </div>
+        <div class="stat-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 3 2 8l10 5 10-5-10-5Z" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M6 10.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-5.5" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Stat 3 -->
+      <div class="card stat float-in" style="animation-delay:.12s">
+        <div class="stat-left">
+          <div class="stat-title"><span>คาบเรียนวันนี้</span></div>
+          <div class="stat-value" id="todaySessions">-</div>
+          <div class="stat-sub" id="subToday">กำลังเปิดอยู่: -</div>
+        </div>
+        <div class="stat-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 8v5l3 2" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z" stroke="rgba(229,231,235,.95)" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Stat 4 -->
+      <div class="card stat float-in" style="animation-delay:.16s">
+        <div class="stat-left">
+          <div class="stat-title"><span>การเช็คชื่อทั้งหมด</span></div>
+          <div class="stat-value" id="totalAttendance">-</div>
+          <div class="stat-sub" id="subAttendance">รายการสะสมทั้งระบบ</div>
+        </div>
+        <div class="stat-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M4 19V5" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M4 19h16" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 15V9" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 17V7" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M16 13V11" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card main float-in" style="animation-delay:.20s">
+        <div class="card-head">
+          <div class="card-title">
+            <b>คาบเรียนล่าสุด</b>
+            <span>ค้นหา/กรองได้ + Export CSV ได้</span>
+          </div>
+
+          <div class="mini-actions">
+            <div class="select">
+              <span class="muted">Filter</span>
+              <select id="filterStatus">
+                <option value="ALL">ทั้งหมด</option>
+                <option value="OPEN">OPEN</option>
+                <option value="CLOSED">CLOSED</option>
+              </select>
+            </div>
+            <button class="btn" id="btnViewAll" type="button">View all</button>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width:30%">วิชา</th>
+              <th style="width:22%">ครูผู้สอน</th>
+              <th style="width:14%">ห้อง</th>
+              <th style="width:16%">สถานะ</th>
+              <th class="right" style="width:18%">เวลา</th>
+            </tr>
+          </thead>
+          <tbody id="recentSessions">
+            <tr><td colspan="5" class="empty">กำลังโหลดข้อมูล…</td></tr>
+          </tbody>
+        </table>
+
+        <div class="footer-note" id="footerNote">Last sync: -</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ ไฟล์ JS ของจริง (ต้องมี admin/dashboard.js) -->
+  <script type="module" src="../js/admin-dashboard.js"></script>
 </body>
 </html>
