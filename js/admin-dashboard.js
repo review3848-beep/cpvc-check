@@ -1,7 +1,7 @@
-// admin/dashboard.js (REAL)
-import { callApi } from "../api.js";
+// admin/dashboard.js
+import { callApi, getAdminSession } from "../api.js";
 
-// ✅ ให้ตรงกับ login ที่เซฟไว้
+// key ต้องตรงกับที่หน้า login เซฟไว้
 const ADMIN_KEY = "admin";
 
 const $ = (id) => document.getElementById(id);
@@ -33,32 +33,25 @@ const el = {
 let rawSessions = [];
 let viewSessions = [];
 
-function getAdmin() {
-  try { return JSON.parse(localStorage.getItem(ADMIN_KEY) || "null"); }
-  catch { return null; }
-}
-
 function guard() {
-  const admin = getAdmin();
+  const admin = getAdminSession() || safeGetLocal(ADMIN_KEY);
   if (!admin) {
     location.href = "./login.html";
     return null;
   }
-  el.adminName.textContent = admin?.name || admin?.username || "Admin";
+  if (el.adminName) el.adminName.textContent = admin?.name || admin?.username || "Admin";
   return admin;
+}
+
+function safeGetLocal(key) {
+  try { return JSON.parse(localStorage.getItem(key) || "null"); }
+  catch { return null; }
 }
 
 function nowStamp() {
   const d = new Date();
-  const pad = (n) => String(n).padStart(2,"0");
-  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-// ✅ ใช้ callApi แทน API_URL/fetch
-async function post(action, payload = {}) {
-  const data = await callApi(action, payload);
-  if (!data?.success) throw new Error(data?.message || "API error");
-  return data;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function pill(status) {
@@ -70,7 +63,7 @@ function pill(status) {
 
 function escapeHtml(v) {
   return String(v ?? "").replace(/[&<>"']/g, (m) => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
   }[m]));
 }
 
@@ -128,14 +121,14 @@ function renderTable(rows) {
 
 function csvEscape(v) {
   const s = String(v ?? "");
-  if (/[,"\n]/.test(s)) return `"${s.replaceAll('"','""')}"`;
+  if (/[,"\n]/.test(s)) return `"${s.replaceAll('"', '""')}"`;
   return s;
 }
 
 function exportCSV() {
   if (!viewSessions.length) return alert("ไม่มีข้อมูลให้ Export");
 
-  const cols = ["subject","teacher","room","status","time"];
+  const cols = ["subject", "teacher", "room", "status", "time"];
   const lines = [
     cols.join(","),
     ...viewSessions.map(r => cols.map(c => csvEscape(r[c])).join(","))
@@ -145,7 +138,7 @@ function exportCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `admin_recent_sessions_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `admin_recent_sessions_${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -153,10 +146,13 @@ function exportCSV() {
 }
 
 async function loadDashboard() {
-  // ต้องมี action "adminDashboard" ใน Code.gs
-  const data = await post("adminDashboard", { limit: 20 });
+  // ต้องมีเคสนี้ใน Code.gs (doPost)
+  const r = await callApi("adminDashboard", { limit: 20 });
 
-  if (data.adminName) el.adminName.textContent = data.adminName;
+  // รองรับทั้งรูปแบบ {success:true,...} และ {success:true,data:{...}}
+  const data = r.data || r;
+
+  if (data.adminName && el.adminName) el.adminName.textContent = data.adminName;
 
   renderStats(data.stats || {});
   rawSessions = Array.isArray(data.recentSessions) ? data.recentSessions : [];
@@ -169,7 +165,7 @@ function bindEvents() {
 
   el.btnRefresh?.addEventListener("click", async () => {
     try { await loadDashboard(); }
-    catch (e) { console.error(e); alert(e.message); }
+    catch (e) { console.error(e); alert(e.message || "โหลดข้อมูลไม่สำเร็จ"); }
   });
 
   el.btnExport?.addEventListener("click", exportCSV);
@@ -180,12 +176,16 @@ function bindEvents() {
   });
 }
 
-(async function init(){
+(async function init() {
   const admin = guard();
-  if(!admin) return;
+  if (!admin) return;
 
   bindEvents();
 
-  try { await loadDashboard(); }
-  catch(e){ console.error(e); alert(e.message || "โหลดข้อมูลไม่สำเร็จ"); }
+  try {
+    await loadDashboard();
+  } catch (e) {
+    console.error(e);
+    alert(e?.message || "Failed to fetch");
+  }
 })();
