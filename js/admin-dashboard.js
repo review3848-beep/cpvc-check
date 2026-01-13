@@ -1,6 +1,7 @@
 // admin/dashboard.js (REAL)
 // ✅ ใส่ URL Google Apps Script Web App ของคุณ (ลงท้าย /exec)
-const API_URL = "PASTE_YOUR_GAS_WEBAPP_URL_HERE";
+import { callApi } from "../js/api.js";
+
 
 // ✅ ให้ตรงกับ login ที่เซฟไว้
 const ADMIN_KEY = "admin";
