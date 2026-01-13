@@ -1,23 +1,29 @@
-import { callApi } from "../api.js";
+import { callApi, getTeacherSession } from "../api.js";
 
 /* ================= DOM ================= */
 const teacherNameEl   = document.getElementById("teacherName");
-const subjectInput   = document.getElementById("subject");
-const roomInput      = document.getElementById("room");
+const subjectInput    = document.getElementById("subject");
+const roomInput       = document.getElementById("room");
 
-const openBtn        = document.getElementById("btnOpenSession");
-const closeBtn       = document.getElementById("closeSessionBtn");
+const openBtn         = document.getElementById("btnOpenSession");
+const closeBtn        = document.getElementById("closeSessionBtn");
 
-const tokenBox       = document.getElementById("tokenBox");
-const tokenEl        = document.getElementById("token");
-const statusEl       = document.getElementById("sessionStatus");
-const msgEl          = document.getElementById("msg");
+const tokenBox        = document.getElementById("tokenBox");
+const tokenEl         = document.getElementById("token");
+const statusEl        = document.getElementById("sessionStatus");
+const msgEl           = document.getElementById("msg");
 
 /* modal */
-const modal          = document.getElementById("closeModal");
-const modalSummary   = document.getElementById("modalSummary");
-const cancelCloseBtn = document.getElementById("cancelClose");
-const confirmCloseBtn= document.getElementById("confirmClose");
+const modal           = document.getElementById("closeModal");
+const modalSummary    = document.getElementById("modalSummary");
+const cancelCloseBtn  = document.getElementById("cancelClose");
+const confirmCloseBtn = document.getElementById("confirmClose");
+
+/* back */
+const backBtn = document.getElementById("backDashboardBtn");
+
+/* ================= STATE ================= */
+let currentToken = "";
 
 /* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", init);
@@ -36,16 +42,28 @@ async function init(){
   cancelCloseBtn.addEventListener("click", hideCloseModal);
   confirmCloseBtn.addEventListener("click", closeSession);
 
-  await loadCurrentSession();
+  backBtn?.addEventListener("click", () => location.href = "dashboard.html");
+
+  // ถ้าคุณยังไม่มี action นี้ใน GAS ให้ปล่อยไว้เฉยๆได้
+  // await loadCurrentSession();
+
+  resetUI(); // เริ่มต้น
 }
 
 /* ================= SESSION ================= */
 async function openSession(){
-  const subject = subjectInput.value.trim();
-  const room    = roomInput.value.trim();
+  const teacher = getTeacherSession();
+  const email   = (teacher?.email || "").trim();
+  const subject = (subjectInput.value || "").trim();
+  const room    = (roomInput.value || "").trim();
+
+  if(!email){
+    showMsg("❌ ไม่พบอีเมลครูในระบบ (ลอง logout/login ใหม่)", "err");
+    return;
+  }
 
   if(!subject || !room){
-    showMsg("⚠️ กรุณากรอกข้อมูลให้ครบ", "warn");
+    showMsg("⚠️ กรุณากรอก วิชา และ ห้อง ให้ครบ", "warn");
     return;
   }
 
@@ -54,49 +72,55 @@ async function openSession(){
 
   try{
     const res = await callApi("teacherOpenSession", {
+      email,     // ✅ สำคัญมาก
       subject,
       room
     });
 
-    if(!res.success) throw res.message;
+    if(!res?.success) throw new Error(res?.message || "เปิดคาบไม่สำเร็จ");
 
-    renderSession(res.session);
+    renderSession({
+      token: res.session?.token,
+      subject,
+      room
+    });
+
     showMsg("✅ เปิดคาบเรียนสำเร็จ", "ok");
-
   }catch(err){
-    showMsg(err || "เกิดข้อผิดพลาด", "err");
+    console.error(err);
+    showMsg(err?.message || "เกิดข้อผิดพลาด", "err");
+    resetUI();
+  }finally{
+    openBtn.disabled = false;
+    openBtn.textContent = "เปิดคาบเรียน";
   }
-
-  openBtn.disabled = false;
-  openBtn.textContent = "เปิดคาบเรียน";
-}
-
-async function loadCurrentSession(){
-  try{
-    const res = await callApi("teacherGetCurrentSession", {});
-    if(res && res.session){
-      renderSession(res.session);
-    }
-  }catch(e){}
 }
 
 function renderSession(session){
-  tokenBox.style.display = "block";
-  tokenEl.textContent   = session.token;
-  statusEl.textContent  = "สถานะคาบ: เปิดอยู่";
+  currentToken = String(session.token || "").trim();
 
-  closeBtn.disabled = false;
+  tokenBox.style.display = "block";
+  tokenEl.textContent    = currentToken || "------";
+  statusEl.textContent   = "สถานะคาบ: เปิดอยู่";
+
+  closeBtn.disabled = !currentToken;
   openBtn.disabled  = true;
 
-  subjectInput.value = session.subject;
-  roomInput.value    = session.room;
+  subjectInput.value = session.subject || "";
+  roomInput.value    = session.room || "";
 }
 
 /* ================= CLOSE SESSION ================= */
 function showCloseModal(){
+  if(!currentToken){
+    showMsg("ยังไม่มีคาบที่เปิดอยู่", "warn");
+    return;
+  }
+
   modalSummary.innerHTML = `
-    <b>วิชา:</b> ${subjectInput.value}<br>
-    <b>ห้อง:</b> ${roomInput.value}
+    <b>วิชา:</b> ${escapeHtml(subjectInput.value)}<br>
+    <b>ห้อง:</b> ${escapeHtml(roomInput.value)}<br>
+    <b>TOKEN:</b> ${escapeHtml(currentToken)}
   `;
   modal.classList.add("show");
 }
@@ -106,41 +130,43 @@ function hideCloseModal(){
 }
 
 async function closeSession(){
-  if(!confirm("ปิดคาบเรียนใช่ไหม?")) return;
+  if(!currentToken) return;
+
+  confirmCloseBtn.disabled = true;
+  confirmCloseBtn.textContent = "กำลังปิดคาบ...";
 
   try{
-    const res = await callApi("teacherCloseSession", {});
+    // ✅ GAS ของคุณต้องรับ token (คุณเขียน teacherCloseSession_ ให้รับ token แล้ว)
+    const res = await callApi("teacherCloseSession", { token: currentToken });
 
-    if(!res.success) throw res.message;
+    if(!res?.success) throw new Error(res?.message || "ปิดคาบไม่สำเร็จ");
 
-    alert("✅ ปิดคาบเรียนเรียบร้อย");
-
-    // รีเซ็ตหน้า
-    tokenBox.style.display = "none";
-    tokenEl.textContent = "------";
-    statusEl.textContent = "สถานะคาบ: ยังไม่เปิดคาบ";
-
-    openBtn.disabled = false;
-    closeBtn.disabled = true;
-
+    showMsg("✅ ปิดคาบเรียนเรียบร้อย", "ok");
+    hideCloseModal();
+    resetUI();
   }catch(err){
-    alert("❌ ปิดคาบไม่สำเร็จ");
+    console.error(err);
+    showMsg(err?.message || "❌ ปิดคาบไม่สำเร็จ", "err");
+  }finally{
+    confirmCloseBtn.disabled = false;
+    confirmCloseBtn.textContent = "ยืนยันปิดคาบ";
   }
 }
-  confirmCloseBtn.disabled = false;
-  hideCloseModal();
 
 /* ================= UI HELPERS ================= */
 function resetUI(){
-  tokenBox.style.display = "none"; 
+  currentToken = "";
+
+  tokenBox.style.display = "none";
   tokenEl.textContent    = "------";
-  statusEl.textContent  = "สถานะคาบ: ยังไม่เปิดคาบ";
+  statusEl.textContent   = "สถานะคาบ: ยังไม่เปิดคาบ";
 
   openBtn.disabled  = false;
   closeBtn.disabled = true;
 
-  subjectInput.value = "";
-  roomInput.value    = "";
+  // ไม่ล้าง subject/room ก็ได้ แต่ผมล้างให้เพื่อกันเผลอ
+  // subjectInput.value = "";
+  // roomInput.value = "";
 }
 
 function showMsg(text, type=""){
@@ -151,15 +177,8 @@ function showMsg(text, type=""){
     "#facc15";
 }
 
-/* ================= SESSION STORAGE ================= */
-function getTeacherSession(){
-  try{
-    return JSON.parse(localStorage.getItem("teacherSession"));
-  }catch{
-    return null;
-  }
+function escapeHtml(v){
+  return String(v ?? "").replace(/[&<>"']/g, (m) => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
 }
-document.getElementById("backDashboardBtn")
-  .addEventListener("click", () => {
-    location.href = "dashboard.html";
-  });
