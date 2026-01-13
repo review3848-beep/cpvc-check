@@ -4,7 +4,8 @@
 const API_URL = "PASTE_YOUR_GAS_WEBAPP_URL_HERE";
 
 // คีย์ session admin (ให้ตรงกับหน้า login ของคุณ)
-const ADMIN_KEY = "nexattend_admin";
+const ADMIN_KEY = "CPVC_ADMIN_SESSION";
+
 
 const $ = (id) => document.getElementById(id);
 
