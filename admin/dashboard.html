@@ -392,7 +392,7 @@
       background: rgba(15,23,42,.55);
       border-bottom: 1px solid var(--border);
       position:sticky;
-      top: 0; /* just in case table overflows later */
+      top: 0;
       z-index: 2;
     }
     tbody td{
@@ -517,23 +517,24 @@
     <div class="hero float-in">
       <div>
         <h1>ภาพรวมระบบวันนี้</h1>
+        <p>หน้าจอแอดมินสำหรับดูสถิติภาพรวม + รายการคาบล่าสุด (ดึงข้อมูลจริงจาก Google Apps Script)</p>
       </div>
       <div class="hero-right">
-        <button class="btn" type="button" id="btnExport">
+        <button class="btn" type="button" id="btnExport" title="Export CSV จากตารางที่กำลังเห็น">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M12 3v10" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
             <path d="M8 9l4 4 4-4" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M4 17v3h16v-3" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
           </svg>
-          Export (เร็วๆนี้)
+          Export CSV
         </button>
-        <button class="btn" type="button" id="btnAudit">
+        <button class="btn" type="button" id="btnAudit" title="เผื่อทำ audit ทีหลัง">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M7 7h10M7 12h10M7 17h6" stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linecap="round"/>
             <path d="M5 3h14a2 2 0 0 1 2 2v14l-4-2-4 2-4-2-4 2V5a2 2 0 0 1 2-2Z"
                   stroke="rgba(229,231,235,.95)" stroke-width="2" stroke-linejoin="round"/>
           </svg>
-          Audit Log (เร็วๆนี้)
+          Audit (เร็วๆนี้)
         </button>
       </div>
     </div>
@@ -543,9 +544,7 @@
       <!-- Stat 1 -->
       <div class="card stat float-in" style="animation-delay:.04s">
         <div class="stat-left">
-          <div class="stat-title">
-            <span>ครูทั้งหมด</span>
-          </div>
+          <div class="stat-title"><span>ครูทั้งหมด</span></div>
           <div class="stat-value" id="totalTeachers">-</div>
           <div class="stat-sub" id="subTeachers">อัปเดตล่าสุด: -</div>
         </div>
@@ -560,9 +559,7 @@
       <!-- Stat 2 -->
       <div class="card stat float-in" style="animation-delay:.08s">
         <div class="stat-left">
-          <div class="stat-title">
-            <span>นักเรียนทั้งหมด</span>
-          </div>
+          <div class="stat-title"><span>นักเรียนทั้งหมด</span></div>
           <div class="stat-value" id="totalStudents">-</div>
           <div class="stat-sub" id="subStudents">อัปเดตล่าสุด: -</div>
         </div>
@@ -577,9 +574,7 @@
       <!-- Stat 3 -->
       <div class="card stat float-in" style="animation-delay:.12s">
         <div class="stat-left">
-          <div class="stat-title">
-            <span>คาบเรียนวันนี้</span>
-          </div>
+          <div class="stat-title"><span>คาบเรียนวันนี้</span></div>
           <div class="stat-value" id="todaySessions">-</div>
           <div class="stat-sub" id="subToday">กำลังเปิดอยู่: -</div>
         </div>
@@ -594,9 +589,7 @@
       <!-- Stat 4 -->
       <div class="card stat float-in" style="animation-delay:.16s">
         <div class="stat-left">
-          <div class="stat-title">
-            <span>การเช็คชื่อทั้งหมด</span>
-          </div>
+          <div class="stat-title"><span>การเช็คชื่อทั้งหมด</span></div>
           <div class="stat-value" id="totalAttendance">-</div>
           <div class="stat-sub" id="subAttendance">รายการสะสมทั้งระบบ</div>
         </div>
@@ -616,7 +609,7 @@
         <div class="card-head">
           <div class="card-title">
             <b>คาบเรียนล่าสุด</b>
-            <span>แสดงรายการล่าสุด + กรอง/ค้นหาได้ (พร้อมต่อ API)</span>
+            <span>ค้นหา/กรองได้ + Export CSV ได้</span>
           </div>
 
           <div class="mini-actions">
@@ -643,7 +636,7 @@
             </tr>
           </thead>
           <tbody id="recentSessions">
-            <tr><td colspan="5" class="empty">ยังไม่มีข้อมูล</td></tr>
+            <tr><td colspan="5" class="empty">กำลังโหลดข้อมูล…</td></tr>
           </tbody>
         </table>
 
@@ -652,143 +645,7 @@
     </div>
   </div>
 
-  <script>
-    // ====== Mock data (เปลี่ยนเป็น callApi จาก GAS ทีหลัง) ======
-    const mock = {
-      adminName: "Admin CPVC",
-      teachers: 12,
-      students: 486,
-      today: 8,
-      attendance: 3421,
-      sessions: [
-        {subject:"คณิตศาสตร์", teacher:"อ.สมชาย", room:"201", status:"OPEN", time:"09:10"},
-        {subject:"อังกฤษ", teacher:"อ.สุดา", room:"305", status:"CLOSED", time:"08:05"},
-        {subject:"ฐานข้อมูล", teacher:"อ.ธีรพล", room:"LAB-2", status:"OPEN", time:"10:20"},
-      ]
-    };
-
-    // ====== UI bind ======
-    const $ = (id)=>document.getElementById(id);
-
-    const el = {
-      adminName: $("adminName"),
-      totalTeachers: $("totalTeachers"),
-      totalStudents: $("totalStudents"),
-      todaySessions: $("todaySessions"),
-      totalAttendance: $("totalAttendance"),
-      subTeachers: $("subTeachers"),
-      subStudents: $("subStudents"),
-      subToday: $("subToday"),
-      subAttendance: $("subAttendance"),
-      recentSessions: $("recentSessions"),
-      footerNote: $("footerNote"),
-      q: $("q"),
-      filterStatus: $("filterStatus"),
-
-      btnRefresh: $("btnRefresh"),
-      btnManage: $("btnManage"),
-      btnViewAll: $("btnViewAll"),
-      btnExport: $("btnExport"),
-      btnAudit: $("btnAudit"),
-    };
-
-    function nowStamp(){
-      const d = new Date();
-      const pad = (n)=>String(n).padStart(2,"0");
-      return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    }
-
-    function pill(status){
-      const isOpen = status === "OPEN";
-      const cls = isOpen ? "open" : "closed";
-      const label = isOpen ? "OPEN" : "CLOSED";
-      return `<span class="pill ${cls}">
-        <span class="dot"></span>${label}
-      </span>`;
-    }
-
-    function render(){
-      el.adminName.textContent = mock.adminName;
-
-      el.totalTeachers.textContent = mock.teachers;
-      el.totalStudents.textContent = mock.students;
-      el.todaySessions.textContent = mock.today;
-      el.totalAttendance.textContent = mock.attendance;
-
-      const stamp = nowStamp();
-      el.subTeachers.textContent = `อัปเดตล่าสุด: ${stamp}`;
-      el.subStudents.textContent = `อัปเดตล่าสุด: ${stamp}`;
-
-      const openCount = mock.sessions.filter(s=>s.status==="OPEN").length;
-      el.subToday.textContent = `กำลังเปิดอยู่: ${openCount}`;
-
-      el.footerNote.textContent = `Last sync: ${stamp}`;
-
-      applyFilterAndSearch();
-    }
-
-    function applyFilterAndSearch(){
-      const q = (el.q?.value || "").trim().toLowerCase();
-      const f = el.filterStatus.value;
-
-      let rows = [...mock.sessions];
-
-      if(f !== "ALL") rows = rows.filter(s=>s.status === f);
-
-      if(q){
-        rows = rows.filter(s =>
-          s.subject.toLowerCase().includes(q) ||
-          s.teacher.toLowerCase().includes(q) ||
-          String(s.room).toLowerCase().includes(q) ||
-          s.status.toLowerCase().includes(q)
-        );
-      }
-
-      if(rows.length === 0){
-        el.recentSessions.innerHTML = `<tr><td colspan="5" class="empty">ไม่พบข้อมูลตามตัวกรอง/คำค้น</td></tr>`;
-        return;
-      }
-
-      el.recentSessions.innerHTML = rows.map(s => `
-        <tr>
-          <td><b>${s.subject}</b></td>
-          <td>${s.teacher}</td>
-          <td>${s.room}</td>
-          <td>${pill(s.status)}</td>
-          <td class="right muted">${s.time || "-"}</td>
-        </tr>
-      `).join("");
-    }
-
-    // ====== Events ======
-    el.q?.addEventListener("input", applyFilterAndSearch);
-    el.filterStatus.addEventListener("change", applyFilterAndSearch);
-
-    el.btnRefresh.addEventListener("click", ()=>{
-      // ตรงนี้อนาคตแทนด้วยโหลดจาก API จริง
-      render();
-    });
-
-    el.btnManage.addEventListener("click", ()=>{
-      alert("Manage: ต่อไปค่อยลิงก์ไปหน้า admin/manage.html (หรือหน้าแยก ครู/นักเรียน)");
-    });
-
-    el.btnViewAll.addEventListener("click", ()=>{
-      alert("View all: ต่อไปค่อยทำหน้า Sessions ทั้งหมด + pagination");
-    });
-
-    el.btnExport.addEventListener("click", ()=>{
-      alert("Export: ของจริงจะต่อ API export CSV/Sheet ได้");
-    });
-
-    el.btnAudit.addEventListener("click", ()=>{
-      alert("Audit Log: ของจริงจะดึง event log จากชีต/DB ได้");
-    });
-
-    // init
-    render();
-  </script>
-  <script type="module" src="../admin/dashboard.js" defer></script>
-
+  <!-- ✅ ไฟล์ JS ของจริง (ต้องมี admin/dashboard.js) -->
+  <script type="module" src="../admin/dashboard.js"></script>
 </body>
 </html>
