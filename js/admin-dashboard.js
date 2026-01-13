@@ -1,6 +1,6 @@
 // admin/dashboard.js (REAL)
 // ✅ ใส่ URL Google Apps Script Web App ของคุณ (ลงท้าย /exec)
-import { callApi } from "../js/api.js";
+import { callApi } from "../api.js";
 
 
 // ✅ ให้ตรงกับ login ที่เซฟไว้
