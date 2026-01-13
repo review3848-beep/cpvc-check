@@ -1,7 +1,5 @@
 // admin/dashboard.js (REAL)
-// ✅ ใส่ URL Google Apps Script Web App ของคุณ (ลงท้าย /exec)
 import { callApi } from "../api.js";
-
 
 // ✅ ให้ตรงกับ login ที่เซฟไว้
 const ADMIN_KEY = "admin";
@@ -56,18 +54,9 @@ function nowStamp() {
   return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+// ✅ ใช้ callApi แทน API_URL/fetch
 async function post(action, payload = {}) {
-  if (!API_URL || API_URL.includes("PASTE_YOUR")) {
-    throw new Error("ยังไม่ได้ตั้งค่า API_URL ใน admin/dashboard.js");
-  }
-
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action, ...payload }),
-  });
-
-  const data = await res.json().catch(() => ({}));
+  const data = await callApi(action, payload);
   if (!data?.success) throw new Error(data?.message || "API error");
   return data;
 }
@@ -164,7 +153,9 @@ function exportCSV() {
 }
 
 async function loadDashboard() {
+  // ต้องมี action "adminDashboard" ใน Code.gs
   const data = await post("adminDashboard", { limit: 20 });
+
   if (data.adminName) el.adminName.textContent = data.adminName;
 
   renderStats(data.stats || {});
