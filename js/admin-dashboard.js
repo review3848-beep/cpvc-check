@@ -1,11 +1,9 @@
 // admin/dashboard.js (REAL)
-
 // ✅ ใส่ URL Google Apps Script Web App ของคุณ (ลงท้าย /exec)
 const API_URL = "PASTE_YOUR_GAS_WEBAPP_URL_HERE";
 
-// คีย์ session admin (ให้ตรงกับหน้า login ของคุณ)
-const ADMIN_KEY = "CPVC_ADMIN_SESSION";
-
+// ✅ ให้ตรงกับ login ที่เซฟไว้
+const ADMIN_KEY = "admin";
 
 const $ = (id) => document.getElementById(id);
 
@@ -29,14 +27,12 @@ const el = {
   filterStatus: $("filterStatus"),
 
   btnRefresh: $("btnRefresh"),
-  btnManage: $("btnManage"),
-  btnViewAll: $("btnViewAll"),
   btnExport: $("btnExport"),
-  btnAudit: $("btnAudit"),
+  btnLogout: $("btnLogout"),
 };
 
-let rawSessions = [];   // recent sessions from API
-let viewSessions = [];  // after filter/search
+let rawSessions = [];
+let viewSessions = [];
 
 function getAdmin() {
   try { return JSON.parse(localStorage.getItem(ADMIN_KEY) || "null"); }
@@ -46,8 +42,7 @@ function getAdmin() {
 function guard() {
   const admin = getAdmin();
   if (!admin) {
-    // ถ้าคุณใช้ path login อื่น เปลี่ยนตรงนี้
-    location.href = "login.html";
+    location.href = "./login.html";
     return null;
   }
   el.adminName.textContent = admin?.name || admin?.username || "Admin";
@@ -56,19 +51,21 @@ function guard() {
 
 function nowStamp() {
   const d = new Date();
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const pad = (n) => String(n).padStart(2,"0");
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 async function post(action, payload = {}) {
   if (!API_URL || API_URL.includes("PASTE_YOUR")) {
     throw new Error("ยังไม่ได้ตั้งค่า API_URL ใน admin/dashboard.js");
   }
+
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action, ...payload }),
   });
+
   const data = await res.json().catch(() => ({}));
   if (!data?.success) throw new Error(data?.message || "API error");
   return data;
@@ -78,13 +75,12 @@ function pill(status) {
   const s = String(status || "").toUpperCase();
   const isOpen = s === "OPEN";
   const cls = isOpen ? "open" : "closed";
-  const label = isOpen ? "OPEN" : "CLOSED";
-  return `<span class="pill ${cls}"><span class="dot"></span>${label}</span>`;
+  return `<span class="pill ${cls}"><span class="dot"></span>${isOpen ? "OPEN" : "CLOSED"}</span>`;
 }
 
 function escapeHtml(v) {
   return String(v ?? "").replace(/[&<>"']/g, (m) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   }[m]));
 }
 
@@ -99,7 +95,6 @@ function renderStats(stats) {
   el.subStudents.textContent = `อัปเดตล่าสุด: ${stamp}`;
   el.subToday.textContent = `กำลังเปิดอยู่: ${stats.openSessions ?? "-"}`;
   el.subAttendance.textContent = `รายการสะสมทั้งระบบ`;
-
   el.footerNote.textContent = `Last sync: ${stamp}`;
 }
 
@@ -141,11 +136,16 @@ function renderTable(rows) {
   `).join("");
 }
 
-// Export CSV ของ “ตารางที่กำลังเห็น”
+function csvEscape(v) {
+  const s = String(v ?? "");
+  if (/[,"\n]/.test(s)) return `"${s.replaceAll('"','""')}"`;
+  return s;
+}
+
 function exportCSV() {
   if (!viewSessions.length) return alert("ไม่มีข้อมูลให้ Export");
 
-  const cols = ["subject", "teacher", "room", "status", "time"];
+  const cols = ["subject","teacher","room","status","time"];
   const lines = [
     cols.join(","),
     ...viewSessions.map(r => cols.map(c => csvEscape(r[c])).join(","))
@@ -153,33 +153,20 @@ function exportCSV() {
 
   const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-
   const a = document.createElement("a");
   a.href = url;
-  a.download = `admin_recent_sessions_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `admin_recent_sessions_${new Date().toISOString().slice(0,10)}.csv`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
 }
 
-function csvEscape(v) {
-  const s = String(v ?? "");
-  if (/[,"\n]/.test(s)) return `"${s.replaceAll('"', '""')}"`;
-  return s;
-}
-
 async function loadDashboard() {
-  // action ใหม่จาก Code.gs: adminDashboard
   const data = await post("adminDashboard", { limit: 20 });
-
-  // admin name
   if (data.adminName) el.adminName.textContent = data.adminName;
 
-  // stats
   renderStats(data.stats || {});
-
-  // sessions
   rawSessions = Array.isArray(data.recentSessions) ? data.recentSessions : [];
   applyFilterAndSearch();
 }
@@ -195,30 +182,18 @@ function bindEvents() {
 
   el.btnExport?.addEventListener("click", exportCSV);
 
-  el.btnManage?.addEventListener("click", () => {
-    // คุณค่อยทำหน้าจัดการทีหลังได้ เช่น admin/manage.html
-    alert("Manage: ถัดไปทำหน้า CRUD ครู/นักเรียน/คาบเรียน");
-  });
-
-  el.btnViewAll?.addEventListener("click", () => {
-    alert("View all: ถัดไปทำหน้า sessions ทั้งหมด + pagination");
-  });
-
-  el.btnAudit?.addEventListener("click", () => {
-    alert("Audit Log: ถัดไปทำระบบ log ได้");
+  el.btnLogout?.addEventListener("click", () => {
+    localStorage.removeItem(ADMIN_KEY);
+    location.href = "./login.html";
   });
 }
 
-(async function init() {
+(async function init(){
   const admin = guard();
-  if (!admin) return;
+  if(!admin) return;
 
   bindEvents();
 
-  try {
-    await loadDashboard();
-  } catch (e) {
-    console.error(e);
-    alert(e.message || "โหลดข้อมูลไม่สำเร็จ");
-  }
+  try { await loadDashboard(); }
+  catch(e){ console.error(e); alert(e.message || "โหลดข้อมูลไม่สำเร็จ"); }
 })();

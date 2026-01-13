@@ -1,4 +1,3 @@
-// js/admin-login.js
 import { callApi } from "../api.js";
 
 const userEl = document.getElementById("username");
