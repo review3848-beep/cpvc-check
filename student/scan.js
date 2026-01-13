@@ -1,4 +1,4 @@
-import { callApi } from "../js/api.js";
+import { callApi } from "../api.js";
 
 /* ================= DOM ================= */
 const tokenInput = document.getElementById("tokenInput");

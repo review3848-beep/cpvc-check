@@ -1,5 +1,5 @@
 // teacher-open-session.js
-import { callApi } from "../js/api.js";
+import { callApi } from "../api.js";
 
 /* ================== STATE ================== */
 let currentSession = null;

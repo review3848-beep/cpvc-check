@@ -1,5 +1,5 @@
 // student/register.js
-import { callApi } from "../js/api.js";
+import { callApi } from "../api.js";
 
 /* ================= DOM ================= */
 const idInput   = document.getElementById("studentId");
