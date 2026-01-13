@@ -1,11 +1,12 @@
 // js/admin-login.js
 import { callApi } from "../api.js";
 
-
 const userEl = document.getElementById("username");
 const passEl = document.getElementById("password");
 const btnEl  = document.getElementById("loginBtn");
 const msgEl  = document.getElementById("msg");
+
+const ADMIN_KEY = "admin";
 
 btnEl.addEventListener("click", login);
 passEl.addEventListener("keydown", (e)=>{ if(e.key==="Enter") login(); });
@@ -37,13 +38,22 @@ async function login(){
       return;
     }
 
-    const admin = r.admin || r.data || { username };
-    localStorage.setItem("admin", JSON.stringify(admin));
+    const admin = r.admin || r.data || { username, name: "Admin" };
+
+    // ✅ เซฟ session key ที่ dashboard อ่านจริง
+    localStorage.setItem(ADMIN_KEY, JSON.stringify({
+      username: admin.username || username,
+      name: admin.name || "Admin",
+      ts: Date.now()
+    }));
 
     setMsg("เข้าสู่ระบบสำเร็จ", "is-ok");
-    setTimeout(()=> location.href = "dashboard.html", 350);
+
+    // ✅ สำคัญ: redirect ในโฟลเดอร์ admin
+    setTimeout(()=> location.href = "./dashboard.html", 200);
 
   }catch(err){
+    console.error(err);
     setMsg("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ (API/เน็ต/สิทธิ์ Web App)", "is-error");
   }finally{
     btnEl.disabled = false;
