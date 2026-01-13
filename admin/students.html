@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CPVC-Check | Admin - Students</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <script type="module" src="./students.js" defer></script>
+
+  <style>
+    body{margin:0;min-height:100vh;background:radial-gradient(circle at 25% 15%, #1e293b, #020617 75%);color:#e5e7eb;font-family:Inter,Prompt,system-ui}
+    .wrap{max-width:1100px;margin:28px auto;padding:0 16px}
+    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .title{font-size:20px;font-weight:800;letter-spacing:.2px}
+    .card{background:rgba(15,23,42,.92);border:1px solid rgba(148,163,184,.28);border-radius:18px;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+    .cardHd{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:14px 14px;border-bottom:1px solid rgba(148,163,184,.18)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .input{background:rgba(2,6,23,.7);border:1px solid rgba(148,163,184,.28);color:#e5e7eb;border-radius:12px;padding:10px 12px;outline:none}
+    .btn{border:1px solid rgba(148,163,184,.28);background:rgba(2,6,23,.55);color:#e5e7eb;border-radius:12px;padding:10px 12px;cursor:pointer}
+    .btn.primary{background:linear-gradient(135deg,#2563eb,#7c3aed);border:none}
+    .btn.danger{background:rgba(239,68,68,.14);border:1px solid rgba(239,68,68,.45)}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    table{width:100%;border-collapse:separate;border-spacing:0}
+    th,td{padding:12px 12px;border-bottom:1px solid rgba(148,163,184,.14);text-align:left;vertical-align:middle}
+    th{font-size:12px;letter-spacing:.4px;color:#a5b4fc;text-transform:uppercase}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.25);background:rgba(2,6,23,.5);font-size:12px}
+    .muted{color:#9ca3af}
+    .right{display:flex;gap:8px;justify-content:flex-end}
+
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:18px}
+    .modal.show{display:flex}
+    .modalCard{width:min(560px,100%);padding:16px;border-radius:18px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .grid .full{grid-column:1/-1}
+    label{font-size:12px;color:#9ca3af}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .help{font-size:12px;color:#9ca3af;margin-top:4px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">Admin • จัดการนักเรียน</div>
+      <div class="row">
+        <a class="btn" href="./dashboard.html">← Dashboard</a>
+        <a class="btn" href="./teachers.html">Teachers</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="cardHd">
+        <div class="row">
+          <input id="q" class="input" placeholder="ค้นหา (ชื่อ/รหัสนักเรียน)..." />
+          <span id="count" class="pill muted">0 รายการ</span>
+        </div>
+        <div class="row">
+          <button id="btnExport" class="btn">Export CSV</button>
+          <button id="btnAdd" class="btn primary">+ เพิ่มนักเรียน</button>
+        </div>
+      </div>
+
+      <div style="overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>STUDENT_ID</th>
+              <th>NAME</th>
+              <th style="width:170px">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div style="padding:12px 14px" class="muted" id="msg"></div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="card modalCard">
+      <div class="row" style="justify-content:space-between;margin-bottom:10px">
+        <div style="font-weight:800" id="modalTitle">เพิ่มนักเรียน</div>
+        <button class="btn" id="btnClose">✕</button>
+      </div>
+
+      <div class="grid">
+        <div class="field full">
+          <label>STUDENT_ID</label>
+          <input id="fId" class="input" placeholder="รหัสนักเรียน (ต้องไม่ซ้ำ)" />
+          <div class="help">ของคุณใช้เป็นรหัสจริง ๆ เลย แนะนำให้บังคับกรอก</div>
+        </div>
+
+        <div class="field full">
+          <label>NAME</label>
+          <input id="fName" class="input" placeholder="ชื่อนักเรียน" />
+        </div>
+
+        <div class="field full">
+          <label>PASSWORD</label>
+          <input id="fPass" class="input" placeholder="ถ้าแก้ไข: เว้นว่าง = ไม่เปลี่ยนรหัส" />
+        </div>
+      </div>
+
+      <div class="row" style="justify-content:flex-end;margin-top:12px">
+        <button id="btnSave" class="btn primary">บันทึก</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
