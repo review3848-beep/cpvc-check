@@ -2345,3 +2345,110 @@ body{ overflow-x:hidden; }
   .hero-left, .hero-card{ min-height: unset; }
   .hero-trust{ grid-template-columns: 1fr; }
 }
+
+/* ============ Final Compact Polish ============ */
+
+/* NAV ให้บางลง + ดูแพงขึ้น */
+.top-nav{
+  padding: .72rem 1.2rem !important;
+  background: rgba(2,6,23,.72) !important;
+}
+.brand-logo{
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 12px !important;
+}
+.brand-text-main{ font-size: 1.05rem !important; }
+.brand-text-sub{ font-size: .70rem !important; }
+
+/* เมนูขวาให้เตี้ยลง */
+.nav-links{
+  padding: 4px !important;
+}
+.nav-link{
+  padding: .35rem .68rem !important;
+  font-size: .86rem !important;
+}
+.admin-btn{
+  padding: .46rem .92rem !important;
+  font-size: .76rem !important;
+}
+
+/* HERO: ลดความสูงรวม + ลดช่องว่าง */
+.hero{
+  margin: 1.35rem auto 1.35rem !important;
+  gap: .9rem !important;
+}
+.hero-left,
+.hero-card{
+  min-height: 390px !important;  /* ลดอีก */
+}
+
+/* ซ้าย: ลดหัวข้อ/บรรทัด ให้กระชับ */
+.hero-title{
+  font-size: clamp(1.55rem, 1.95vw, 1.95rem) !important;
+  line-height: 1.10 !important;
+  margin-bottom: .55rem !important;
+}
+.hero-subtitle{
+  font-size: .90rem !important;
+  line-height: 1.58 !important;
+  margin-bottom: .85rem !important;
+}
+
+/* CTA ให้เล็กลงอีกนิด */
+.btn-lg-primary,
+.btn-lg-outline{
+  padding: .62rem 1.0rem !important;
+  font-size: .86rem !important;
+}
+
+/* chip/meta ให้แน่นขึ้น */
+.hero-meta{
+  gap: 7px !important;
+}
+.chip{
+  padding: 6px 10px !important;
+  font-size: .78rem !important;
+}
+
+/* ตัดความ “โล่ง” ด้านล่าง: ให้ trust ขึ้นมาอีกนิด */
+.hero-trust{
+  padding-top: 8px !important;
+}
+.trust-card{
+  padding: 9px !important;
+}
+.trust-card b{ font-size: .90rem !important; }
+.trust-card span{ font-size: .76rem !important; }
+
+/* ขวา: KPI เล็กลง + grid แน่นขึ้น */
+.hero-card-grid{
+  gap: .65rem !important;
+}
+.hero-stat{
+  padding: .66rem .66rem !important;
+}
+.hero-stat-value{
+  font-size: 1.08rem !important;
+}
+.hero-stat-label{
+  font-size: .70rem !important;
+}
+
+/* progress ให้เตี้ยลง */
+.mini-progress{
+  padding: 7px 9px !important;
+}
+.bar{ height: 8px !important; }
+
+/* footer ของการ์ดขวาให้เล็กลง */
+.hero-card-footer{
+  font-size: .74rem !important;
+  padding-top: .55rem !important;
+}
+
+/* section หัวข้อด้านล่างให้ไม่ “ชน hero” */
+.section{
+  margin-bottom: 2.2rem !important;
+}
