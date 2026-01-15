@@ -1,15 +1,20 @@
-import { callApi, getAdminSession } from "../api.js";
+// js/admin-teachers.js (ทับทั้งไฟล์)
+import { callApi, getAdminSession, clearAllSession } from "../api.js";
 
+/* ================= DOM ================= */
 const tbody = document.getElementById("tbody");
 const q = document.getElementById("q");
 const countEl = document.getElementById("count");
 const msg = document.getElementById("msg");
+
 const btnAdd = document.getElementById("btnAdd");
 const btnExport = document.getElementById("btnExport");
+const btnLogout = document.getElementById("btnLogout");
 
 const modal = document.getElementById("modal");
 const modalTitle = document.getElementById("modalTitle");
 const btnClose = document.getElementById("btnClose");
+const btnCancel = document.getElementById("btnCancel");
 const btnSave = document.getElementById("btnSave");
 
 const fId = document.getElementById("fId");
@@ -17,79 +22,85 @@ const fName = document.getElementById("fName");
 const fEmail = document.getElementById("fEmail");
 const fPass = document.getElementById("fPass");
 
+/* ================= STATE ================= */
 let rows = [];
 let editingId = null;
 
 document.addEventListener("DOMContentLoaded", init);
 
-/* ================== AUTH GUARD ================== */
+/* ================= AUTH GUARD ================= */
 function guardAdmin() {
-  const admin = getAdminSession(); // ✅ ใช้คีย์เดียวกับระบบ: localStorage "admin"
+  const admin = getAdminSession(); // localStorage key: "admin"
   if (!admin) {
-    location.href = "./login.html";
+    location.replace("./login.html");
     return null;
   }
   return admin;
 }
 
-/* ================== INIT ================== */
+/* ================= INIT ================= */
 async function init() {
-  guardAdmin();
+  const ses = guardAdmin();
+  if (!ses) return;
 
   btnAdd?.addEventListener("click", () => openModal());
   btnClose?.addEventListener("click", closeModal);
+  btnCancel?.addEventListener("click", closeModal);
+
   modal?.addEventListener("click", (e) => {
     if (e.target === modal) closeModal();
   });
+
   btnSave?.addEventListener("click", save);
   q?.addEventListener("input", render);
   btnExport?.addEventListener("click", exportCsv);
 
+  btnLogout?.addEventListener("click", () => {
+    // ล้าง session ให้หมด แล้วกลับ login
+    localStorage.removeItem("admin");
+    // เผื่อระบบอื่นใช้ร่วมกัน
+    clearAllSession?.();
+    location.replace("./login.html");
+  });
+
   await load();
 }
 
-/* ================== LOAD ================== */
+/* ================= LOAD ================= */
 async function load() {
-  msg.textContent = "Loading...";
+  setToast("กำลังโหลดข้อมูล…");
+  setLoadingTable(true);
+
   try {
-    // รองรับ backend ที่คืนแบบ {success:true, headers, rows} หรือ {success:true, data:{headers,rows}}
     const res = await callApi("adminGetTeachers", {});
 
     if (!res?.success) {
-      msg.textContent = res?.message || "โหลดไม่สำเร็จ";
+      setToast(res?.message || "โหลดไม่สำเร็จ");
+      setEmpty("โหลดข้อมูลไม่สำเร็จ");
       return;
     }
 
-    // ✅ ดึง rows ให้ครอบจักรวาล
-    const rawRows =
-      res.rows ||
-      res.data?.rows ||
-      res.data ||
-      res.list ||
-      [];
-
-    // ✅ normalize key ให้ใช้ได้ทั้ง TEACHER_ID / teacherId / id / UID + NAME/email/password/createdAt
+    const rawRows = res.rows || res.data?.rows || res.data || res.list || [];
     rows = normalizeRows(rawRows);
 
-    msg.textContent = "";
+    setToast("");
     render();
   } catch (e) {
     console.error(e);
-    msg.textContent = "โหลดไม่สำเร็จ (เชื่อมต่อผิดพลาด)";
+    setToast("โหลดไม่สำเร็จ (เชื่อมต่อผิดพลาด)");
+    setEmpty("เชื่อมต่อผิดพลาด");
   }
 }
 
-/* ================== NORMALIZE ================== */
+/* ================= NORMALIZE ================= */
 function normalizeRows(raw) {
   if (!Array.isArray(raw)) return [];
 
   return raw.map((r) => {
-    // เผื่อบางอันเป็น array (ไม่ควร แต่กันไว้)
     if (Array.isArray(r)) return { __raw: r };
 
     const o = { ...r };
 
-    // id
     o.TEACHER_ID =
       o.TEACHER_ID ??
       o.teacherId ??
@@ -99,7 +110,6 @@ function normalizeRows(raw) {
       o.uid ??
       "";
 
-    // name
     o.NAME =
       o.NAME ??
       o.name ??
@@ -107,20 +117,17 @@ function normalizeRows(raw) {
       o.fullname ??
       "";
 
-    // email
     o.EMAIL =
       o.EMAIL ??
       o.email ??
       o.Mail ??
       "";
 
-    // password (อาจโดนตัดออกตอน list ก็ไม่เป็นไร)
     o.PASSWORD =
       o.PASSWORD ??
       o.password ??
       "";
 
-    // created
     o.CREATED_AT =
       o.CREATED_AT ??
       o.createdAt ??
@@ -132,13 +139,14 @@ function normalizeRows(raw) {
   });
 }
 
-/* ================== RENDER ================== */
+/* ================= RENDER ================= */
 function norm(v) {
   return String(v ?? "").toLowerCase().trim();
 }
 
 function render() {
   const key = norm(q?.value);
+
   const filtered = !key
     ? rows
     : rows.filter((r) => {
@@ -151,22 +159,28 @@ function render() {
 
   countEl.textContent = `${filtered.length} รายการ`;
 
+  if (!filtered.length) {
+    setEmpty(key ? "ไม่พบข้อมูลที่ตรงกับการค้นหา" : "ยังไม่มีข้อมูลครูในระบบ");
+    return;
+  }
+
   tbody.innerHTML = filtered
     .map((r) => {
       const id = esc(r.TEACHER_ID);
       const name = esc(r.NAME);
       const email = esc(r.EMAIL);
       const created = esc(r.CREATED_AT || "");
+
       return `
         <tr>
-          <td class="muted">${id}</td>
-          <td>${name}</td>
-          <td class="muted">${email}</td>
-          <td class="muted">${created}</td>
-          <td>
+          <td data-label="TEACHER_ID" class="mono muted">${id}</td>
+          <td data-label="NAME">${name}</td>
+          <td data-label="EMAIL" class="muted">${email}</td>
+          <td data-label="CREATED_AT" class="muted nowrap">${created}</td>
+          <td data-label="ACTIONS">
             <div class="right">
-              <button class="btn" data-edit="${id}">แก้ไข</button>
-              <button class="btn danger" data-del="${id}">ลบ</button>
+              <button class="btn" data-edit="${id}" type="button">แก้ไข</button>
+              <button class="btn btn--danger" data-del="${id}" type="button">ลบ</button>
             </div>
           </td>
         </tr>
@@ -187,53 +201,59 @@ function render() {
   });
 }
 
-/* ================== MODAL ================== */
+/* ================= MODAL ================= */
 function openModal(r = null) {
   editingId = r ? String(r.TEACHER_ID) : null;
   modalTitle.textContent = r ? "แก้ไขครู" : "เพิ่มครู";
 
   fId.value = r ? (r.TEACHER_ID || "") : "";
+  // edit ห้ามเปลี่ยน id
   fId.disabled = !!r;
 
   fName.value = r ? (r.NAME || "") : "";
   fEmail.value = r ? (r.EMAIL || "") : "";
-  fPass.value = ""; // ไม่โชว์ของเดิม
+  fPass.value = "";
 
   modal.classList.add("show");
+  // focus สวยๆ
+  setTimeout(() => (fName?.focus?.()), 30);
 }
 
 function closeModal() {
   modal.classList.remove("show");
 }
 
-/* ================== CRUD ================== */
+/* ================= CRUD ================= */
 async function save() {
   const TEACHER_ID = fId.value.trim();
   const NAME = fName.value.trim();
   const EMAIL = fEmail.value.trim();
   const PASSWORD = fPass.value.trim();
 
-  if (!NAME) return toast("กรอกชื่อครู (NAME)");
-  if (!EMAIL) return toast("กรอกอีเมล (EMAIL)");
-  if (!editingId && !PASSWORD) return toast("เพิ่มครูต้องใส่รหัสผ่าน (PASSWORD)");
+  if (!NAME) return setToast("กรอกชื่อครู (NAME)");
+  if (!EMAIL) return setToast("กรอกอีเมล (EMAIL)");
+  if (!editingId && !PASSWORD) return setToast("เพิ่มครูต้องใส่รหัสผ่าน (PASSWORD)");
 
   btnSave.disabled = true;
+  setToast("กำลังบันทึก…");
 
   try {
-    // ✅ callApi จะใส่ action ให้อัตโนมัติ -> ส่งแค่ params
     const params = { TEACHER_ID, NAME, EMAIL };
     if (PASSWORD) params.PASSWORD = PASSWORD;
 
     const res = await callApi("adminUpsertTeacher", params);
 
-    if (!res?.success) return toast(res?.message || "บันทึกไม่สำเร็จ");
+    if (!res?.success) {
+      setToast(res?.message || "บันทึกไม่สำเร็จ");
+      return;
+    }
 
     closeModal();
     await load();
-    toast("บันทึกแล้ว ✅");
+    setToast("บันทึกแล้ว ✅");
   } catch (e) {
     console.error(e);
-    toast("บันทึกไม่สำเร็จ (เชื่อมต่อผิดพลาด)");
+    setToast("บันทึกไม่สำเร็จ (เชื่อมต่อผิดพลาด)");
   } finally {
     btnSave.disabled = false;
   }
@@ -242,19 +262,24 @@ async function save() {
 async function del(id) {
   if (!confirm(`ลบครู ${id} ?`)) return;
 
+  setToast("กำลังลบ…");
+
   try {
     const res = await callApi("adminDeleteTeacher", { TEACHER_ID: id });
-    if (!res?.success) return toast(res?.message || "ลบไม่สำเร็จ");
+    if (!res?.success) {
+      setToast(res?.message || "ลบไม่สำเร็จ");
+      return;
+    }
 
     await load();
-    toast("ลบแล้ว 🧹");
+    setToast("ลบแล้ว 🧹");
   } catch (e) {
     console.error(e);
-    toast("ลบไม่สำเร็จ (เชื่อมต่อผิดพลาด)");
+    setToast("ลบไม่สำเร็จ (เชื่อมต่อผิดพลาด)");
   }
 }
 
-/* ================== EXPORT ================== */
+/* ================= EXPORT ================= */
 function exportCsv() {
   const headers = ["TEACHER_ID", "NAME", "EMAIL", "PASSWORD", "CREATED_AT"];
   const lines = [headers.join(",")];
@@ -265,12 +290,27 @@ function exportCsv() {
   });
 
   download(`teachers_${Date.now()}.csv`, lines.join("\n"));
+  setToast("Export CSV ✅");
+}
+
+/* ================= UI HELPERS ================= */
+function setToast(t) {
+  msg.textContent = String(t || "");
+}
+
+function setEmpty(text) {
+  tbody.innerHTML = `<tr><td class="empty" colspan="5">${esc(text)}</td></tr>`;
+}
+
+function setLoadingTable(on) {
+  if (on) setEmpty("กำลังโหลดข้อมูล…");
 }
 
 function csvCell(v) {
   const s = String(v ?? "").replaceAll(`"`, `""`);
   return `"${s}"`;
 }
+
 function download(filename, content) {
   const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a");
@@ -281,13 +321,6 @@ function download(filename, content) {
   a.remove();
 }
 
-/* ================== UI HELPERS ================== */
-function toast(t) {
-  msg.textContent = t;
-  setTimeout(() => {
-    if (msg.textContent === t) msg.textContent = "";
-  }, 2500);
-}
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (m) => ({
     "&": "&amp;",
