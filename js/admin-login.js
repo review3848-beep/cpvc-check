@@ -1,4 +1,4 @@
-import { callApi } from "../api.js"; // หรือ ../js/api.js ตามโครงจริง
+import { callApi } from "ใ./api.js"; // หรือ ../js/api.js ตามโครงจริง
 
 const form = document.querySelector(".auth-form") || document.querySelector("form");
 const userEl = document.getElementById("username");
