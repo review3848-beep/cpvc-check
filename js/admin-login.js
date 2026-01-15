@@ -1,56 +1,40 @@
-import { callApi } from "../api.js";
+import { callApi } from "../api.js"; // หรือ ../js/api.js ตามโครงจริง
 
+const form = document.querySelector(".auth-form") || document.querySelector("form");
+const userEl = document.getElementById("username");
+const passEl = document.getElementById("password");
+const msgEl  = document.getElementById("msg");
+const btn    = document.getElementById("loginBtn");
 
-const form = document.getElementById("loginForm");
-const usernameEl = document.getElementById("username");
-const passwordEl = document.getElementById("password");
-const btn = document.getElementById("loginBtn");
-const msgEl = document.getElementById("msg");
+function setMsg(t){ if(msgEl) msgEl.textContent = t || ""; }
 
-document.addEventListener("DOMContentLoaded", () => {
-  // ถ้าเคยล็อกอินอยู่แล้ว ให้เด้งไป dashboard
-  try {
-    const admin = JSON.parse(localStorage.getItem("admin"));
-    if (admin && admin.username) {
-      location.replace("./dashboard.html");
-      return;
-    }
-  } catch {}
-});
+btn?.addEventListener("click", login);
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const username = String(usernameEl.value || "").trim();
-  const password = String(passwordEl.value || "").trim();
-
-  if (!username || !password) {
-    setMsg("กรอกชื่อผู้ใช้และรหัสผ่านให้ครบ");
-    return;
-  }
+async function login(){
+  const username = userEl.value.trim();
+  const password = passEl.value.trim();
+  if(!username || !password) return setMsg("กรอกชื่อผู้ใช้และรหัสผ่าน");
 
   btn.disabled = true;
   setMsg("กำลังเข้าสู่ระบบ...");
 
-  try {
+  try{
     const res = await callApi("adminLogin", { username, password });
 
-    if (!res || !res.success) {
-      throw new Error(res?.message || "เข้าสู่ระบบไม่สำเร็จ");
+    if(!res?.success) {
+      setMsg(res?.message || "เข้าสู่ระบบไม่สำเร็จ");
+      return;
     }
 
-    // เก็บ session admin
-    const admin = res.admin || { username, name: "Admin" };
-    localStorage.setItem("admin", JSON.stringify(admin));
+    // ✅ สำคัญ: ต้องเก็บ key = "admin"
+    localStorage.setItem("admin", JSON.stringify(res.admin));
 
-    setMsg("เข้าสู่ระบบสำเร็จ");
-    location.replace("./dashboard.html");
-  } catch (err) {
-    setMsg(err.message || "เกิดข้อผิดพลาด");
+    // ✅ ไปหน้าแดชบอร์ด
+    window.location.href = "./dashboard.html";
+  }catch(e){
+    console.error(e);
+    setMsg("เชื่อมต่อไม่สำเร็จ");
+  }finally{
     btn.disabled = false;
   }
-});
-
-function setMsg(t) {
-  msgEl.textContent = t;
 }
