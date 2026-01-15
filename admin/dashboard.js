@@ -1,4 +1,4 @@
-import { callApi } from "../api.js";
+import { callApi, getAdminSession, clearAllSession } from "../api.js";
 
 /* ===== DOM ===== */
 const adminNameEl       = document.getElementById("adminName");
@@ -24,41 +24,39 @@ const btnManage         = document.getElementById("btnManage");
 const btnExport         = document.getElementById("btnExport");
 const btnAudit          = document.getElementById("btnAudit");
 const btnViewAll        = document.getElementById("btnViewAll");
+const btnLogout         = document.getElementById("btnLogout");
 
 /* ===== STATE ===== */
-let sessions = []; // [{subject,teacher,room,status,time}]
+let sessions = [];
 let stats = { teachers:0, students:0, todaySessions:0, openSessions:0, attendance:0 };
 
 document.addEventListener("DOMContentLoaded", init);
 
 function guardAdmin(){
-  const raw = localStorage.getItem("adminSession");
-  if(!raw){
+  const ses = getAdminSession(); // ✅ localStorage "admin"
+  if(!ses){
     location.href = "./login.html";
     return null;
   }
-  try{
-    return JSON.parse(raw);
-  }catch{
-    localStorage.removeItem("adminSession");
-    location.href = "./login.html";
-    return null;
-  }
+  return ses;
 }
 
 async function init(){
   const ses = guardAdmin();
   if(!ses) return;
 
-  adminNameEl.textContent = ses.admin?.name || ses.admin?.username || ses.name || "Admin";
+  adminNameEl.textContent = ses.name || ses.username || "Admin";
 
   btnRefresh?.addEventListener("click", () => load());
   btnExport?.addEventListener("click", exportCsv);
-  btnAudit?.addEventListener("click", () => toast("Audit: เร็ว ๆ นี้ (อย่ากดถี่ เดี๋ยวระบบเขิน)"));
+  btnAudit?.addEventListener("click", () => toast("Audit: เร็ว ๆ นี้"));
   btnViewAll?.addEventListener("click", () => toast("View all: ถ้าต้องการหน้า sessions.html เดี๋ยวจัดให้"));
-  btnManage?.addEventListener("click", () => {
-    // เปลี่ยนปลายทางได้: teachers.html / students.html
-    location.href = "./teachers.html";
+  btnManage?.addEventListener("click", () => location.href = "./teachers.html");
+
+  btnLogout?.addEventListener("click", () => {
+    localStorage.removeItem("admin"); // ✅ ออกจากระบบแอดมิน
+    // ถ้าจะล้างทุก role ด้วย ใช้ clearAllSession(); แต่ตอนนี้ล้างเฉพาะแอดมินพอ
+    location.replace("./login.html");
   });
 
   qEl?.addEventListener("input", renderTable);
@@ -70,7 +68,6 @@ async function init(){
 async function load(){
   setLoading(true);
 
-  // ใช้ action ที่คุณมีใน doPost: adminDashboard
   const res = await callApi("adminDashboard", { limit: 30 });
 
   if(!res || !res.success){
