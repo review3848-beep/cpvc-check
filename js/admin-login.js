@@ -1,5 +1,5 @@
 // js/admin-login.js
-import { callApi } from "./api.js";
+import { callApi } from "../api.js";
 
 const form = document.getElementById("loginForm");
 const usernameEl = document.getElementById("username");
@@ -35,11 +35,8 @@ form.addEventListener("submit", async (e) => {
   try {
     const res = await callApi("adminLogin", { username, password });
 
-    if (!res || !res.success) {
-      throw new Error(res?.message || "เข้าสู่ระบบไม่สำเร็จ");
-    }
+    if (!res || !res.success) throw new Error(res?.message || "เข้าสู่ระบบไม่สำเร็จ");
 
-    // เก็บ session admin
     const admin = res.admin || { username, name: "Admin" };
     localStorage.setItem("admin", JSON.stringify(admin));
 
