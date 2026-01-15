@@ -1,5 +1,4 @@
-// js/admin-login.js
-const GAS_WEBAPP_URL = "PUT_YOUR_GAS_WEBAPP_URL_HERE"; // <-- ใส่ลิงก์ Web App (ลงท้าย /exec)
+import { callApi } from "../api.js";
 
 const form = document.getElementById("loginForm");
 const usernameEl = document.getElementById("username");
