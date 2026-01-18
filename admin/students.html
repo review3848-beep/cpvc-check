@@ -1,209 +1,378 @@
-<style>
-  :root{
-    --bg0:#020617;
-    --bg1:#0b1227;
-    --panel: rgba(15,23,42,.86);
-    --panel2: rgba(15,23,42,.94);
-    --border: rgba(148,163,184,.22);
-    --border2: rgba(148,163,184,.14);
-    --muted:#9ca3af;
-    --text:#e5e7eb;
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NexAttend | Admin - จัดการนักเรียน</title>
 
-    --brand1:#2563eb;
-    --brand2:#7c3aed;
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-    --shadow: 0 18px 45px rgba(0,0,0,.38);
-    --shadow2: 0 10px 24px rgba(0,0,0,.28);
+  <link rel="stylesheet" href="../css/styles.css" />
+  <script type="module" src="../js/admin-students.js" defer></script>
 
-    --r12:12px;
-    --r16:16px;
-    --r20:20px;
-  }
+  <style>
+    :root{
+      --bg0:#020617;
+      --panel: rgba(15,23,42,.86);
+      --panel2: rgba(15,23,42,.96);
+      --border: rgba(148,163,184,.35);
+      --muted:#9ca3af;
 
-  *{box-sizing:border-box}
-  body{
-    margin:0;min-height:100vh;
-    background:
-      radial-gradient(900px 520px at 20% 10%, rgba(124,58,237,.22), transparent 55%),
-      radial-gradient(900px 520px at 80% 0%, rgba(37,99,235,.22), transparent 55%),
-      radial-gradient(circle at 25% 15%, #1e293b, #020617 72%);
-    color:var(--text);
-    font-family:Inter,Prompt,system-ui;
-  }
+      --accent: linear-gradient(90deg,#38bdf8,#60a5fa);
+      --accent-soft: rgba(56,189,248,.18);
+      --danger: linear-gradient(90deg,#fb7185,#f43f5e);
+      --danger-soft: rgba(244,63,94,.18);
+    }
+    body{
+      margin:0;
+      min-height:100vh;
+      background: radial-gradient(circle at 20% 10%, #0b3a6b, #020617 62%);
+      font-family:"Inter","Prompt",system-ui,sans-serif;
+      color:#e5e7eb;
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:20px 22px;
+      border-bottom:1px solid rgba(148,163,184,.18);
+      background: rgba(2,6,23,.55);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top:0;
+      z-index:10;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .brand .logo{
+      width:44px; height:44px; border-radius:14px;
+      display:grid; place-items:center;
+      background: radial-gradient(circle at 30% 25%, rgba(56,189,248,.28), rgba(96,165,250,.10) 55%, rgba(2,6,23,0) 74%);
+      border:1px solid rgba(56,189,248,.18);
+      box-shadow: 0 18px 60px rgba(56,189,248,.08);
+    }
+    .brand .logo span{ font-weight:900; }
+    .brand small{ display:block; color:var(--muted); font-weight:600; margin-top:2px; }
 
-  .wrap{max-width:1120px;margin:30px auto;padding:0 16px}
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 14px; border-radius:14px;
+      border:1px solid rgba(148,163,184,.22);
+      background: rgba(15,23,42,.55);
+      color:#e5e7eb;
+      text-decoration:none;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .chip:hover{ border-color: rgba(56,189,248,.35); }
+    .chip--primary{
+      background: var(--accent);
+      color:#04121f;
+      border: none;
+      box-shadow: 0 18px 50px rgba(56,189,248,.12);
+    }
+    .chip--danger{
+      background: rgba(15,23,42,.55);
+      border:1px solid rgba(244,63,94,.35);
+      color:#fecdd3;
+    }
 
-  /* topbar */
-  .topbar{
-    display:flex;gap:12px;align-items:center;justify-content:space-between;
-    margin-bottom:14px;
-  }
-  .title{
-    display:flex;align-items:center;gap:10px;
-    font-size:18px;font-weight:900;letter-spacing:.2px;
-  }
-  .title:before{
-    content:"";
-    width:10px;height:10px;border-radius:999px;
-    background:linear-gradient(135deg,var(--brand1),var(--brand2));
-    box-shadow:0 0 0 4px rgba(124,58,237,.12);
-  }
+    .wrap{
+      max-width:1100px;
+      margin: 22px auto;
+      padding: 0 18px 38px;
+    }
 
-  /* card */
-  .card{
-    background:linear-gradient(180deg, rgba(15,23,42,.92), rgba(15,23,42,.86));
-    border:1px solid var(--border);
-    border-radius:22px;
-    box-shadow:var(--shadow);
-    overflow:hidden;
-    backdrop-filter: blur(10px);
-  }
+    .card{
+      background: var(--panel);
+      border:1px solid rgba(148,163,184,.18);
+      border-radius: 20px;
+      box-shadow: 0 30px 90px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
 
-  .cardHd{
-    display:flex;gap:12px;align-items:center;justify-content:space-between;
-    padding:14px 14px;
-    border-bottom:1px solid var(--border2);
-    background:rgba(2,6,23,.18);
-  }
+    .card-head{
+      padding: 18px 18px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+    .head-left{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .title{
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: .2px;
+    }
+    .subtitle{
+      color:var(--muted);
+      font-weight:600;
+    }
 
-  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .toolbar{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    .search{
+      display:flex; align-items:center; gap:10px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border:1px solid rgba(148,163,184,.20);
+      background: rgba(2,6,23,.35);
+      min-width: 260px;
+    }
+    .search input{
+      width:100%;
+      border:none; outline:none;
+      background: transparent;
+      color:#e5e7eb;
+      font-weight:600;
+    }
+    .pill{
+      padding:8px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(148,163,184,.20);
+      background: rgba(2,6,23,.25);
+      color:#cbd5e1;
+      font-weight:700;
+      font-size: 13px;
+    }
 
-  /* inputs */
-  .input{
-    min-width:260px;
-    background:rgba(2,6,23,.55);
-    border:1px solid rgba(148,163,184,.26);
-    color:var(--text);
-    border-radius:14px;
-    padding:10px 12px;
-    outline:none;
-    transition:.18s ease;
-  }
-  .input::placeholder{color:rgba(156,163,175,.75)}
-  .input:focus{
-    border-color:rgba(165,180,252,.6);
-    box-shadow:0 0 0 4px rgba(99,102,241,.12);
-  }
+    .btn{
+      padding:10px 14px;
+      border-radius: 14px;
+      border:1px solid rgba(148,163,184,.22);
+      background: rgba(15,23,42,.55);
+      color:#e5e7eb;
+      cursor:pointer;
+      font-weight:800;
+    }
+    .btn:hover{ border-color: rgba(56,189,248,.35); }
+    .btn--primary{
+      background: var(--accent);
+      color:#04121f;
+      border:none;
+    }
+    .btn--danger{
+      background: rgba(15,23,42,.55);
+      border:1px solid rgba(244,63,94,.35);
+      color:#fecdd3;
+    }
 
-  /* buttons */
-  .btn{
-    border:1px solid rgba(148,163,184,.25);
-    background:rgba(2,6,23,.45);
-    color:var(--text);
-    border-radius:14px;
-    padding:10px 12px;
-    cursor:pointer;
-    text-decoration:none;
-    line-height:1;
-    transition:.18s ease;
-    box-shadow: 0 6px 18px rgba(0,0,0,.12);
-  }
-  .btn:hover{transform:translateY(-1px);border-color:rgba(165,180,252,.55)}
-  .btn:active{transform:translateY(0)}
-  .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+    table{
+      width:100%;
+      border-collapse: collapse;
+    }
+    thead th{
+      text-align:left;
+      padding: 14px 16px;
+      color:#cbd5e1;
+      font-size: 13px;
+      letter-spacing: .6px;
+      border-top:1px solid rgba(148,163,184,.12);
+      border-bottom:1px solid rgba(148,163,184,.12);
+      background: rgba(2,6,23,.25);
+    }
+    tbody td{
+      padding: 14px 16px;
+      border-bottom:1px solid rgba(148,163,184,.10);
+      vertical-align: middle;
+    }
+    tbody tr:hover{
+      background: rgba(56,189,248,.06);
+    }
+    .muted{ color: var(--muted); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
+    .right{ display:flex; justify-content:flex-end; gap:8px; }
+    .nowrap{ white-space: nowrap; }
 
-  .btn.primary{
-    background:linear-gradient(135deg,var(--brand1),var(--brand2));
-    border:none;
-    box-shadow:0 14px 30px rgba(37,99,235,.22);
-  }
-  .btn.primary:hover{filter:brightness(1.05)}
-  .btn.danger{
-    background:rgba(239,68,68,.14);
-    border:1px solid rgba(239,68,68,.45)
-  }
+    .empty{
+      padding: 22px 16px;
+      text-align:center;
+      color: #a1a1aa;
+      font-weight: 700;
+    }
 
-  /* pill */
-  .pill{
-    display:inline-flex;align-items:center;gap:8px;
-    padding:6px 10px;border-radius:999px;
-    border:1px solid rgba(148,163,184,.22);
-    background:rgba(2,6,23,.45);
-    font-size:12px;
-  }
-  .muted{color:var(--muted)}
+    /* modal */
+    .modal{
+      position: fixed;
+      inset: 0;
+      display:none;
+      place-items:center;
+      background: rgba(2,6,23,.62);
+      backdrop-filter: blur(8px);
+      z-index: 50;
+      padding: 18px;
+    }
+    .modal.show{ display:grid; }
+    .modal-card{
+      width: min(560px, 100%);
+      border-radius: 22px;
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(15,23,42,.94);
+      box-shadow: 0 30px 90px rgba(0,0,0,.45);
+      overflow:hidden;
+    }
+    .modal-head{
+      padding: 16px 16px 10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      border-bottom:1px solid rgba(148,163,184,.12);
+    }
+    .modal-head h3{
+      margin:0;
+      font-weight: 900;
+      letter-spacing: .2px;
+    }
+    .modal-body{
+      padding: 16px;
+      display:grid;
+      gap: 12px;
+    }
+    .field label{
+      display:block;
+      font-size: 13px;
+      color:#cbd5e1;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .field input{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(148,163,184,.22);
+      background: rgba(2,6,23,.35);
+      color:#e5e7eb;
+      outline:none;
+      font-weight:700;
+    }
+    .field input:focus{ border-color: rgba(56,189,248,.45); }
+    .modal-foot{
+      padding: 14px 16px 16px;
+      display:flex;
+      justify-content:flex-end;
+      gap: 10px;
+      border-top:1px solid rgba(148,163,184,.12);
+    }
 
-  /* table */
-  .tableWrap{overflow:auto}
-  table{
-    width:100%;
-    border-collapse:separate;
-    border-spacing:0;
-  }
-  thead th{
-    position:sticky;top:0;z-index:2;
-    background:rgba(2,6,23,.72);
-    backdrop-filter: blur(10px);
-    border-bottom:1px solid var(--border2);
-  }
-  th,td{
-    padding:12px 14px;
-    border-bottom:1px solid rgba(148,163,184,.12);
-    text-align:left;vertical-align:middle;
-  }
-  th{
-    font-size:11px;
-    letter-spacing:.6px;
-    color:#a5b4fc;
-    text-transform:uppercase;
-  }
+    @media (max-width:760px){
+      thead{ display:none; }
+      tbody tr{ display:block; padding: 10px 0; }
+      tbody td{
+        display:flex; justify-content:space-between;
+        padding: 10px 16px;
+        border-bottom: none;
+      }
+      tbody td::before{
+        content: attr(data-label);
+        color:#94a3b8;
+        font-weight:800;
+        margin-right: 14px;
+      }
+      .right{ justify-content:flex-start; }
+    }
+  </style>
+</head>
 
-  tbody tr{
-    transition:.16s ease;
-  }
-  tbody tr:nth-child(odd){
-    background:rgba(2,6,23,.10);
-  }
-  tbody tr:hover{
-    background:rgba(99,102,241,.10);
-  }
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo"><span>🛡️</span></div>
+      <div>
+        <div style="font-size:16px;">NexAttend Admin</div>
+        <small>Student Management</small>
+      </div>
+    </div>
 
-  td:last-child .right{display:flex;gap:8px;justify-content:flex-end}
+    <div class="actions">
+      <a class="chip" href="./dashboard.html">← Dashboard</a>
+      <a class="chip" href="./teachers.html">Teachers</a>
+      <button class="chip chip--danger" id="btnLogout" type="button">ออกจากระบบ</button>
+    </div>
+  </header>
 
-  /* message area */
-  #msg{
-    padding:12px 14px;
-    color:rgba(156,163,175,.9);
-    border-top:1px solid rgba(148,163,184,.10);
-    background:rgba(2,6,23,.10);
-  }
+  <div class="wrap">
+    <section class="card">
+      <div class="card-head">
+        <div class="head-left">
+          <div>
+            <div class="title">Admin • จัดการนักเรียน</div>
+            <div class="subtitle">ค้นหา เพิ่ม แก้ไข ลบนักเรียนในระบบ</div>
+          </div>
 
-  /* modal */
-  .modal{
-    position:fixed;inset:0;
-    display:none;align-items:center;justify-content:center;
-    background:rgba(0,0,0,.60);
-    padding:18px;
-  }
-  .modal.show{display:flex}
-  .modalCard{
-    width:min(560px,100%);
-    padding:16px;
-    border-radius:22px;
-    background:linear-gradient(180deg, rgba(15,23,42,.96), rgba(15,23,42,.90));
-    border:1px solid rgba(148,163,184,.24);
-    box-shadow:var(--shadow2);
-  }
+          <div class="search" title="ค้นหา (ชื่อ/ID)">
+            🔎
+            <input id="q" placeholder="ค้นหา (ชื่อ/ID)..." autocomplete="off" />
+          </div>
 
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .grid .full{grid-column:1/-1}
+          <span class="pill" id="count">0 รายการ</span>
+        </div>
 
-  label{font-size:12px;color:rgba(156,163,175,.95)}
-  .field{display:flex;flex-direction:column;gap:6px}
-  .help{font-size:12px;color:rgba(156,163,175,.85);margin-top:4px}
+        <div class="toolbar">
+          <button class="btn" id="btnExport" type="button">Export CSV</button>
+          <button class="btn btn--primary" id="btnAdd" type="button">+ เพิ่มนักเรียน</button>
+        </div>
+      </div>
 
-  /* nicer close button */
-  #btnClose{
-    width:40px;height:40px;
-    display:inline-flex;align-items:center;justify-content:center;
-    border-radius:14px;
-  }
+      <table>
+        <thead>
+          <tr>
+            <th style="width:38%;">STUDENT_ID</th>
+            <th style="width:30%;">NAME</th>
+            <th style="width:18%;">CREATED_AT</th>
+            <th style="width:14%;">ACTIONS</th>
+          </tr>
+        </thead>
 
-  /* responsive */
-  @media (max-width:640px){
-    .input{min-width:unset;width:100%}
-    .cardHd{flex-direction:column;align-items:stretch}
-    .row{width:100%}
-    .grid{grid-template-columns:1fr}
-  }
-</style>
+        <tbody id="tbody">
+          <tr><td class="empty" colspan="4">กำลังโหลดข้อมูล…</td></tr>
+        </tbody>
+      </table>
+
+      <div style="padding:14px 16px; color:#94a3b8; font-weight:700;">
+        <span id="msg"></span>
+      </div>
+    </section>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <h3 id="modalTitle">เพิ่มนักเรียน</h3>
+        <button class="btn" id="btnClose" type="button">ปิด</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <label for="fId">STUDENT_ID</label>
+          <input id="fId" placeholder="เช่น 12345" />
+        </div>
+
+        <div class="field">
+          <label for="fName">NAME</label>
+          <input id="fName" placeholder="ชื่อ-สกุล" />
+        </div>
+
+        <div class="field">
+          <label for="fPass">PASSWORD (ใส่เฉพาะตอนเพิ่ม/หรือเปลี่ยนรหัส)</label>
+          <input id="fPass" type="password" placeholder="••••••••" />
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn" id="btnCancel" type="button">ยกเลิก</button>
+        <button class="btn btn--primary" id="btnSave" type="button">บันทึก</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
