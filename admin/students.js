@@ -1,7 +1,5 @@
-// js/admin-students.js
 import { callApi, getAdminSession, clearAllSession } from "../api.js";
 
-/* ===== DOM ===== */
 const tbody = document.getElementById("tbody");
 const q = document.getElementById("q");
 const countEl = document.getElementById("count");
@@ -21,15 +19,13 @@ const fId = document.getElementById("fId");
 const fName = document.getElementById("fName");
 const fPass = document.getElementById("fPass");
 
-/* ===== STATE ===== */
 let rows = [];
 let editingId = null;
 
 document.addEventListener("DOMContentLoaded", init);
 
-/* ================== AUTH GUARD ================== */
 function guardAdmin() {
-  const admin = getAdminSession(); // ✅ localStorage key "admin"
+  const admin = getAdminSession();
   if (!admin) {
     location.replace("./login.html");
     return null;
@@ -37,7 +33,6 @@ function guardAdmin() {
   return admin;
 }
 
-/* ================== INIT ================== */
 async function init() {
   const ses = guardAdmin();
   if (!ses) return;
@@ -48,7 +43,7 @@ async function init() {
   btnLogout?.addEventListener("click", () => {
     if (!confirm("ออกจากระบบ?")) return;
     clearAllSession();
-    localStorage.removeItem("admin"); // ✅ ของแอดมิน
+    localStorage.removeItem("admin");
     location.replace("./login.html");
   });
 
@@ -64,12 +59,10 @@ async function init() {
   await load();
 }
 
-/* ================== LOAD ================== */
 async function load() {
   msg.textContent = "Loading...";
   try {
     const res = await callApi("adminGetStudents", {});
-
     if (!res?.success) {
       msg.textContent = res?.message || "โหลดไม่สำเร็จ";
       rows = [];
@@ -77,14 +70,7 @@ async function load() {
       return;
     }
 
-    // รองรับหลายรูปแบบผลลัพธ์
-    const rawRows =
-      res.rows ||
-      res.data?.rows ||
-      res.data ||
-      res.list ||
-      [];
-
+    const rawRows = res.rows || res.data?.rows || res.data || res.list || [];
     rows = normalizeRows(rawRows);
 
     msg.textContent = "";
@@ -97,68 +83,30 @@ async function load() {
   }
 }
 
-/* ================== NORMALIZE ================== */
 function normalizeRows(raw) {
   if (!Array.isArray(raw)) return [];
-
   return raw.map((r) => {
     if (Array.isArray(r)) return { __raw: r };
-
     const o = { ...r };
 
-    // id
-    o.STUDENT_ID =
-      o.STUDENT_ID ??
-      o.studentId ??
-      o.STUDENTID ??
-      o.id ??
-      o.UID ??
-      o.uid ??
-      "";
-
-    // name
-    o.NAME =
-      o.NAME ??
-      o.name ??
-      o.FullName ??
-      o.fullname ??
-      "";
-
-    // password (บาง backend อาจตัดออก)
-    o.PASSWORD =
-      o.PASSWORD ??
-      o.password ??
-      "";
-
-    // created
-    o.CREATED_AT =
-      o.CREATED_AT ??
-      o.createdAt ??
-      o.timestamp ??
-      o.เวลา ??
-      "";
+    o.STUDENT_ID = o.STUDENT_ID ?? o.studentId ?? o.STUDENTID ?? o.id ?? o.UID ?? o.uid ?? "";
+    o.NAME = o.NAME ?? o.name ?? o.FullName ?? o.fullname ?? "";
+    o.PASSWORD = o.PASSWORD ?? o.password ?? "";
+    o.CREATED_AT = o.CREATED_AT ?? o.createdAt ?? o.timestamp ?? o.เวลา ?? "";
 
     return o;
   });
 }
 
-/* ================== RENDER ================== */
 function norm(v) {
   return String(v ?? "").toLowerCase().trim();
 }
 
 function render() {
   const key = norm(q?.value);
-  const filtered = !key
-    ? rows
-    : rows.filter((r) => {
-        return (
-          norm(r.STUDENT_ID).includes(key) ||
-          norm(r.NAME).includes(key)
-        );
-      });
+  const filtered = !key ? rows : rows.filter((r) => norm(r.STUDENT_ID).includes(key) || norm(r.NAME).includes(key));
 
-  if (countEl) countEl.textContent = `${filtered.length} รายการ`;
+  countEl && (countEl.textContent = `${filtered.length} รายการ`);
 
   if (!tbody) return;
 
@@ -167,27 +115,24 @@ function render() {
     return;
   }
 
-  tbody.innerHTML = filtered
-    .map((r) => {
-      const id = esc(r.STUDENT_ID);
-      const name = esc(r.NAME);
-      const created = esc(r.CREATED_AT || "");
-
-      return `
-        <tr>
-          <td class="mono muted" data-label="STUDENT_ID">${id}</td>
-          <td data-label="NAME">${name}</td>
-          <td class="muted nowrap" data-label="CREATED_AT">${created}</td>
-          <td data-label="ACTIONS">
-            <div class="right">
-              <button class="btn" data-edit="${id}">แก้ไข</button>
-              <button class="btn btn--danger" data-del="${id}">ลบ</button>
-            </div>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
+  tbody.innerHTML = filtered.map((r) => {
+    const id = esc(r.STUDENT_ID);
+    const name = esc(r.NAME);
+    const created = esc(r.CREATED_AT || "");
+    return `
+      <tr>
+        <td class="mono muted" data-label="STUDENT_ID">${id}</td>
+        <td data-label="NAME">${name}</td>
+        <td class="muted nowrap" data-label="CREATED_AT">${created}</td>
+        <td data-label="ACTIONS">
+          <div class="right">
+            <button class="btn" data-edit="${id}">แก้ไข</button>
+            <button class="btn btn--danger" data-del="${id}">ลบ</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
 
   tbody.querySelectorAll("[data-edit]").forEach((b) => {
     b.addEventListener("click", () => {
@@ -202,16 +147,15 @@ function render() {
   });
 }
 
-/* ================== MODAL ================== */
 function openModal(r = null) {
   editingId = r ? String(r.STUDENT_ID) : null;
-  if (modalTitle) modalTitle.textContent = r ? "แก้ไขนักเรียน" : "เพิ่มนักเรียน";
+  modalTitle && (modalTitle.textContent = r ? "แก้ไขนักเรียน" : "เพิ่มนักเรียน");
 
   fId.value = r ? (r.STUDENT_ID || "") : "";
   fId.disabled = !!r;
 
   fName.value = r ? (r.NAME || "") : "";
-  fPass.value = ""; // ไม่โชว์ของเดิม
+  fPass.value = "";
 
   modal?.classList.add("show");
 }
@@ -220,7 +164,6 @@ function closeModal() {
   modal?.classList.remove("show");
 }
 
-/* ================== CRUD ================== */
 async function save() {
   const STUDENT_ID = String(fId.value || "").trim();
   const NAME = String(fName.value || "").trim();
@@ -237,7 +180,6 @@ async function save() {
     if (PASSWORD) params.PASSWORD = PASSWORD;
 
     const res = await callApi("adminUpsertStudent", params);
-
     if (!res?.success) return toast(res?.message || "บันทึกไม่สำเร็จ");
 
     closeModal();
@@ -266,21 +208,18 @@ async function del(id) {
   }
 }
 
-/* ================== EXPORT ================== */
 function exportCsv() {
   const headers = ["STUDENT_ID", "NAME", "PASSWORD", "CREATED_AT"];
   const lines = [headers.join(",")];
 
   rows.forEach((r) => {
-    const row = headers.map((h) => csvCell(r[h] ?? ""));
-    lines.push(row.join(","));
+    lines.push(headers.map((h) => csvCell(r[h] ?? "")).join(","));
   });
 
   download(`students_${Date.now()}.csv`, lines.join("\n"));
   toast("Export CSV ✅");
 }
 
-/* ================== HELPERS ================== */
 function toast(t) {
   if (!msg) return alert(t);
   msg.textContent = String(t);
