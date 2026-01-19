@@ -10,6 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="../css/styles.css" />
+
+  <!-- ✅ โหลด JS แค่ที่เดียวพอ -->
   <script type="module" src="../js/admin-students.js" defer></script>
 
   <style>
@@ -300,7 +302,7 @@
   </header>
 
   <div class="wrap">
-    <section class="card">
+    <section class="card" aria-label="Student Management">
       <div class="card-head">
         <div class="head-left">
           <div>
@@ -338,14 +340,14 @@
       </table>
 
       <div style="padding:14px 16px; color:#94a3b8; font-weight:700;">
-        <span id="msg"></span>
+        <span id="msg" role="status" aria-live="polite"></span>
       </div>
     </section>
   </div>
 
   <!-- MODAL -->
   <div class="modal" id="modal" aria-hidden="true">
-    <div class="modal-card" role="dialog" aria-modal="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="modal-head">
         <h3 id="modalTitle">เพิ่มนักเรียน</h3>
         <button class="btn" id="btnClose" type="button">ปิด</button>
@@ -374,7 +376,5 @@
       </div>
     </div>
   </div>
-  
 </body>
 </html>
-<script type="module" src="./admin-students.js" defer></script>
