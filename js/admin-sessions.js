@@ -1,12 +1,12 @@
 // ../js/admin-sessions.js
 import { callApi } from "../api.js";
 
-/* ================== CONFIG: ตรงกับ GS ของคุณ ================== */
+/* ================== CONFIG ================== */
 const ACTIONS = {
-  list:   "adminSessions",        // ✅ doGet (GS ของคุณมี)
-  open:   "adminOpenSession",        // ✅ doPost
-  close:  "adminCloseSession",       // ✅ doPost
-  export: "adminExportSessions"      // ✅ doPost (หรือ fallback export หน้าเว็บ)
+  list:  "adminListSessions",
+  open:  "adminOpenSession",
+  close: "adminCloseSession",
+  export:"adminExportSessions"
 };
 
 /* ================= DOM ================= */
@@ -25,7 +25,7 @@ const openClose  = document.getElementById("openClose");
 const openCancel = document.getElementById("openCancel");
 const openSave   = document.getElementById("openSave");
 
-const fTeacher = document.getElementById("fTeacher"); // ใน UI เขียน TEACHER_ID แต่ GS ใช้ TEACHER_EMAIL -> รองรับทั้งคู่
+const fTeacher = document.getElementById("fTeacher");
 const fRoom    = document.getElementById("fRoom");
 const fSubject = document.getElementById("fSubject");
 const fNote    = document.getElementById("fNote");
@@ -56,35 +56,27 @@ async function init(){
 
 /* ================= GUARD ================= */
 function guardAdmin(){
-  // รองรับหลาย key กัน “เด้งล็อกอิน” เพราะชื่อ key ไม่ตรง
-  const keys = ["adminSession","admin","admin_session","sessionAdmin","adminAuth"];
-  let raw = null;
-
-  for(const k of keys){
-    raw = localStorage.getItem(k);
-    if(raw) break;
-  }
-
+  const raw = localStorage.getItem("adminSession");
   if(!raw){
     location.href = "./login.html";
     return null;
   }
-
   try{
     return JSON.parse(raw);
   }catch{
-    return { token: raw };
+    location.href = "./login.html";
+    return null;
   }
 }
 
 /* ================= EVENTS ================= */
 function bindEvents(){
   btnLogout?.addEventListener("click", () => {
-    ["adminSession","admin","admin_session","sessionAdmin","adminAuth"].forEach(k => localStorage.removeItem(k));
+    localStorage.removeItem("adminSession");
     location.href = "./login.html";
   });
 
-  q?.addEventListener("input", applyFilter);
+  q?.addEventListener("input", () => applyFilter());
 
   btnOpen?.addEventListener("click", openOpenModal);
   openClose?.addEventListener("click", closeOpenModal);
@@ -96,31 +88,16 @@ function bindEvents(){
   closeConfirm?.addEventListener("click", onCloseConfirm);
 
   btnExport?.addEventListener("click", onExport);
-
-  document.addEventListener("keydown", (e) => {
-    if(e.key !== "Escape") return;
-    if(openModal?.classList.contains("show")) closeOpenModal();
-    if(closeModal?.classList.contains("show")) closeCloseModal();
-  });
-
-  openModal?.addEventListener("click", (e) => { if(e.target === openModal) closeOpenModal(); });
-  closeModal?.addEventListener("click", (e) => { if(e.target === closeModal) closeCloseModal(); });
 }
 
 /* ================= DATA ================= */
 async function loadSessions(){
   setMsg("กำลังโหลดคาบเรียน…");
-
   try{
     const res = await callApi(ACTIONS.list, {});
     if(!res?.success) throw new Error(res?.message || "โหลดข้อมูลไม่สำเร็จ");
-
-    // GS adminGetList_ คืน { success:true, headers, rows }
-    // rows เป็น array ของ object (key ตามหัวตาราง) + __row
-    const list = res.rows || res.data || res.sessions || [];
-    rows = normalizeSessions(list);
+    rows = normalizeSessions(res.rows || []);
     setMsg("");
-
   }catch(err){
     rows = [];
     setMsg(`โหลดข้อมูลไม่สำเร็จ: ${err.message || err}`);
@@ -128,284 +105,135 @@ async function loadSessions(){
 }
 
 function normalizeSessions(list){
-  // ชีตคุณ: ID, TEACHER_EMAIL, SUBJECT, ROOM, TOKEN, STATUS, START_TIME
-  return list.map((s) => ({
-    sessionId:  s.sessionId ?? s.ID ?? s.SESSION_ID ?? s.id ?? s.session_id ?? "",
-    token:      s.token ?? s.TOKEN ?? s.sessionToken ?? s.session_token ?? "",
-    subject:    s.subject ?? s.SUBJECT ?? "",
-    room:       s.room ?? s.ROOM ?? "",
-    teacherId:  s.teacherId ?? s.TEACHER_ID ?? s.TEACHER_EMAIL ?? s.teacher ?? s.teacher_id ?? "",
-    teacherName:s.teacherName ?? s.TEACHER_NAME ?? "",
-    status:     (s.status ?? s.STATUS ?? "").toString().toLowerCase(), // open/closed
-    createdAt:  s.createdAt ?? s.CREATED_AT ?? s.created_at ?? s.START_TIME ?? s.startTime ?? s.start_time ?? "",
-    note:       s.note ?? s.NOTE ?? ""
+  return list.map(r => ({
+    sessionId: r.ID || r.sessionId || "",
+    token: r.TOKEN || r.token || "",
+    subject: r.SUBJECT || r.subject || "",
+    room: r.ROOM || r.room || "",
+    teacher: r.TEACHER_EMAIL || r.teacher || "",
+    status: String(r.STATUS || r.status || "").toLowerCase(),
+    createdAt: r.START_TIME || r.createdAt || ""
   }));
 }
 
 /* ================= FILTER + RENDER ================= */
 function applyFilter(){
   const text = (q?.value || "").trim().toLowerCase();
-
-  filteredCache = !text
-    ? [...rows]
-    : rows.filter((r) => {
-        const hay = [
-          r.sessionId, r.token, r.subject, r.room,
-          r.teacherId, r.teacherName, r.status, r.createdAt, r.note
-        ].join(" ").toLowerCase();
-        return hay.includes(text);
-      });
-
+  filteredCache = !text ? [...rows] : rows.filter(r =>
+    Object.values(r).join(" ").toLowerCase().includes(text)
+  );
   renderTable(filteredCache);
-  if(countEl) countEl.textContent = `${filteredCache.length} รายการ`;
+  countEl.textContent = `${filteredCache.length} รายการ`;
 }
 
 function renderTable(list){
-  if(!tbody) return;
-
   if(!list.length){
     tbody.innerHTML = `<tr><td class="empty" colspan="6">ไม่พบข้อมูล</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = list.map((r) => {
-    const teacherText =
-      (r.teacherName ? `${escapeHtml(r.teacherName)} ` : "") +
-      (r.teacherId ? `<span class="muted mono">(${escapeHtml(r.teacherId)})</span>` : `<span class="muted">—</span>`);
-
-    const subRoom = `${escapeHtml(r.subject || "—")} <span class="muted">/</span> <span class="mono">${escapeHtml(r.room || "—")}</span>`;
-
-    const st = (r.status === "open" || r.status === "opened" || r.status === "active") ? "open"
-             : (r.status === "closing") ? "closing"
-             : "closed";
-
-    const statusBadge =
-      st === "open"
-        ? `<span class="status status--open"><span class="dot"></span>OPEN</span>`
-        : st === "closing"
-        ? `<span class="status status--closing"><span class="dot"></span>CLOSING</span>`
-        : `<span class="status status--closed"><span class="dot"></span>CLOSED</span>`;
+  tbody.innerHTML = list.map(r => {
+    const st = r.status === "open" ? "open" : "closed";
+    const badge = st === "open"
+      ? `<span class="status status--open"><span class="dot"></span>OPEN</span>`
+      : `<span class="status status--closed"><span class="dot"></span>CLOSED</span>`;
 
     return `
       <tr>
-        <td data-label="SESSION_ID" class="mono">${escapeHtml(r.sessionId || "—")}</td>
-        <td data-label="TOKEN" class="mono nowrap">
-          ${escapeHtml(r.token || "—")}
-          <button class="btn" data-act="copy" data-token="${escapeAttr(r.token || "")}" type="button" style="margin-left:8px;">Copy</button>
-        </td>
-        <td data-label="SUBJECT / ROOM">${subRoom}</td>
-        <td data-label="TEACHER">${teacherText}</td>
-        <td data-label="STATUS">${statusBadge}</td>
-        <td data-label="ACTIONS">
+        <td class="mono">${r.sessionId}</td>
+        <td class="mono">${r.token}</td>
+        <td>${r.subject} / <span class="mono">${r.room}</span></td>
+        <td>${r.teacher || "-"}</td>
+        <td>${badge}</td>
+        <td>
           <div class="right">
-            <button class="${st === "open" ? "btn btn--danger" : "btn"}"
-                    data-act="close"
-                    data-id="${escapeAttr(r.sessionId)}"
-                    ${st !== "open" ? "disabled" : ""} type="button">ปิดคาบ</button>
+            <button class="btn btn--danger" data-id="${r.sessionId}" ${st!=="open"?"disabled":""}>ปิดคาบ</button>
           </div>
         </td>
       </tr>
     `;
   }).join("");
 
-  tbody.querySelectorAll("button[data-act]").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const act = e.currentTarget.getAttribute("data-act");
-
-      if(act === "copy"){
-        const token = e.currentTarget.getAttribute("data-token") || "";
-        copyText(token);
-        toast("คัดลอก TOKEN แล้ว");
-      }
-
-      if(act === "close"){
-        const id = e.currentTarget.getAttribute("data-id");
-        if(!id) return;
-        openCloseConfirm(id);
-      }
-    });
+  tbody.querySelectorAll("button[data-id]").forEach(btn=>{
+    btn.addEventListener("click",()=>openCloseConfirm(btn.dataset.id));
   });
 }
 
 /* ================= OPEN SESSION ================= */
 function openOpenModal(){
-  openModal?.classList.add("show");
-  openModal?.setAttribute("aria-hidden", "false");
-  fTeacher?.focus();
+  openModal.classList.add("show");
 }
-
 function closeOpenModal(){
-  openModal?.classList.remove("show");
-  openModal?.setAttribute("aria-hidden", "true");
-  fTeacher.value = "";
-  fRoom.value = "";
-  fSubject.value = "";
-  fNote.value = "";
+  openModal.classList.remove("show");
+  fTeacher.value = fRoom.value = fSubject.value = fNote.value = "";
 }
 
 async function onOpenSave(){
-  const teacherRaw = (fTeacher.value || "").trim();
-  const room       = (fRoom.value || "").trim();
-  const subject    = (fSubject.value || "").trim();
-  const note       = (fNote.value || "").trim();
-
-  if(!teacherRaw || !room || !subject){
-    toast("กรอก TEACHER_ID/EMAIL, ROOM, SUBJECT ให้ครบ");
+  const teacherId = fTeacher.value.trim();
+  const room = fRoom.value.trim();
+  const subject = fSubject.value.trim();
+  if(!teacherId || !room || !subject){
+    toast("กรอกข้อมูลให้ครบ");
     return;
   }
 
-  openSave.disabled = true;
-  setMsg("กำลังเปิดคาบ…");
-
   try{
-    // GS ของคุณ adminOpenSession_ รองรับ teacherEmail หรือ teacherId
-    const isEmail = teacherRaw.includes("@");
-    const payload = isEmail
-      ? { teacherEmail: teacherRaw, room, subject, note }
-      : { teacherId: teacherRaw, room, subject, note };
-
-    const res = await callApi(ACTIONS.open, payload);
-    if(!res?.success) throw new Error(res?.message || "เปิดคาบไม่สำเร็จ");
-
+    const res = await callApi(ACTIONS.open,{ teacherId, room, subject });
+    if(!res?.success) throw new Error(res.message);
     toast("เปิดคาบแล้ว");
     closeOpenModal();
-
     await loadSessions();
     applyFilter();
-    setMsg("");
-
-  }catch(err){
-    setMsg(`เปิดคาบไม่สำเร็จ: ${err.message || err}`);
-  }finally{
-    openSave.disabled = false;
+  }catch(e){
+    setMsg(e.message);
   }
 }
 
-/* ================= CLOSE SESSION ================= */
-function openCloseConfirm(sessionId){
-  closingSessionId = sessionId;
-
-  const row = rows.find(r => r.sessionId === sessionId);
-  const token = row?.token ? `TOKEN: ${row.token}` : "TOKEN: —";
-  const info  = row ? `${row.subject || "—"} / ${row.room || "—"} • ${row.teacherId || "—"}` : "—";
-
-  if(closeSummary) closeSummary.textContent = `${sessionId} • ${token} • ${info}`;
-
-  closeModal?.classList.add("show");
-  closeModal?.setAttribute("aria-hidden", "false");
-  closeConfirm?.focus();
+/* ================= CLOSE ================= */
+function openCloseConfirm(id){
+  closingSessionId = id;
+  closeSummary.textContent = id;
+  closeModal.classList.add("show");
 }
-
 function closeCloseModal(){
-  closeModal?.classList.remove("show");
-  closeModal?.setAttribute("aria-hidden", "true");
+  closeModal.classList.remove("show");
   closingSessionId = null;
 }
-
 async function onCloseConfirm(){
   if(!closingSessionId) return;
-
-  closeConfirm.disabled = true;
-  setMsg("กำลังปิดคาบ…");
-
   try{
-    // GS close รองรับ sessionId หรือ id
-    const res = await callApi(ACTIONS.close, { sessionId: closingSessionId });
-    if(!res?.success) throw new Error(res?.message || "ปิดคาบไม่สำเร็จ");
-
+    const res = await callApi(ACTIONS.close,{ sessionId: closingSessionId });
+    if(!res?.success) throw new Error(res.message);
     toast("ปิดคาบแล้ว");
     closeCloseModal();
-
     await loadSessions();
     applyFilter();
-    setMsg("");
-
-  }catch(err){
-    setMsg(`ปิดคาบไม่สำเร็จ: ${err.message || err}`);
-  }finally{
-    closeConfirm.disabled = false;
+  }catch(e){
+    setMsg(e.message);
   }
 }
 
 /* ================= EXPORT ================= */
 async function onExport(){
   try{
-    const res = await callApi(ACTIONS.export, {});
-    if(res?.success && res.csv){
-      downloadText(res.csv, `sessions_${stamp()}.csv`, "text/csv;charset=utf-8;");
-      toast("Export CSV แล้ว");
-      return;
-    }
-  }catch{ /* fallback */ }
-
-  const list = filteredCache?.length ? filteredCache : rows;
-  const headers = ["ID","TEACHER_EMAIL","SUBJECT","ROOM","TOKEN","STATUS","START_TIME"];
-  const csv = [
-    headers.join(","),
-    ...list.map(r => [
-      csvCell(r.sessionId),
-      csvCell(r.teacherId),
-      csvCell(r.subject),
-      csvCell(r.room),
-      csvCell(r.token),
-      csvCell((r.status || "").toUpperCase()),
-      csvCell(r.createdAt),
-    ].join(","))
-  ].join("\n");
-
-  downloadText(csv, `sessions_${stamp()}.csv`, "text/csv;charset=utf-8;");
-  toast("Export CSV แล้ว");
+    const res = await callApi(ACTIONS.export,{});
+    if(!res?.success) throw new Error(res.message);
+    downloadText(res.csv,"sessions.csv","text/csv;charset=utf-8;");
+    toast("Export CSV แล้ว");
+  }catch(e){
+    setMsg(`Export ไม่สำเร็จ: ${e.message}`);
+  }
 }
 
 /* ================= HELPERS ================= */
-function setMsg(text){
-  if(!msgEl) return;
-  msgEl.textContent = text || "";
-}
-function toast(text){
-  setMsg(text);
-  if(text){
-    clearTimeout(toast._t);
-    toast._t = setTimeout(() => setMsg(""), 2400);
-  }
-}
-function copyText(text){
-  if(!text) return;
-  navigator.clipboard?.writeText(text).catch(() => {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    ta.remove();
-  });
-}
+function setMsg(t){ msgEl.textContent = t||""; }
+function toast(t){ setMsg(t); setTimeout(()=>setMsg(""),2000); }
+
 function downloadText(content, filename, mime){
-  const blob = new Blob([content], { type: mime || "text/plain;charset=utf-8;" });
+  const blob = new Blob([content],{type:mime});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
 }
-function stamp(){
-  const d = new Date();
-  const pad = (n) => String(n).padStart(2,"0");
-  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
-}
-function csvCell(v){
-  const s = (v ?? "").toString();
-  return `"${s.replaceAll('"','""')}"`;
-}
-function escapeHtml(s){
-  return (s ?? "").toString()
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-function escapeAttr(s){ return escapeHtml(s); }

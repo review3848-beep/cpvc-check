@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NexAttend | Admin - ส่งออกข้อมูล</title>
+
+  <link rel="stylesheet" href="../css/styles.css" />
+  <script type="module" src="../js/admin-export.js" defer></script>
+
+  <style>
+    body{
+      margin:0;
+      min-height:100vh;
+      background: radial-gradient(circle at 20% 10%, #0b3a6b, #020617 62%);
+      font-family:"Inter","Prompt",system-ui,sans-serif;
+      color:#e5e7eb;
+    }
+    .wrap{ max-width:1000px; margin:40px auto; padding:0 18px; }
+    .card{
+      background: rgba(15,23,42,.9);
+      border:1px solid rgba(148,163,184,.18);
+      border-radius:20px;
+      padding:24px;
+      box-shadow:0 30px 90px rgba(0,0,0,.35);
+    }
+    h1{ margin:0 0 6px; font-size:26px; }
+    p{ color:#9ca3af; font-weight:600; margin-top:0; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+      gap:16px;
+      margin-top:20px;
+    }
+    .box{
+      border:1px solid rgba(148,163,184,.25);
+      border-radius:16px;
+      padding:18px;
+      background: rgba(2,6,23,.35);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .box h3{ margin:0; }
+    .muted{ color:#9ca3af; font-weight:600; }
+
+    .btn{
+      margin-top:auto;
+      padding:10px 14px;
+      border-radius:12px;
+      border:1px solid rgba(148,163,184,.25);
+      background: rgba(15,23,42,.55);
+      color:#e5e7eb;
+      cursor:pointer;
+      font-weight:800;
+    }
+    .btn:hover{ border-color:#38bdf8; }
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+    .back{
+      color:#cbd5e1;
+      text-decoration:none;
+      font-weight:700;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="top">
+        <div>
+          <h1>ส่งออกข้อมูลระบบ</h1>
+          <p>เลือกประเภทข้อมูลที่ต้องการดาวน์โหลดเป็นไฟล์ CSV</p>
+        </div>
+        <a class="back" href="./dashboard.html">← กลับ Dashboard</a>
+      </div>
+
+      <div class="grid">
+        <div class="box">
+          <h3>ครู (Teachers)</h3>
+          <div class="muted">รายชื่อครูทั้งหมดในระบบ</div>
+          <button class="btn" data-type="teachers">ดาวน์โหลด CSV</button>
+        </div>
+
+        <div class="box">
+          <h3>นักเรียน (Students)</h3>
+          <div class="muted">ข้อมูลนักเรียนทั้งหมด</div>
+          <button class="btn" data-type="students">ดาวน์โหลด CSV</button>
+        </div>
+
+        <div class="box">
+          <h3>คาบเรียน (Sessions)</h3>
+          <div class="muted">ข้อมูลคาบเรียนทั้งหมด</div>
+          <button class="btn" data-type="sessions">ดาวน์โหลด CSV</button>
+        </div>
+
+        <div class="box">
+          <h3>ประวัติเช็คชื่อ (Attendance)</h3>
+          <div class="muted">บันทึกการเข้าเรียนทั้งหมด</div>
+          <button class="btn" data-type="attendance">ดาวน์โหลด CSV</button>
+        </div>
+      </div>
+
+      <div id="msg" class="muted" style="margin-top:16px;"></div>
+    </div>
+  </div>
+</body>
+</html>
