@@ -3,7 +3,7 @@ import { callApi } from "../api.js";
 
 /* ================== CONFIG: ตรงกับ GS ของคุณ ================== */
 const ACTIONS = {
-  list:   "adminGetSessions",        // ✅ doGet (GS ของคุณมี)
+  list:   "adminSessions",        // ✅ doGet (GS ของคุณมี)
   open:   "adminOpenSession",        // ✅ doPost
   close:  "adminCloseSession",       // ✅ doPost
   export: "adminExportSessions"      // ✅ doPost (หรือ fallback export หน้าเว็บ)
