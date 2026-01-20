@@ -5,10 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NexAttend | Admin - ส่งออกข้อมูล</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Prompt:wght@400;600;700&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="../css/styles.css" />
   <script type="module" src="../js/admin-export.js" defer></script>
 
   <style>
+    :root{
+      --bg0:#020617;
+      --panel: rgba(15,23,42,.78);
+      --border: rgba(148,163,184,.18);
+      --muted:#9ca3af;
+
+      --accent: linear-gradient(90deg,#38bdf8,#60a5fa);
+      --accent-soft: rgba(56,189,248,.12);
+
+      --t: rgba(56,189,248,.12);
+      --s: rgba(34,197,94,.12);
+      --c: rgba(245,158,11,.12);
+      --a: rgba(244,63,94,.12);
+    }
+
     body{
       margin:0;
       min-height:100vh;
@@ -16,100 +35,315 @@
       font-family:"Inter","Prompt",system-ui,sans-serif;
       color:#e5e7eb;
     }
-    .wrap{ max-width:1000px; margin:40px auto; padding:0 18px; }
-    .card{
-      background: rgba(15,23,42,.9);
-      border:1px solid rgba(148,163,184,.18);
-      border-radius:20px;
-      padding:24px;
-      box-shadow:0 30px 90px rgba(0,0,0,.35);
-    }
-    h1{ margin:0 0 6px; font-size:26px; }
-    p{ color:#9ca3af; font-weight:600; margin-top:0; }
 
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
-      gap:16px;
-      margin-top:20px;
+    /* topbar */
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:18px 22px;
+      border-bottom:1px solid rgba(148,163,184,.12);
+      background: rgba(2,6,23,.55);
+      backdrop-filter: blur(12px);
+      position: sticky; top:0; z-index:10;
     }
-    .box{
-      border:1px solid rgba(148,163,184,.25);
-      border-radius:16px;
-      padding:18px;
-      background: rgba(2,6,23,.35);
+    .brand{ display:flex; align-items:center; gap:12px; font-weight:900; }
+    .logo{
+      width:42px;height:42px;border-radius:14px;
+      display:grid;place-items:center;
+      border:1px solid rgba(56,189,248,.18);
+      background: radial-gradient(circle at 30% 25%, rgba(56,189,248,.22), rgba(96,165,250,.08) 55%, rgba(2,6,23,0) 74%);
+      box-shadow: 0 18px 60px rgba(56,189,248,.08);
+    }
+    .brand small{ display:block; color:var(--muted); font-weight:700; margin-top:2px; }
+
+    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 14px; border-radius:999px;
+      border:1px solid rgba(148,163,184,.20);
+      background: rgba(15,23,42,.45);
+      color:#e5e7eb; text-decoration:none;
+      font-weight:900;
+    }
+    .chip:hover{ border-color: rgba(56,189,248,.35); }
+    .chip--primary{
+      background: var(--accent);
+      color:#04121f;
+      border:none;
+      box-shadow: 0 18px 50px rgba(56,189,248,.12);
+    }
+
+    /* layout */
+    .wrap{ max-width:1200px; margin: 18px auto; padding: 0 18px 50px; }
+
+    .hero{
+      border-radius: 22px;
+      border:1px solid rgba(148,163,184,.14);
+      background: rgba(15,23,42,.58);
+      box-shadow: 0 30px 90px rgba(0,0,0,.28);
+      padding: 18px 18px 14px;
+      display:flex; align-items:flex-end; justify-content:space-between;
+      gap:14px; flex-wrap:wrap;
+      overflow:hidden;
+      position:relative;
+    }
+    .hero::after{
+      content:"";
+      position:absolute; right:-120px; top:-120px;
+      width:420px; height:420px;
+      background: radial-gradient(circle at 30% 30%, rgba(56,189,248,.18), rgba(96,165,250,.06), rgba(2,6,23,0) 70%);
+      pointer-events:none;
+    }
+    .hero h1{
+      margin:0;
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing:.2px;
+      position:relative; z-index:1;
+    }
+    .hero p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-weight:800;
+      position:relative; z-index:1;
+    }
+
+    .meta{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+      position:relative; z-index:1;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(2,6,23,.18);
+      color:#cbd5e1;
+      font-weight:900;
+      font-size: 12px;
+      white-space:nowrap;
+    }
+    .dot{ width:8px; height:8px; border-radius:999px; background:#22c55e; box-shadow:0 0 0 6px rgba(34,197,94,.14); }
+
+    /* grid 4 columns on desktop */
+    .grid{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card{
+      border-radius: 22px;
+      border:1px solid rgba(148,163,184,.14);
+      background: rgba(15,23,42,.62);
+      box-shadow: 0 24px 70px rgba(0,0,0,.26);
+      overflow:hidden;
+      position:relative;
+      transition: transform .12s ease, border-color .12s ease;
+      min-height: 156px;
+    }
+    .card:hover{ transform: translateY(-2px); border-color: rgba(56,189,248,.32); }
+
+    .inner{
+      padding: 16px;
       display:flex;
       flex-direction:column;
-      gap:10px;
+      gap: 12px;
+      height: 100%;
     }
-    .box h3{ margin:0; }
-    .muted{ color:#9ca3af; font-weight:600; }
+
+    .head{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .left{
+      display:flex; align-items:center; gap:12px;
+      min-width:0;
+    }
+    .ico{
+      width:44px; height:44px; border-radius: 14px;
+      display:grid; place-items:center;
+      border:1px solid rgba(148,163,184,.14);
+      background: rgba(2,6,23,.22);
+      font-size: 20px;
+      flex: 0 0 auto;
+    }
+    .title{
+      font-weight: 900;
+      font-size: 16px;
+      margin:0;
+      letter-spacing:.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .sub{
+      margin:3px 0 0;
+      color:var(--muted);
+      font-weight:800;
+      font-size: 12px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .count{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(2,6,23,.18);
+      font-weight:900;
+      font-size: 12px;
+      color:#cbd5e1;
+      white-space:nowrap;
+      flex: 0 0 auto;
+    }
 
     .btn{
       margin-top:auto;
-      padding:10px 14px;
-      border-radius:12px;
-      border:1px solid rgba(148,163,184,.25);
-      background: rgba(15,23,42,.55);
-      color:#e5e7eb;
-      cursor:pointer;
-      font-weight:800;
-    }
-    .btn:hover{ border-color:#38bdf8; }
-
-    .top{
-      display:flex;
-      justify-content:space-between;
+      width:100%;
+      display:inline-flex;
       align-items:center;
-      gap:12px;
+      justify-content:center;
+      gap:10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border:1px solid rgba(148,163,184,.20);
+      background: rgba(2,6,23,.18);
+      color:#e5e7eb;
+      font-weight: 900;
+      cursor:pointer;
     }
-    .back{
+    .btn:hover{ border-color: rgba(56,189,248,.35); }
+
+    /* per type accent strip */
+    .card[data-type="teachers"]{ box-shadow: 0 24px 70px rgba(56,189,248,.08); }
+    .card[data-type="students"]{ box-shadow: 0 24px 70px rgba(34,197,94,.08); }
+    .card[data-type="sessions"]{ box-shadow: 0 24px 70px rgba(245,158,11,.08); }
+    .card[data-type="attendance"]{ box-shadow: 0 24px 70px rgba(244,63,94,.08); }
+
+    .card[data-type="teachers"] .btn{ background: var(--t); border-color: rgba(56,189,248,.22); }
+    .card[data-type="students"] .btn{ background: var(--s); border-color: rgba(34,197,94,.22); }
+    .card[data-type="sessions"] .btn{ background: var(--c); border-color: rgba(245,158,11,.22); }
+    .card[data-type="attendance"] .btn{ background: var(--a); border-color: rgba(244,63,94,.22); }
+
+    .msg{
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border:1px solid rgba(148,163,184,.14);
+      background: rgba(2,6,23,.18);
       color:#cbd5e1;
-      text-decoration:none;
-      font-weight:700;
+      font-weight:800;
+      min-height: 18px;
+    }
+
+    /* responsive */
+    @media (max-width: 1050px){
+      .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 620px){
+      .grid{ grid-template-columns: 1fr; }
+      .hero h1{ font-size: 22px; }
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="top">
-        <div>
-          <h1>ส่งออกข้อมูลระบบ</h1>
-          <p>เลือกประเภทข้อมูลที่ต้องการดาวน์โหลดเป็นไฟล์ CSV</p>
-        </div>
-        <a class="back" href="./dashboard.html">← กลับ Dashboard</a>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">📤</div>
+      <div>
+        <div style="font-size:16px;">NexAttend Admin</div>
+        <small>Export</small>
       </div>
-
-      <div class="grid">
-        <div class="box">
-          <h3>ครู (Teachers)</h3>
-          <div class="muted">รายชื่อครูทั้งหมดในระบบ</div>
-          <button class="btn" data-type="teachers">ดาวน์โหลด CSV</button>
-        </div>
-
-        <div class="box">
-          <h3>นักเรียน (Students)</h3>
-          <div class="muted">ข้อมูลนักเรียนทั้งหมด</div>
-          <button class="btn" data-type="students">ดาวน์โหลด CSV</button>
-        </div>
-
-        <div class="box">
-          <h3>คาบเรียน (Sessions)</h3>
-          <div class="muted">ข้อมูลคาบเรียนทั้งหมด</div>
-          <button class="btn" data-type="sessions">ดาวน์โหลด CSV</button>
-        </div>
-
-        <div class="box">
-          <h3>ประวัติเช็คชื่อ (Attendance)</h3>
-          <div class="muted">บันทึกการเข้าเรียนทั้งหมด</div>
-          <button class="btn" data-type="attendance">ดาวน์โหลด CSV</button>
-        </div>
-      </div>
-
-      <div id="msg" class="muted" style="margin-top:16px;"></div>
     </div>
-  </div>
+
+    <div class="actions">
+      <a class="chip" href="./dashboard.html">← Dashboard</a>
+      <a class="chip chip--primary" href="./sessions.html">จัดการคาบเรียน</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div>
+        <h1>ส่งออกข้อมูล</h1>
+        <p>เลือกประเภท แล้วดาวน์โหลด CSV</p>
+      </div>
+
+      <div class="meta">
+        <span class="pill"><span class="dot"></span>พร้อมใช้งาน</span>
+        <span class="pill">CSV (UTF-8)</span>
+      </div>
+    </section>
+
+    <section class="grid" aria-label="export grid">
+      <article class="card" data-type="teachers">
+        <div class="inner">
+          <div class="head">
+            <div class="left">
+              <div class="ico">👩‍🏫</div>
+              <div style="min-width:0;">
+                <h3 class="title">ครู</h3>
+                <div class="sub">รายการทั้งหมด</div>
+              </div>
+            </div>
+            <div class="count" data-count="teachers">—</div>
+          </div>
+          <button class="btn" data-export="teachers" type="button">ดาวน์โหลด CSV</button>
+        </div>
+      </article>
+
+      <article class="card" data-type="students">
+        <div class="inner">
+          <div class="head">
+            <div class="left">
+              <div class="ico">👨‍🎓</div>
+              <div style="min-width:0;">
+                <h3 class="title">นักเรียน</h3>
+                <div class="sub">รายการทั้งหมด</div>
+              </div>
+            </div>
+            <div class="count" data-count="students">—</div>
+          </div>
+          <button class="btn" data-export="students" type="button">ดาวน์โหลด CSV</button>
+        </div>
+      </article>
+
+      <article class="card" data-type="sessions">
+        <div class="inner">
+          <div class="head">
+            <div class="left">
+              <div class="ico">🗓️</div>
+              <div style="min-width:0;">
+                <h3 class="title">คาบเรียน</h3>
+                <div class="sub">ทั้งหมด</div>
+              </div>
+            </div>
+            <div class="count" data-count="sessions">—</div>
+          </div>
+          <button class="btn" data-export="sessions" type="button">ดาวน์โหลด CSV</button>
+        </div>
+      </article>
+
+      <article class="card" data-type="attendance">
+        <div class="inner">
+          <div class="head">
+            <div class="left">
+              <div class="ico">✅</div>
+              <div style="min-width:0;">
+                <h3 class="title">เช็คชื่อ</h3>
+                <div class="sub">ประวัติทั้งหมด</div>
+              </div>
+            </div>
+            <div class="count" data-count="attendance">—</div>
+          </div>
+          <button class="btn" data-export="attendance" type="button">ดาวน์โหลด CSV</button>
+        </div>
+      </article>
+    </section>
+
+    <div id="msg" class="msg" role="status" aria-live="polite"></div>
+  </main>
 </body>
 </html>
