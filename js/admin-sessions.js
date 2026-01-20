@@ -1,16 +1,12 @@
 // ../js/admin-sessions.js
 import { callApi } from "../api.js";
 
-/* ================== CONFIG: แก้ชื่อ action ที่ backend ของคุณตรงนี้ ================== */
+/* ================== CONFIG: ตรงกับ GS ของคุณ ================== */
 const ACTIONS = {
-  // list sessions
-  list: "adminListSessions",          // <- แก้เป็น action ของคุณ เช่น "adminGetSessions" / "teacherGetDashboard" ฯลฯ
-  // open session
-  open: "adminOpenSession",           // <- แก้เป็น "teacherOpenSession" ถ้าคุณใช้ฝั่งครูเป็นคนเปิดคาบ
-  // close session
-  close: "adminCloseSession",         // <- แก้เป็น "teacherCloseSession" ถ้าคุณใช้ฝั่งครูเป็นคนปิดคาบ
-  // export (ถ้าคุณมี export จาก backend)
-  export: "adminExportSessions"       // <- ถ้าไม่มี เดี๋ยวไฟล์นี้จะ export CSV ฝั่งหน้าเว็บให้เอง
+  list:   "adminGetSessions",        // ✅ doGet (GS ของคุณมี)
+  open:   "adminOpenSession",        // ✅ doPost
+  close:  "adminCloseSession",       // ✅ doPost
+  export: "adminExportSessions"      // ✅ doPost (หรือ fallback export หน้าเว็บ)
 };
 
 /* ================= DOM ================= */
@@ -29,7 +25,7 @@ const openClose  = document.getElementById("openClose");
 const openCancel = document.getElementById("openCancel");
 const openSave   = document.getElementById("openSave");
 
-const fTeacher = document.getElementById("fTeacher");
+const fTeacher = document.getElementById("fTeacher"); // ใน UI เขียน TEACHER_ID แต่ GS ใช้ TEACHER_EMAIL -> รองรับทั้งคู่
 const fRoom    = document.getElementById("fRoom");
 const fSubject = document.getElementById("fSubject");
 const fNote    = document.getElementById("fNote");
@@ -55,36 +51,42 @@ async function init(){
 
   bindEvents();
   await loadSessions();
-
-  // initial filter render
   applyFilter();
 }
 
 /* ================= GUARD ================= */
 function guardAdmin(){
-  const raw = localStorage.getItem("adminSession");
+  // รองรับหลาย key กัน “เด้งล็อกอิน” เพราะชื่อ key ไม่ตรง
+  const keys = ["adminSession","admin","admin_session","sessionAdmin","adminAuth"];
+  let raw = null;
+
+  for(const k of keys){
+    raw = localStorage.getItem(k);
+    if(raw) break;
+  }
+
   if(!raw){
     location.href = "./login.html";
     return null;
   }
+
   try{
     return JSON.parse(raw);
   }catch{
-    location.href = "./login.html";
-    return null;
+    return { token: raw };
   }
 }
 
 /* ================= EVENTS ================= */
 function bindEvents(){
   btnLogout?.addEventListener("click", () => {
-    localStorage.removeItem("adminSession");
+    ["adminSession","admin","admin_session","sessionAdmin","adminAuth"].forEach(k => localStorage.removeItem(k));
     location.href = "./login.html";
   });
 
-  q?.addEventListener("input", () => applyFilter());
+  q?.addEventListener("input", applyFilter);
 
-  btnOpen?.addEventListener("click", () => openOpenModal());
+  btnOpen?.addEventListener("click", openOpenModal);
   openClose?.addEventListener("click", closeOpenModal);
   openCancel?.addEventListener("click", closeOpenModal);
   openSave?.addEventListener("click", onOpenSave);
@@ -95,14 +97,12 @@ function bindEvents(){
 
   btnExport?.addEventListener("click", onExport);
 
-  // UX: กด ESC ปิด modal
   document.addEventListener("keydown", (e) => {
     if(e.key !== "Escape") return;
     if(openModal?.classList.contains("show")) closeOpenModal();
     if(closeModal?.classList.contains("show")) closeCloseModal();
   });
 
-  // UX: คลิกฉากหลังปิด modal
   openModal?.addEventListener("click", (e) => { if(e.target === openModal) closeOpenModal(); });
   closeModal?.addEventListener("click", (e) => { if(e.target === closeModal) closeCloseModal(); });
 }
@@ -115,8 +115,10 @@ async function loadSessions(){
     const res = await callApi(ACTIONS.list, {});
     if(!res?.success) throw new Error(res?.message || "โหลดข้อมูลไม่สำเร็จ");
 
-    // รองรับหลายทรง: res.rows / res.data / res.sessions
-    rows = normalizeSessions(res.rows || res.data || res.sessions || []);
+    // GS adminGetList_ คืน { success:true, headers, rows }
+    // rows เป็น array ของ object (key ตามหัวตาราง) + __row
+    const list = res.rows || res.data || res.sessions || [];
+    rows = normalizeSessions(list);
     setMsg("");
 
   }catch(err){
@@ -126,17 +128,17 @@ async function loadSessions(){
 }
 
 function normalizeSessions(list){
-  // ทำให้ field ชื่อไม่ตรงก็ยังพอใช้ได้
+  // ชีตคุณ: ID, TEACHER_EMAIL, SUBJECT, ROOM, TOKEN, STATUS, START_TIME
   return list.map((s) => ({
-    sessionId:  s.sessionId  ?? s.SESSION_ID ?? s.id ?? s.session_id ?? "",
-    token:      s.token      ?? s.TOKEN      ?? s.sessionToken ?? s.session_token ?? "",
-    subject:    s.subject    ?? s.SUBJECT    ?? "",
-    room:       s.room       ?? s.ROOM       ?? "",
-    teacherId:  s.teacherId  ?? s.TEACHER_ID ?? s.teacher ?? s.teacher_id ?? "",
-    teacherName:s.teacherName?? s.TEACHER_NAME ?? "",
+    sessionId:  s.sessionId ?? s.ID ?? s.SESSION_ID ?? s.id ?? s.session_id ?? "",
+    token:      s.token ?? s.TOKEN ?? s.sessionToken ?? s.session_token ?? "",
+    subject:    s.subject ?? s.SUBJECT ?? "",
+    room:       s.room ?? s.ROOM ?? "",
+    teacherId:  s.teacherId ?? s.TEACHER_ID ?? s.TEACHER_EMAIL ?? s.teacher ?? s.teacher_id ?? "",
+    teacherName:s.teacherName ?? s.TEACHER_NAME ?? "",
     status:     (s.status ?? s.STATUS ?? "").toString().toLowerCase(), // open/closed
-    createdAt:  s.createdAt  ?? s.CREATED_AT ?? s.created_at ?? "",
-    note:       s.note       ?? s.NOTE ?? ""
+    createdAt:  s.createdAt ?? s.CREATED_AT ?? s.created_at ?? s.START_TIME ?? s.startTime ?? s.start_time ?? "",
+    note:       s.note ?? s.NOTE ?? ""
   }));
 }
 
@@ -155,7 +157,7 @@ function applyFilter(){
       });
 
   renderTable(filteredCache);
-  countEl.textContent = `${filteredCache.length} รายการ`;
+  if(countEl) countEl.textContent = `${filteredCache.length} รายการ`;
 }
 
 function renderTable(list){
@@ -167,7 +169,10 @@ function renderTable(list){
   }
 
   tbody.innerHTML = list.map((r) => {
-    const teacherText = (r.teacherName ? `${escapeHtml(r.teacherName)} ` : "") + (r.teacherId ? `<span class="muted mono">(${escapeHtml(r.teacherId)})</span>` : `<span class="muted">—</span>`);
+    const teacherText =
+      (r.teacherName ? `${escapeHtml(r.teacherName)} ` : "") +
+      (r.teacherId ? `<span class="muted mono">(${escapeHtml(r.teacherId)})</span>` : `<span class="muted">—</span>`);
+
     const subRoom = `${escapeHtml(r.subject || "—")} <span class="muted">/</span> <span class="mono">${escapeHtml(r.room || "—")}</span>`;
 
     const st = (r.status === "open" || r.status === "opened" || r.status === "active") ? "open"
@@ -181,12 +186,6 @@ function renderTable(list){
         ? `<span class="status status--closing"><span class="dot"></span>CLOSING</span>`
         : `<span class="status status--closed"><span class="dot"></span>CLOSED</span>`;
 
-    const created = r.createdAt ? escapeHtml(formatDateTime(r.createdAt)) : `<span class="muted">—</span>`;
-
-    const btnCloseDisabled = (st !== "open") ? "disabled" : "";
-    const btnCloseLabel = (st !== "open") ? "ปิดคาบ" : "ปิดคาบ";
-    const btnCloseClass = (st === "open") ? "btn btn--danger" : "btn";
-
     return `
       <tr>
         <td data-label="SESSION_ID" class="mono">${escapeHtml(r.sessionId || "—")}</td>
@@ -199,22 +198,26 @@ function renderTable(list){
         <td data-label="STATUS">${statusBadge}</td>
         <td data-label="ACTIONS">
           <div class="right">
-            <button class="${btnCloseClass}" data-act="close" data-id="${escapeAttr(r.sessionId)}" ${btnCloseDisabled} type="button">${btnCloseLabel}</button>
+            <button class="${st === "open" ? "btn btn--danger" : "btn"}"
+                    data-act="close"
+                    data-id="${escapeAttr(r.sessionId)}"
+                    ${st !== "open" ? "disabled" : ""} type="button">ปิดคาบ</button>
           </div>
         </td>
       </tr>
     `;
   }).join("");
 
-  // bind row actions (event delegation)
   tbody.querySelectorAll("button[data-act]").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       const act = e.currentTarget.getAttribute("data-act");
+
       if(act === "copy"){
         const token = e.currentTarget.getAttribute("data-token") || "";
         copyText(token);
         toast("คัดลอก TOKEN แล้ว");
       }
+
       if(act === "close"){
         const id = e.currentTarget.getAttribute("data-id");
         if(!id) return;
@@ -234,7 +237,6 @@ function openOpenModal(){
 function closeOpenModal(){
   openModal?.classList.remove("show");
   openModal?.setAttribute("aria-hidden", "true");
-  // ไม่ล้างก็ได้ แต่ล้างให้เนียน
   fTeacher.value = "";
   fRoom.value = "";
   fSubject.value = "";
@@ -242,13 +244,13 @@ function closeOpenModal(){
 }
 
 async function onOpenSave(){
-  const teacherId = (fTeacher.value || "").trim();
-  const room      = (fRoom.value || "").trim();
-  const subject   = (fSubject.value || "").trim();
-  const note      = (fNote.value || "").trim();
+  const teacherRaw = (fTeacher.value || "").trim();
+  const room       = (fRoom.value || "").trim();
+  const subject    = (fSubject.value || "").trim();
+  const note       = (fNote.value || "").trim();
 
-  if(!teacherId || !room || !subject){
-    toast("กรอก TEACHER_ID, ROOM, SUBJECT ให้ครบ");
+  if(!teacherRaw || !room || !subject){
+    toast("กรอก TEACHER_ID/EMAIL, ROOM, SUBJECT ให้ครบ");
     return;
   }
 
@@ -256,13 +258,18 @@ async function onOpenSave(){
   setMsg("กำลังเปิดคาบ…");
 
   try{
-    const res = await callApi(ACTIONS.open, { teacherId, room, subject, note });
+    // GS ของคุณ adminOpenSession_ รองรับ teacherEmail หรือ teacherId
+    const isEmail = teacherRaw.includes("@");
+    const payload = isEmail
+      ? { teacherEmail: teacherRaw, room, subject, note }
+      : { teacherId: teacherRaw, room, subject, note };
+
+    const res = await callApi(ACTIONS.open, payload);
     if(!res?.success) throw new Error(res?.message || "เปิดคาบไม่สำเร็จ");
 
     toast("เปิดคาบแล้ว");
     closeOpenModal();
 
-    // refresh list (หรือจะ push row ใหม่จาก res ก็ได้)
     await loadSessions();
     applyFilter();
     setMsg("");
@@ -282,7 +289,7 @@ function openCloseConfirm(sessionId){
   const token = row?.token ? `TOKEN: ${row.token}` : "TOKEN: —";
   const info  = row ? `${row.subject || "—"} / ${row.room || "—"} • ${row.teacherId || "—"}` : "—";
 
-  closeSummary.textContent = `${sessionId} • ${token} • ${info}`;
+  if(closeSummary) closeSummary.textContent = `${sessionId} • ${token} • ${info}`;
 
   closeModal?.classList.add("show");
   closeModal?.setAttribute("aria-hidden", "false");
@@ -302,6 +309,7 @@ async function onCloseConfirm(){
   setMsg("กำลังปิดคาบ…");
 
   try{
+    // GS close รองรับ sessionId หรือ id
     const res = await callApi(ACTIONS.close, { sessionId: closingSessionId });
     if(!res?.success) throw new Error(res?.message || "ปิดคาบไม่สำเร็จ");
 
@@ -321,43 +329,27 @@ async function onCloseConfirm(){
 
 /* ================= EXPORT ================= */
 async function onExport(){
-  // ถ้า backend มี export ให้ลองเรียกก่อน
   try{
     const res = await callApi(ACTIONS.export, {});
-    if(res?.success && (res.csv || res.url)){
-      // ถ้า backend ส่ง csv string มา
-      if(res.csv){
-        downloadText(res.csv, `sessions_${stamp()}.csv`, "text/csv;charset=utf-8;");
-        toast("Export CSV แล้ว");
-        return;
-      }
-      // ถ้าส่ง url มา
-      if(res.url){
-        window.open(res.url, "_blank");
-        toast("เปิดลิงก์ Export แล้ว");
-        return;
-      }
+    if(res?.success && res.csv){
+      downloadText(res.csv, `sessions_${stamp()}.csv`, "text/csv;charset=utf-8;");
+      toast("Export CSV แล้ว");
+      return;
     }
-  }catch{
-    // เงียบ ๆ แล้ว fallback เป็น export ฝั่งหน้าเว็บ
-  }
+  }catch{ /* fallback */ }
 
-  // fallback: export จาก filteredCache (หรือ rows ถ้าไม่ filter)
   const list = filteredCache?.length ? filteredCache : rows;
-
-  const headers = ["SESSION_ID","TOKEN","SUBJECT","ROOM","TEACHER_ID","TEACHER_NAME","STATUS","CREATED_AT","NOTE"];
+  const headers = ["ID","TEACHER_EMAIL","SUBJECT","ROOM","TOKEN","STATUS","START_TIME"];
   const csv = [
     headers.join(","),
     ...list.map(r => [
       csvCell(r.sessionId),
-      csvCell(r.token),
+      csvCell(r.teacherId),
       csvCell(r.subject),
       csvCell(r.room),
-      csvCell(r.teacherId),
-      csvCell(r.teacherName),
-      csvCell(r.status),
+      csvCell(r.token),
+      csvCell((r.status || "").toUpperCase()),
       csvCell(r.createdAt),
-      csvCell(r.note),
     ].join(","))
   ].join("\n");
 
@@ -370,20 +362,16 @@ function setMsg(text){
   if(!msgEl) return;
   msgEl.textContent = text || "";
 }
-
 function toast(text){
-  // ใช้ msg bar เป็น toast แบบองค์กร: ไม่รก ไม่จอแดง
   setMsg(text);
   if(text){
     clearTimeout(toast._t);
     toast._t = setTimeout(() => setMsg(""), 2400);
   }
 }
-
 function copyText(text){
   if(!text) return;
   navigator.clipboard?.writeText(text).catch(() => {
-    // fallback
     const ta = document.createElement("textarea");
     ta.value = text;
     document.body.appendChild(ta);
@@ -392,7 +380,6 @@ function copyText(text){
     ta.remove();
   });
 }
-
 function downloadText(content, filename, mime){
   const blob = new Blob([content], { type: mime || "text/plain;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
@@ -404,30 +391,15 @@ function downloadText(content, filename, mime){
   a.remove();
   URL.revokeObjectURL(url);
 }
-
 function stamp(){
   const d = new Date();
   const pad = (n) => String(n).padStart(2,"0");
   return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
 }
-
-function formatDateTime(v){
-  // รองรับทั้ง ISO, timestamp, string
-  try{
-    const d = (typeof v === "number") ? new Date(v) : new Date(String(v));
-    if(Number.isNaN(d.getTime())) return String(v);
-    return d.toLocaleString("th-TH", { hour12:false });
-  }catch{
-    return String(v);
-  }
-}
-
 function csvCell(v){
   const s = (v ?? "").toString();
-  // escape quote + wrap
   return `"${s.replaceAll('"','""')}"`;
 }
-
 function escapeHtml(s){
   return (s ?? "").toString()
     .replaceAll("&","&amp;")
