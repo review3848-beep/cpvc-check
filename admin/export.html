@@ -19,13 +19,10 @@
       --border: rgba(148,163,184,.18);
       --muted:#9ca3af;
 
-      --accent: linear-gradient(90deg,#38bdf8,#60a5fa);
-      --accent-soft: rgba(56,189,248,.12);
-
-      --t: rgba(56,189,248,.12);
-      --s: rgba(34,197,94,.12);
-      --c: rgba(245,158,11,.12);
-      --a: rgba(244,63,94,.12);
+      --t: rgba(56,189,248,.14);
+      --s: rgba(34,197,94,.14);
+      --c: rgba(245,158,11,.14);
+      --a: rgba(244,63,94,.14);
     }
 
     body{
@@ -36,7 +33,6 @@
       color:#e5e7eb;
     }
 
-    /* topbar */
     .topbar{
       display:flex; align-items:center; justify-content:space-between;
       padding:18px 22px;
@@ -51,85 +47,69 @@
       display:grid;place-items:center;
       border:1px solid rgba(56,189,248,.18);
       background: radial-gradient(circle at 30% 25%, rgba(56,189,248,.22), rgba(96,165,250,.08) 55%, rgba(2,6,23,0) 74%);
-      box-shadow: 0 18px 60px rgba(56,189,248,.08);
     }
     .brand small{ display:block; color:var(--muted); font-weight:700; margin-top:2px; }
 
-    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .actions{ display:flex; gap:10px; }
     .chip{
-      display:inline-flex; align-items:center; gap:8px;
+      display:inline-flex; align-items:center;
       padding:10px 14px; border-radius:999px;
       border:1px solid rgba(148,163,184,.20);
       background: rgba(15,23,42,.45);
       color:#e5e7eb; text-decoration:none;
       font-weight:900;
     }
-    .chip:hover{ border-color: rgba(56,189,248,.35); }
-    .chip--primary{
-      background: var(--accent);
-      color:#04121f;
-      border:none;
-      box-shadow: 0 18px 50px rgba(56,189,248,.12);
+    .chip.primary{
+      background: linear-gradient(90deg,#38bdf8,#60a5fa);
+      color:#04121f; border:none;
     }
 
-    /* layout */
     .wrap{ max-width:1200px; margin: 18px auto; padding: 0 18px 50px; }
 
     .hero{
-      border-radius: 22px;
+      border-radius: 24px;
       border:1px solid rgba(148,163,184,.14);
-      background: rgba(15,23,42,.58);
-      box-shadow: 0 30px 90px rgba(0,0,0,.28);
-      padding: 18px 18px 14px;
+      background:
+        radial-gradient(900px 220px at 22% 35%, rgba(56,189,248,.14), rgba(2,6,23,0) 60%),
+        radial-gradient(700px 220px at 78% 20%, rgba(99,102,241,.10), rgba(2,6,23,0) 62%),
+        linear-gradient(180deg, rgba(15,23,42,.62), rgba(15,23,42,.42));
+      box-shadow:
+        0 30px 90px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.05);
+      padding: 18px;
       display:flex; align-items:flex-end; justify-content:space-between;
       gap:14px; flex-wrap:wrap;
-      overflow:hidden;
       position:relative;
+      overflow:hidden;
+      backdrop-filter: blur(14px);
     }
     .hero::after{
       content:"";
-      position:absolute; right:-120px; top:-120px;
-      width:420px; height:420px;
-      background: radial-gradient(circle at 30% 30%, rgba(56,189,248,.18), rgba(96,165,250,.06), rgba(2,6,23,0) 70%);
+      position:absolute; inset:0;
+      background:
+        radial-gradient(420px 420px at 88% -10%, rgba(56,189,248,.16), rgba(2,6,23,0) 62%),
+        radial-gradient(520px 520px at -10% 110%, rgba(59,130,246,.10), rgba(2,6,23,0) 66%);
       pointer-events:none;
     }
-    .hero h1{
-      margin:0;
-      font-size: 26px;
-      font-weight: 900;
-      letter-spacing:.2px;
-      position:relative; z-index:1;
-    }
-    .hero p{
-      margin:6px 0 0;
-      color:var(--muted);
-      font-weight:800;
-      position:relative; z-index:1;
-    }
 
-    .meta{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
-      position:relative; z-index:1;
-    }
+    .hero h1{ margin:0; font-size:26px; font-weight:900; }
+    .hero p{ margin:6px 0 0; color:var(--muted); font-weight:800; }
+
+    .meta{ display:flex; gap:10px; align-items:center; }
     .pill{
       display:inline-flex; align-items:center; gap:8px;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(2,6,23,.18);
-      color:#cbd5e1;
-      font-weight:900;
-      font-size: 12px;
-      white-space:nowrap;
+      padding:8px 10px; border-radius:999px;
+      border:1px solid rgba(148,163,184,.16);
+      background: rgba(2,6,23,.22);
+      font-weight:900; font-size:12px;
     }
-    .dot{ width:8px; height:8px; border-radius:999px; background:#22c55e; box-shadow:0 0 0 6px rgba(34,197,94,.14); }
+    .dot{ width:8px;height:8px;border-radius:50%;background:#22c55e; }
 
-    /* grid 4 columns on desktop */
     .grid{
-      margin-top: 14px;
+      margin-top:14px;
       display:grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap:14px;
     }
 
     .card{
@@ -137,213 +117,143 @@
       border:1px solid rgba(148,163,184,.14);
       background: rgba(15,23,42,.62);
       box-shadow: 0 24px 70px rgba(0,0,0,.26);
-      overflow:hidden;
-      position:relative;
-      transition: transform .12s ease, border-color .12s ease;
       min-height: 156px;
-    }
-    .card:hover{ transform: translateY(-2px); border-color: rgba(56,189,248,.32); }
-
-    .inner{
-      padding: 16px;
       display:flex;
       flex-direction:column;
-      gap: 12px;
-      height: 100%;
+      padding:16px;
+      gap:12px;
     }
 
-    .head{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-    }
-    .left{
-      display:flex; align-items:center; gap:12px;
-      min-width:0;
-    }
+    .head{ display:flex; justify-content:space-between; align-items:center; }
+    .left{ display:flex; gap:12px; align-items:center; }
     .ico{
-      width:44px; height:44px; border-radius: 14px;
-      display:grid; place-items:center;
+      width:44px;height:44px;border-radius:14px;
+      display:grid;place-items:center;
       border:1px solid rgba(148,163,184,.14);
       background: rgba(2,6,23,.22);
-      font-size: 20px;
-      flex: 0 0 auto;
+      font-size:20px;
     }
-    .title{
-      font-weight: 900;
-      font-size: 16px;
-      margin:0;
-      letter-spacing:.2px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .sub{
-      margin:3px 0 0;
-      color:var(--muted);
-      font-weight:800;
-      font-size: 12px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
+    .title{ font-weight:900; font-size:16px; margin:0; }
+    .sub{ font-size:12px; color:var(--muted); font-weight:800; }
+
     .count{
-      display:inline-flex; align-items:center; justify-content:center;
       padding:7px 10px;
       border-radius:999px;
       border:1px solid rgba(148,163,184,.18);
       background: rgba(2,6,23,.18);
       font-weight:900;
-      font-size: 12px;
-      color:#cbd5e1;
-      white-space:nowrap;
-      flex: 0 0 auto;
+      font-size:12px;
     }
 
     .btn{
       margin-top:auto;
-      width:100%;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      padding: 12px 14px;
-      border-radius: 14px;
+      padding:12px;
+      border-radius:14px;
       border:1px solid rgba(148,163,184,.20);
       background: rgba(2,6,23,.18);
       color:#e5e7eb;
-      font-weight: 900;
+      font-weight:900;
       cursor:pointer;
     }
-    .btn:hover{ border-color: rgba(56,189,248,.35); }
 
-    /* per type accent strip */
-    .card[data-type="teachers"]{ box-shadow: 0 24px 70px rgba(56,189,248,.08); }
-    .card[data-type="students"]{ box-shadow: 0 24px 70px rgba(34,197,94,.08); }
-    .card[data-type="sessions"]{ box-shadow: 0 24px 70px rgba(245,158,11,.08); }
-    .card[data-type="attendance"]{ box-shadow: 0 24px 70px rgba(244,63,94,.08); }
+    .card[data-type="teachers"] .btn{ background:var(--t); }
+    .card[data-type="students"] .btn{ background:var(--s); }
+    .card[data-type="sessions"] .btn{ background:var(--c); }
+    .card[data-type="attendance"] .btn{ background:var(--a); }
 
-    .card[data-type="teachers"] .btn{ background: var(--t); border-color: rgba(56,189,248,.22); }
-    .card[data-type="students"] .btn{ background: var(--s); border-color: rgba(34,197,94,.22); }
-    .card[data-type="sessions"] .btn{ background: var(--c); border-color: rgba(245,158,11,.22); }
-    .card[data-type="attendance"] .btn{ background: var(--a); border-color: rgba(244,63,94,.22); }
-
-    .msg{
-      margin-top: 12px;
-      padding: 10px 12px;
-      border-radius: 16px;
-      border:1px solid rgba(148,163,184,.14);
-      background: rgba(2,6,23,.18);
-      color:#cbd5e1;
-      font-weight:800;
-      min-height: 18px;
-    }
-
-    /* responsive */
     @media (max-width: 1050px){
-      .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid{ grid-template-columns: repeat(2,1fr); }
     }
     @media (max-width: 620px){
       .grid{ grid-template-columns: 1fr; }
-      .hero h1{ font-size: 22px; }
     }
   </style>
 </head>
 
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo">📤</div>
-      <div>
-        <div style="font-size:16px;">NexAttend Admin</div>
-        <small>Export</small>
-      </div>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">📤</div>
+    <div>
+      <div>NexAttend Admin</div>
+      <small>Export</small>
     </div>
+  </div>
+  <div class="actions">
+    <a class="chip" href="./dashboard.html">Dashboard</a>
+    <a class="chip primary" href="./sessions.html">คาบเรียน</a>
+  </div>
+</header>
 
-    <div class="actions">
-      <a class="chip" href="./dashboard.html">← Dashboard</a>
-      <a class="chip chip--primary" href="./sessions.html">จัดการคาบเรียน</a>
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <h1>ส่งออกข้อมูล</h1>
+      <p>เลือกประเภท แล้วดาวน์โหลด CSV</p>
     </div>
-  </header>
+    <div class="meta">
+      <span class="pill"><span class="dot"></span>พร้อมใช้งาน</span>
+      <span class="pill">CSV (UTF-8)</span>
+    </div>
+  </section>
 
-  <main class="wrap">
-    <section class="hero">
-      <div>
-        <h1>ส่งออกข้อมูล</h1>
-        <p>เลือกประเภท แล้วดาวน์โหลด CSV</p>
+  <section class="grid">
+    <article class="card" data-type="teachers">
+      <div class="head">
+        <div class="left">
+          <div class="ico">👩‍🏫</div>
+          <div>
+            <div class="title">ครู</div>
+            <div class="sub">ทั้งหมด</div>
+          </div>
+        </div>
+        <div class="count" data-count="teachers">—</div>
       </div>
+      <button class="btn" data-export="teachers">ดาวน์โหลด CSV</button>
+    </article>
 
-      <div class="meta">
-        <span class="pill"><span class="dot"></span>พร้อมใช้งาน</span>
-        <span class="pill">CSV (UTF-8)</span>
+    <article class="card" data-type="students">
+      <div class="head">
+        <div class="left">
+          <div class="ico">👨‍🎓</div>
+          <div>
+            <div class="title">นักเรียน</div>
+            <div class="sub">ทั้งหมด</div>
+          </div>
+        </div>
+        <div class="count" data-count="students">—</div>
       </div>
-    </section>
+      <button class="btn" data-export="students">ดาวน์โหลด CSV</button>
+    </article>
 
-    <section class="grid" aria-label="export grid">
-      <article class="card" data-type="teachers">
-        <div class="inner">
-          <div class="head">
-            <div class="left">
-              <div class="ico">👩‍🏫</div>
-              <div style="min-width:0;">
-                <h3 class="title">ครู</h3>
-                <div class="sub">รายการทั้งหมด</div>
-              </div>
-            </div>
-            <div class="count" data-count="teachers">—</div>
+    <article class="card" data-type="sessions">
+      <div class="head">
+        <div class="left">
+          <div class="ico">🗓️</div>
+          <div>
+            <div class="title">คาบเรียน</div>
+            <div class="sub">ทั้งหมด</div>
           </div>
-          <button class="btn" data-export="teachers" type="button">ดาวน์โหลด CSV</button>
         </div>
-      </article>
+        <div class="count" data-count="sessions">—</div>
+      </div>
+      <button class="btn" data-export="sessions">ดาวน์โหลด CSV</button>
+    </article>
 
-      <article class="card" data-type="students">
-        <div class="inner">
-          <div class="head">
-            <div class="left">
-              <div class="ico">👨‍🎓</div>
-              <div style="min-width:0;">
-                <h3 class="title">นักเรียน</h3>
-                <div class="sub">รายการทั้งหมด</div>
-              </div>
-            </div>
-            <div class="count" data-count="students">—</div>
+    <article class="card" data-type="attendance">
+      <div class="head">
+        <div class="left">
+          <div class="ico">✅</div>
+          <div>
+            <div class="title">เช็คชื่อ</div>
+            <div class="sub">ทั้งหมด</div>
           </div>
-          <button class="btn" data-export="students" type="button">ดาวน์โหลด CSV</button>
         </div>
-      </article>
-
-      <article class="card" data-type="sessions">
-        <div class="inner">
-          <div class="head">
-            <div class="left">
-              <div class="ico">🗓️</div>
-              <div style="min-width:0;">
-                <h3 class="title">คาบเรียน</h3>
-                <div class="sub">ทั้งหมด</div>
-              </div>
-            </div>
-            <div class="count" data-count="sessions">—</div>
-          </div>
-          <button class="btn" data-export="sessions" type="button">ดาวน์โหลด CSV</button>
-        </div>
-      </article>
-
-      <article class="card" data-type="attendance">
-        <div class="inner">
-          <div class="head">
-            <div class="left">
-              <div class="ico">✅</div>
-              <div style="min-width:0;">
-                <h3 class="title">เช็คชื่อ</h3>
-                <div class="sub">ประวัติทั้งหมด</div>
-              </div>
-            </div>
-            <div class="count" data-count="attendance">—</div>
-          </div>
-          <button class="btn" data-export="attendance" type="button">ดาวน์โหลด CSV</button>
-        </div>
-      </article>
-    </section>
-
-    <div id="msg" class="msg" role="status" aria-live="polite"></div>
-  </main>
+        <div class="count" data-count="attendance">—</div>
+      </div>
+      <button class="btn" data-export="attendance">ดาวน์โหลด CSV</button>
+    </article>
+  </section>
+</main>
 </body>
 </html>
