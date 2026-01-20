@@ -1,169 +1,115 @@
 // ../js/admin-export.js
 import { callApi } from "../api.js";
 
-/* ================== ACTION MAP (ต้องตรงกับ GS) ================== */
+/* ================== CONFIG ================== */
 const ACTIONS = {
-  // export csv
+  counts: "adminGetExportCounts",
   export: {
-    teachers:   "adminExportTeachers",
-    students:   "adminExportStudents",
-    sessions:   "adminExportSessions",
+    teachers: "adminExportTeachers",
+    students: "adminExportStudents",
+    sessions: "adminExportSessions",
     attendance: "adminExportAttendance",
-  },
-
-  // counts (optional)
-  // ถ้าไม่มี action ไหน ให้ปล่อยว่างไว้ได้ (จะโชว์ —)
-  count: {
-    teachers:   "adminGetTeachers",
-    students:   "adminGetStudents",
-    sessions:   "adminListSessions",
-    attendance: "adminGetAttendance", // ถ้าไม่มีใน GS ก็จะ fallback เป็น —
   }
 };
 
-/* ================= DOM ================= */
+/* ================== DOM ================== */
 const msgEl = document.getElementById("msg");
+const exportButtons = document.querySelectorAll("[data-export]");
+const countEls = {
+  teachers: document.querySelector('[data-count="teachers"]'),
+  students: document.querySelector('[data-count="students"]'),
+  sessions: document.querySelector('[data-count="sessions"]'),
+  attendance: document.querySelector('[data-count="attendance"]'),
+};
 
-/* ================= INIT ================= */
+/* ================== INIT ================== */
 document.addEventListener("DOMContentLoaded", init);
 
 async function init(){
-  const admin = guardAdmin();
-  if(!admin) return;
-
-  bindExportButtons();
-  await loadCountsSafe_();
+  bindEvents();
+  await loadCounts();
 }
 
-/* ================= GUARD ================= */
-function guardAdmin(){
-  const raw = localStorage.getItem("adminSession");
-  if(!raw){
-    location.href = "./login.html";
-    return null;
-  }
-  try{
-    return JSON.parse(raw);
-  }catch{
-    location.href = "./login.html";
-    return null;
-  }
-}
-
-/* ================= UI ================= */
-function setMsg(t){
-  if(!msgEl) return;
-  msgEl.textContent = t || "";
-}
-function toast(t){
-  setMsg(t || "");
-  if(t){
-    clearTimeout(toast._t);
-    toast._t = setTimeout(()=>setMsg(""), 2200);
-  }
-}
-function setBtnLoading(btn, loading){
-  if(!btn) return;
-  btn.disabled = !!loading;
-  btn.dataset.loading = loading ? "1" : "0";
-  btn.style.opacity = loading ? "0.75" : "1";
-  btn.textContent = loading ? "กำลังเตรียมไฟล์..." : "ดาวน์โหลด CSV";
-}
-
-/* ================= EXPORT ================= */
-function bindExportButtons(){
-  document.querySelectorAll("button[data-export]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const type = btn.getAttribute("data-export");
-      if(!type) return;
-
-      const action = ACTIONS.export[type];
-      if(!action){
-        toast("ยังไม่ได้ตั้งค่า action สำหรับ: " + type);
-        return;
-      }
-
-      setBtnLoading(btn, true);
-      toast("กำลังสร้างไฟล์...");
-
-      try{
-        const res = await callApi(action, {});
-        if(!res?.success) throw new Error(res?.message || "Export ไม่สำเร็จ");
-
-        // GS ส่ง {csv:"..."} กลับมา
-        if(res.csv){
-          downloadText(res.csv, `${type}_${stamp()}.csv`, "text/csv;charset=utf-8;");
-          toast("ดาวน์โหลดแล้ว");
-        }else if(res.url){
-          window.open(res.url, "_blank");
-          toast("เปิดลิงก์ดาวน์โหลดแล้ว");
-        }else{
-          throw new Error("รูปแบบ response ไม่ถูกต้อง (ต้องมี csv หรือ url)");
-        }
-      }catch(err){
-        toast("Export ไม่สำเร็จ: " + (err.message || err));
-      }finally{
-        setBtnLoading(btn, false);
-      }
+/* ================== EVENTS ================== */
+function bindEvents(){
+  exportButtons.forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const key = btn.getAttribute("data-export");
+      if(!key || !ACTIONS.export[key]) return;
+      await exportCsv(key, btn);
     });
   });
 }
 
-/* ================= COUNTS (OPTIONAL) ================= */
-async function loadCountsSafe_(){
-  // teachers
-  await trySetCount_("teachers", async () => {
-    const act = ACTIONS.count.teachers;
-    if(!act) return null;
-    const res = await callApi(act, {});
-    const rows = res?.rows || res?.data || [];
-    return Array.isArray(rows) ? rows.length : null;
-  });
-
-  // students
-  await trySetCount_("students", async () => {
-    const act = ACTIONS.count.students;
-    if(!act) return null;
-    const res = await callApi(act, {});
-    const rows = res?.rows || res?.data || [];
-    return Array.isArray(rows) ? rows.length : null;
-  });
-
-  // sessions
-  await trySetCount_("sessions", async () => {
-    const act = ACTIONS.count.sessions;
-    if(!act) return null;
-    const res = await callApi(act, {});
-    const rows = res?.rows || res?.data || [];
-    return Array.isArray(rows) ? rows.length : null;
-  });
-
-  // attendance
-  await trySetCount_("attendance", async () => {
-    const act = ACTIONS.count.attendance;
-    if(!act) return null;
-    const res = await callApi(act, {});
-    const rows = res?.rows || res?.data || [];
-    return Array.isArray(rows) ? rows.length : null;
-  });
-}
-
-async function trySetCount_(key, getter){
-  const el = document.querySelector(`[data-count="${key}"]`);
-  if(!el) return;
-
+/* ================== COUNTS ================== */
+async function loadCounts(){
+  setMsg("กำลังโหลดจำนวนรายการ…");
   try{
-    const n = await getter();
-    if(typeof n === "number") el.textContent = `${n} รายการ`;
-    else el.textContent = "—";
-  }catch{
-    el.textContent = "—";
+    const res = await callApi(ACTIONS.counts, {});
+    if(!res?.success) throw new Error(res?.message || "โหลดจำนวนไม่สำเร็จ");
+
+    const c = res.counts || {};
+    setCount("teachers", c.teachers);
+    setCount("students", c.students);
+    setCount("sessions", c.sessions);
+    setCount("attendance", c.attendance);
+
+    setMsg("");
+  }catch(err){
+    setMsg(`โหลดจำนวนไม่สำเร็จ: ${err.message || err}`);
   }
 }
 
-/* ================= HELPERS ================= */
+function setCount(key, value){
+  if(!countEls[key]) return;
+  const n = Number(value);
+  countEls[key].textContent = Number.isFinite(n) ? n.toLocaleString("th-TH") : "—";
+}
+
+/* ================== EXPORT ================== */
+async function exportCsv(key, btn){
+  const action = ACTIONS.export[key];
+
+  const oldText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "กำลังดาวน์โหลด…";
+  setMsg("กำลังสร้างไฟล์…");
+
+  try{
+    const res = await callApi(action, {});
+    if(!res?.success) throw new Error(res?.message || "ส่งออกไม่สำเร็จ");
+
+    const csv = res.csv;
+    if(!csv || typeof csv !== "string") throw new Error("ไม่พบข้อมูล CSV");
+
+    const filename = `${key}_${stamp()}.csv`;
+    downloadText(csv, filename, "text/csv;charset=utf-8;");
+    setMsg("ดาวน์โหลดแล้ว");
+    clearMsgSoon();
+  }catch(err){
+    setMsg(`ส่งออกไม่สำเร็จ: ${err.message || err}`);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
+/* ================== UI HELPERS ================== */
+function setMsg(text){
+  if(!msgEl) return;
+  msgEl.textContent = text || "";
+}
+
+function clearMsgSoon(){
+  clearTimeout(clearMsgSoon._t);
+  clearMsgSoon._t = setTimeout(()=>setMsg(""), 2400);
+}
+
+/* ================== FILE HELPERS ================== */
 function downloadText(content, filename, mime){
-  const blob = new Blob([content], { type: mime || "text/plain;charset=utf-8;" });
+  // ใส่ BOM ให้ Excel ไทยเปิด UTF-8 สวย
+  const bom = "\uFEFF";
+  const blob = new Blob([bom + content], { type: mime || "text/plain;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -176,6 +122,6 @@ function downloadText(content, filename, mime){
 
 function stamp(){
   const d = new Date();
-  const pad = (n) => String(n).padStart(2,"0");
+  const pad = (n)=>String(n).padStart(2,"0");
   return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
 }
