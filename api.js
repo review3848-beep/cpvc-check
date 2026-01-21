@@ -1,6 +1,6 @@
 //api.js
 export const API_BASE =
-  "https://script.google.com/macros/s/AKfycbxT5LJvcU3KlnbF6OmJKGhPUljOXRvg-S70JbOR-Zc9fHMbfykZo-zGIQ63vt951zsXqg/exec";
+  "https://script.google.com/macros/s/AKfycbxT5LJvcU3KlnbF6OmJKGhPUljOXRvg-S70JbOR-Zc9fHMbfykZo-zGIQ63vt951zsXqg/execv ";
 
 /* ================= API CALL ================= */
 export async function callApi(action, params = {}) {
