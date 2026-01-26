@@ -1,21 +1,26 @@
-//api.js
+// api.js
 export const API_BASE =
-  "https://script.google.com/macros/s/AKfycbxBjro-I9EPdAHGkOiq11TsFRaz5EoO-t38Twv3vgy5c2GV3JhpKExWPvdCJdK0vxPKqQ/exec";
+  "https://script.google.com/macros/s/AKfycby5bmWiRLlMCkbcTHp-LuHpBvCu15dCZUdHnPHdopWaH9hr9sEezZtXY3N792GjSP3Tbw/exec";
 
 /* ================= API CALL ================= */
 export async function callApi(action, params = {}) {
+  const body = new URLSearchParams({ action, ...params });
+
   const res = await fetch(API_BASE, {
     method: "POST",
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8"
-    },
-    body: JSON.stringify({
-      action,
-      ...params
-    })
+    body,
+    redirect: "follow",
   });
 
-  return await res.json();
+  const text = await res.text();
+
+  // ถ้าฝั่ง GAS ส่ง JSON กลับมา
+  try {
+    return JSON.parse(text);
+  } catch {
+    // เผื่อ error เป็นข้อความ/HTML
+    return { ok: false, message: "Non-JSON response", raw: text };
+  }
 }
 
 /* ================= helpers ================= */
