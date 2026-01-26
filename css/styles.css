@@ -2447,3 +2447,50 @@ body{ overflow-x:hidden; }
 .section{
   margin-bottom: 2.2rem !important;
 }
+
+/* ===== micro-interactions ===== */
+.btn, .chip{
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.btn:hover, .chip:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(56,189,248,.18);
+}
+.btn:active{
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* ===== modal animation ===== */
+.modal{
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease;
+}
+.modal.show{
+  display:grid;
+  opacity: 1;
+  pointer-events: auto;
+}
+.modal-card{
+  transform: translateY(8px) scale(.98);
+  transition: transform .18s ease, opacity .18s ease;
+}
+.modal.show .modal-card{
+  transform: translateY(0) scale(1);
+}
+
+/* ===== table polish ===== */
+tbody tr{
+  transition: background .12s ease, transform .12s ease;
+}
+tbody tr:hover{
+  background: rgba(56,189,248,.08);
+  transform: translateX(2px);
+}
+
+/* ===== focus ring (ดูโปรและเข้าถึงได้) ===== */
+input:focus, button:focus, .chip:focus{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(56,189,248,.35);
+}
