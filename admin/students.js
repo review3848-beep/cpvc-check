@@ -49,8 +49,14 @@ async function init() {
 
   btnClose?.addEventListener("click", closeModal);
   btnCancel?.addEventListener("click", closeModal);
+
   modal?.addEventListener("click", (e) => {
     if (e.target === modal) closeModal();
+  });
+
+  // ✅ ESC to close modal
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal?.classList.contains("show")) closeModal();
   });
 
   btnSave?.addEventListener("click", save);
@@ -104,7 +110,9 @@ function norm(v) {
 
 function render() {
   const key = norm(q?.value);
-  const filtered = !key ? rows : rows.filter((r) => norm(r.STUDENT_ID).includes(key) || norm(r.NAME).includes(key));
+  const filtered = !key
+    ? rows
+    : rows.filter((r) => norm(r.STUDENT_ID).includes(key) || norm(r.NAME).includes(key));
 
   countEl && (countEl.textContent = `${filtered.length} รายการ`);
 
@@ -115,11 +123,12 @@ function render() {
     return;
   }
 
-  tbody.innerHTML = filtered.map((r) => {
-    const id = esc(r.STUDENT_ID);
-    const name = esc(r.NAME);
-    const created = esc(r.CREATED_AT || "");
-    return `
+  tbody.innerHTML = filtered
+    .map((r) => {
+      const id = esc(r.STUDENT_ID);
+      const name = esc(r.NAME);
+      const created = esc(r.CREATED_AT || "");
+      return `
       <tr>
         <td class="mono muted" data-label="STUDENT_ID">${id}</td>
         <td data-label="NAME">${name}</td>
@@ -132,7 +141,8 @@ function render() {
         </td>
       </tr>
     `;
-  }).join("");
+    })
+    .join("");
 
   tbody.querySelectorAll("[data-edit]").forEach((b) => {
     b.addEventListener("click", () => {
@@ -147,6 +157,7 @@ function render() {
   });
 }
 
+/* ✅ FIX: aria-hidden warning + focus management */
 function openModal(r = null) {
   editingId = r ? String(r.STUDENT_ID) : null;
   modalTitle && (modalTitle.textContent = r ? "แก้ไขนักเรียน" : "เพิ่มนักเรียน");
@@ -158,10 +169,23 @@ function openModal(r = null) {
   fPass.value = "";
 
   modal?.classList.add("show");
+
+  // ถ้า HTML มี aria-hidden="true" ติดมา ต้องเอาออกตอนเปิด
+  modal?.removeAttribute("aria-hidden"); // หรือจะ set "false" ก็ได้
+
+  // โฟกัสเข้า modal
+  setTimeout(() => {
+    const target = fId.disabled ? fName : fId;
+    target?.focus();
+  }, 0);
 }
 
 function closeModal() {
+  // ย้ายโฟกัสออกจาก modal ก่อน กัน Chrome เตือน
+  btnAdd?.focus();
+
   modal?.classList.remove("show");
+  modal?.setAttribute("aria-hidden", "true");
 }
 
 async function save() {
