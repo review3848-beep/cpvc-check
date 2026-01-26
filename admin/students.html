@@ -2,497 +2,409 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
+  <title>CPVC-Check | จัดการนักเรียน</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NexAttend | Admin - จัดการนักเรียน</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
+  <!-- ใช้ไฟล์ css เดิมของโปรเจกต์ -->
   <link rel="stylesheet" href="../css/styles.css" />
-  <script type="module" src="../admin/students.js" defer></script>
+
+  <!-- JS หน้านี้ -->
+  <script type="module" src="./students.js" defer></script>
 
   <style>
     :root{
       --bg0:#020617;
-      --panel: rgba(15,23,42,.86);
-      --border: rgba(148,163,184,.26);
-      --muted:#9ca3af;
-
-      --accent: linear-gradient(90deg,#4f46e5,#22c55e);
-      --accent2: linear-gradient(90deg,#38bdf8,#60a5fa);
-      --danger: linear-gradient(90deg,#b45309,#991b1b);
-
-      --field: rgba(2,6,23,.35);
-      --field-border: rgba(148,163,184,.22);
+      --panel: rgba(15,23,42,.82);
+      --border: rgba(148,163,184,.25);
+      --muted: rgba(255,255,255,.65);
+      --ink: rgba(255,255,255,.92);
+      --accentA:#6d28d9;
+      --accentB:#6366f1;
     }
 
-    *{ box-sizing:border-box; }
     body{
       margin:0;
-      min-height:100vh;
-      background: radial-gradient(circle at 20% 10%, #0b3a6b, #020617 62%);
-      font-family:"Inter","Prompt",system-ui,sans-serif;
-      color:#e5e7eb;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 40px 18px;
+      font-family: Inter, Prompt, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      background:
+        radial-gradient(900px 500px at 20% 20%, rgba(99,102,241,.18), transparent 60%),
+        radial-gradient(900px 500px at 80% 25%, rgba(34,197,94,.10), transparent 60%),
+        radial-gradient(900px 500px at 60% 80%, rgba(245,158,11,.08), transparent 60%),
+        var(--bg0);
     }
 
-    /* ===== Center Card like teacher/open-session ===== */
-    .shell{
-      width:min(980px, 100%);
+    .topbar{
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 20;
+    }
+
+    .btn-dashboard{
+      border: 1px solid rgba(148,163,184,.35);
+      background: rgba(2,6,23,.35);
+      color: rgba(255,255,255,.92);
+      padding: 10px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 700;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      text-decoration: none;
+    }
+    .btn-dashboard:hover{ background: rgba(2,6,23,.55); }
+
+    .wrap{
+      width: min(1100px, 92vw);
+      margin: 0 auto;
+      padding: 90px 0 40px;
     }
 
     .card{
-      border-radius: 28px;
-      border:1px solid var(--border);
-      background:
-        radial-gradient(900px 240px at 22% 35%, rgba(56,189,248,.14), rgba(2,6,23,0) 60%),
-        radial-gradient(700px 220px at 78% 20%, rgba(99,102,241,.10), rgba(2,6,23,0) 62%),
-        linear-gradient(180deg, rgba(15,23,42,.70), rgba(15,23,42,.44));
-      box-shadow:
-        0 30px 90px rgba(0,0,0,.28),
-        inset 0 1px 0 rgba(255,255,255,.05);
-      padding: 24px;
-      backdrop-filter: blur(14px);
-      position:relative;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.55);
       overflow:hidden;
     }
 
     .head{
+      padding: 22px 24px 14px;
       display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-bottom: 16px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid rgba(148,163,184,.15);
     }
 
-    .hgroup h1{
+    .title{
       margin:0;
-      font-size:34px;
-      font-weight:900;
+      font-size: 24px;
+      font-weight: 800;
       letter-spacing:.2px;
     }
-    .hgroup p{
-      margin:8px 0 0;
-      color:var(--muted);
-      font-weight:700;
+    .sub{
+      margin:6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
     }
 
-    .head-actions{
+    .tools{
       display:flex;
-      gap:10px;
+      gap: 10px;
       align-items:center;
-      flex-wrap:wrap;
-      justify-content:flex-end;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding: 10px 14px;
-      border-radius: 999px;
-      border:1px solid var(--field-border);
-      background: rgba(15,23,42,.45);
-      color:#e5e7eb;
-      text-decoration:none;
-      font-weight:800;
-      cursor:pointer;
-      user-select:none;
-      transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
-      white-space:nowrap;
-    }
-    .pill:hover{
-      transform: translateY(-1px);
-      border-color: rgba(56,189,248,.35);
-      box-shadow: 0 12px 40px rgba(56,189,248,.12);
-    }
-    .pill.primary{
-      background: var(--accent2);
-      color:#04121f;
-      border:none;
-      box-shadow: 0 18px 60px rgba(56,189,248,.12);
-    }
-    .pill.danger{
-      background: var(--danger);
-      color:#fff;
-      border:none;
-      box-shadow: 0 18px 60px rgba(244,63,94,.10);
-    }
-
-    /* ===== Controls Row ===== */
-    .controls{
-      display:grid;
-      grid-template-columns: 1fr auto auto;
-      gap:14px;
-      align-items:center;
-      margin: 18px 0 14px;
-    }
-
-    .search{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding: 14px 16px;
-      border-radius: 18px;
-      border:1px solid var(--field-border);
-      background: var(--field);
-    }
-    .search .icon{ opacity:.9; }
-    .search input{
-      width:100%;
-      border:none;
+    .input{
+      height: 44px;
+      width: min(360px, 70vw);
+      border-radius: 14px;
+      padding: 0 14px;
+      background: rgba(2,6,23,.35);
+      border: 1px solid rgba(148,163,184,.22);
+      color: rgba(255,255,255,.92);
       outline:none;
-      background:transparent;
-      color:#e5e7eb;
-      font-weight:700;
-      font-size:15px;
+    }
+    .input::placeholder{ color: rgba(255,255,255,.35); }
+    .input:focus{
+      border-color: rgba(99,102,241,.65);
+      box-shadow: 0 0 0 4px rgba(99,102,241,.18);
     }
 
-    .count{
-      padding: 12px 16px;
-      border-radius: 999px;
-      border:1px solid var(--field-border);
-      background: rgba(2,6,23,.22);
-      color:#cbd5e1;
-      font-weight:900;
-      white-space:nowrap;
+    .btn-add{
+      height: 44px;
+      border: none;
+      border-radius: 14px;
+      padding: 0 16px;
+      cursor: pointer;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(90deg, var(--accentA), var(--accentB));
+      box-shadow: 0 18px 40px rgba(99,102,241,.22);
     }
+    .btn-add:hover{ filter: brightness(1.06); }
 
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      padding: 14px 18px;
-      border-radius: 999px;
-      border:1px solid var(--field-border);
-      background: rgba(15,23,42,.35);
-      color:#e5e7eb;
-      font-weight:900;
-      cursor:pointer;
-      transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
-      white-space:nowrap;
-    }
-    .btn:hover{
-      transform: translateY(-1px);
-      border-color: rgba(56,189,248,.35);
-      box-shadow: 0 14px 46px rgba(56,189,248,.12);
-    }
-    .btn.primary{
-      border:none;
-      background: var(--accent);
-      box-shadow: 0 18px 64px rgba(34,197,94,.14);
-    }
-
-    /* ===== Table ===== */
-    .table-wrap{
-      border-radius: 18px;
-      border:1px solid rgba(148,163,184,.16);
-      overflow:hidden;
-      background: rgba(2,6,23,.22);
+    .body{
+      padding: 18px 24px 24px;
     }
 
     table{
       width:100%;
       border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,.16);
     }
     thead th{
       text-align:left;
-      padding: 14px 16px;
-      font-size:13px;
+      font-size: 12px;
       letter-spacing:.6px;
-      color:#cbd5e1;
-      border-bottom:1px solid rgba(148,163,184,.14);
-      background: rgba(2,6,23,.20);
+      color: rgba(255,255,255,.65);
+      padding: 14px 14px;
+      background: rgba(2,6,23,.25);
+      border-bottom: 1px solid rgba(148,163,184,.12);
     }
     tbody td{
-      padding: 14px 16px;
-      border-bottom:1px solid rgba(148,163,184,.10);
-      vertical-align:middle;
+      padding: 14px 14px;
+      border-bottom: 1px solid rgba(148,163,184,.10);
+      color: rgba(255,255,255,.9);
     }
     tbody tr:hover{
-      background: rgba(56,189,248,.07);
+      background: rgba(99,102,241,.06);
     }
-
-    .muted{ color:var(--muted); }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
-    .nowrap{ white-space:nowrap; }
+    .muted{ color: rgba(255,255,255,.6); }
 
     .row-actions{
       display:flex;
-      justify-content:flex-end;
-      gap:10px;
-      flex-wrap:wrap;
+      gap: 8px;
+      justify-content: flex-end;
     }
-    .mini{
-      padding: 9px 12px;
-      border-radius: 14px;
-      border:1px solid var(--field-border);
-      background: rgba(15,23,42,.35);
-      color:#e5e7eb;
-      font-weight:900;
-      cursor:pointer;
+    .btn-mini{
+      border: 1px solid rgba(148,163,184,.25);
+      background: rgba(2,6,23,.25);
+      color: rgba(255,255,255,.9);
+      padding: 8px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 12px;
     }
-    .mini:hover{ border-color: rgba(56,189,248,.35); }
-    .mini.danger{
-      border-color: rgba(244,63,94,.40);
-      color:#fecdd3;
-    }
+    .btn-mini:hover{ background: rgba(2,6,23,.45); }
 
-    .empty{
-      padding: 22px 16px;
-      text-align:center;
-      color:#a1a1aa;
-      font-weight:800;
-    }
-
-    /* footer msg */
-    .foot{
+    .msg{
       margin-top: 12px;
-      color:#94a3b8;
-      font-weight:800;
-      min-height: 22px;
+      color: rgba(255,255,255,.7);
+      font-size: 13px;
     }
 
-    /* ===== Modal ===== */
-    .modal{
+    /* ===== modal (เหมือนหน้าสมัคร) ===== */
+    .auth-modal{
       position: fixed;
       inset: 0;
-      display:none;
-      place-items:center;
-      background: rgba(2,6,23,.62);
-      backdrop-filter: blur(8px);
-      z-index: 50;
-      padding: 18px;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      z-index: 9999;
     }
-    .modal.show{ display:grid; }
+    .auth-modal[hidden]{ display:none; }
 
-    .modal-card{
-      width: min(560px, 100%);
+    .auth-card{
+      width: min(720px, 92vw);
       border-radius: 26px;
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(15,23,42,.94);
-      box-shadow: 0 30px 90px rgba(0,0,0,.45);
-      overflow:hidden;
+      background: rgba(15,23,42,.82);
+      border: 1px solid rgba(148,163,184,.25);
+      box-shadow: 0 30px 80px rgba(0,0,0,.55);
+      overflow: hidden;
     }
-    .modal-head{
-      padding: 16px 16px 12px;
+
+    .auth-head{
       display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      border-bottom:1px solid rgba(148,163,184,.12);
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 28px 28px 12px;
+      border-bottom: 1px solid rgba(148,163,184,.12);
     }
-    .modal-head h3{
-      margin:0;
-      font-weight: 900;
+    .auth-title{
+      margin: 0;
+      font-size: 32px;
+      font-weight: 800;
       letter-spacing: .2px;
     }
-    .modal-body{
-      padding: 16px;
-      display:grid;
-      gap: 12px;
+    .auth-sub{
+      margin: 6px 0 0;
+      color: rgba(255,255,255,.65);
+      font-size: 14px;
     }
-    .field label{
+
+    .chip-btn{
+      border: 1px solid rgba(148,163,184,.35);
+      background: rgba(2,6,23,.35);
+      color: rgba(255,255,255,.9);
+      padding: 10px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+    .chip-btn:hover{ background: rgba(2,6,23,.55); }
+
+    .auth-body{
+      padding: 16px 28px 28px;
+    }
+
+    .field{
       display:block;
-      font-size: 13px;
-      color:#cbd5e1;
-      font-weight: 900;
-      margin-bottom: 6px;
+      margin-top: 14px;
     }
+    .field span{
+      display:block;
+      margin-bottom: 8px;
+      color: rgba(255,255,255,.8);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
     .field input{
-      width:100%;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border:1px solid var(--field-border);
-      background: var(--field);
-      color:#e5e7eb;
-      outline:none;
-      font-weight:800;
+      width: 100%;
+      height: 54px;
+      border-radius: 16px;
+      padding: 0 16px;
+      background: rgba(2,6,23,.35);
+      border: 1px solid rgba(148,163,184,.22);
+      color: rgba(255,255,255,.92);
+      outline: none;
+      transition: .15s ease;
     }
-    .field input:focus{ border-color: rgba(56,189,248,.45); }
-
-    .modal-foot{
-      padding: 14px 16px 16px;
-      display:flex;
-      justify-content:flex-end;
-      gap: 10px;
-      border-top:1px solid rgba(148,163,184,.12);
+    .field input::placeholder{
+      color: rgba(255,255,255,.35);
     }
-
-    /* responsive */
-    @media (max-width: 860px){
-      .controls{ grid-template-columns: 1fr; }
-      .head-actions{ justify-content:flex-start; }
+    .field input:focus{
+      border-color: rgba(99,102,241,.65);
+      box-shadow: 0 0 0 4px rgba(99,102,241,.18);
     }
 
-    @media (max-width:760px){
-      thead{ display:none; }
-      tbody tr{ display:block; padding: 10px 0; }
-      tbody td{
-        display:flex; justify-content:space-between;
-        padding: 10px 16px;
-        border-bottom: none;
-      }
-      tbody td::before{
-        content: attr(data-label);
-        color:#94a3b8;
-        font-weight:900;
-        margin-right: 14px;
-      }
-      .row-actions{ justify-content:flex-start; }
+    .btn-primary{
+      width: 100%;
+      height: 56px;
+      border: none;
+      border-radius: 18px;
+      margin-top: 18px;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: 16px;
+      color: white;
+      background: linear-gradient(90deg, var(--accentA), var(--accentB));
+      box-shadow: 0 18px 40px rgba(99,102,241,.22);
     }
-    /* ===== compact mode ===== */
+    .btn-primary:hover{ filter: brightness(1.06); }
 
-/* ย่อกรอบหลัก */
-.shell{
-  width: min(720px, 100%);
-}
+    .btn-ghost{
+      width: 100%;
+      margin-top: 10px;
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,.65);
+      cursor: pointer;
+      padding: 10px 0;
+      font-weight: 800;
+    }
+    .btn-ghost:hover{ color: rgba(255,255,255,.92); }
 
-/* ลด padding รวม */
-.topbar{ padding: 14px 14px 10px; }
-.card{ margin: 0 14px 14px; }
-.toolbar{ padding: 10px 10px 8px; }
-
-/* ลดหัวข้อ */
-.hgroup h1{
-  font-size: 22px;
-}
-.hgroup p{
-  font-size: 13px;
-}
-
-/* search + pill + ปุ่ม ให้เล็กลง */
-.search{
-  padding: 8px 10px;
-}
-.search input{
-  font-size: 13px;
-}
-.pill{
-  padding: 7px 10px;
-  font-size: 12px;
-}
-.btn, .chip{
-  padding: 8px 10px;
-  font-size: 12px;
+    /* ====== ทำให้ modal พอดีกับจอ ====== */
+.auth-modal{
+  padding: 12px;                 /* เดิม 24px -> เล็กลง */
+  place-items: center;
 }
 
-/* ตารางกระชับ */
-thead th{
-  padding: 10px 12px;
-  font-size: 11px;
-}
-tbody td{
-  padding: 10px 12px;
-  font-size: 13px;
+.auth-card{
+  width: min(720px, 92vw);
+  max-height: calc(100dvh - 24px);  /* กันล้นจอ (ใช้ dvh แก้ mobile address bar) */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-/* modal เล็กลง */
-.modal-card{
-  width: min(460px, 100%);
+/* ให้หัวอยู่กับที่ และเนื้อหาเลื่อน */
+.auth-head{
+  flex: 0 0 auto;
+  padding: 18px 18px 10px;       /* กระชับ */
 }
-.modal-head h3{
-  font-size: 14px;
+
+.auth-body{
+  flex: 1 1 auto;
+  overflow: auto;                 /* ถ้าเนื้อหาสูงเกิน ให้เลื่อนใน modal */
+  padding: 10px 18px 18px;
 }
-.field label{
-  font-size: 11px;
-}
-.field input{
-  padding: 9px 10px;
-  font-size: 13px;
+
+/* กระชับช่องและปุ่มบนจอเล็ก */
+@media (max-width: 520px){
+  .auth-title{ font-size: 22px; }
+  .auth-sub{ font-size: 12px; }
+  .field{ margin-top: 10px; }
+  .field input{ height: 48px; border-radius: 14px; }
+  .btn-primary{ height: 50px; border-radius: 16px; margin-top: 14px; }
+  .chip-btn{ padding: 8px 12px; }
 }
 
   </style>
 </head>
 
 <body>
-  <main class="shell">
-    <section class="card" aria-label="Student Management">
+  <div class="topbar">
+    <!-- เปลี่ยนลิงก์กลับแดชบอร์ดให้ตรงของเธอ -->
+    <a class="btn-dashboard" href="./dashboard.html">📊 Dashboard</a>
+  </div>
 
+  <main class="wrap">
+    <section class="card">
       <div class="head">
-        <div class="hgroup">
-          <h1>จัดการนักเรียน</h1>
-          <p>ค้นหา • เพิ่ม • แก้ไข • ลบ (โหมด Admin)</p>
+        <div>
+          <h1 class="title">จัดการนักเรียน</h1>
+          <p class="sub">เพิ่ม/แก้ไขรายชื่อนักเรียน (หน้าตา modal เหมือนหน้าสมัครแล้ว)</p>
         </div>
 
-        <div class="head-actions">
-          <a class="pill" href="./dashboard.html">← กลับ Dashboard</a>
-          <span class="pill" aria-hidden="true">🧑‍🏫 ครู</span>
-          <button class="pill danger" id="btnLogout" type="button">ออกจากระบบ</button>
-        </div>
-      </div>
-
-      <div class="controls">
-        <div class="search" title="ค้นหา (ชื่อ/ID)">
-          <span class="icon">🔎</span>
-          <input id="q" placeholder="ค้นหา (ชื่อ/ID)..." autocomplete="off" />
-        </div>
-
-        <div class="count" id="count">0 รายการ</div>
-
-        <div style="display:flex; gap:12px; justify-content:flex-end; flex-wrap:wrap;">
-          <button class="btn" id="btnExport" type="button">Export CSV</button>
-          <button class="btn primary" id="btnAdd" type="button">เปิดฟอร์มเพิ่ม</button>
+        <div class="tools">
+          <input id="q" class="input" type="text" placeholder="ค้นหา: รหัส / ชื่อ..." />
+          <button id="btnAdd" class="btn-add" type="button">+ เพิ่มนักเรียน</button>
         </div>
       </div>
 
-      <div class="table-wrap">
+      <div class="body">
         <table>
           <thead>
             <tr>
-              <th style="width:38%;">STUDENT_ID</th>
-              <th style="width:30%;">NAME</th>
-              <th style="width:18%;">CREATED_AT</th>
-              <th style="width:14%;">ACTIONS</th>
+              <th style="width: 160px;">STUDENT_ID</th>
+              <th>NAME</th>
+              <th class="muted" style="width: 170px; text-align:right;">ACTIONS</th>
             </tr>
           </thead>
-
-          <tbody id="tbody">
-            <tr><td class="empty" colspan="4">กำลังโหลดข้อมูล…</td></tr>
-          </tbody>
+          <tbody id="tbody"></tbody>
         </table>
-      </div>
 
-      <div class="foot">
-        <span id="msg" role="status" aria-live="polite"></span>
+        <div id="msg" class="msg muted"></div>
       </div>
     </section>
   </main>
 
-  <!-- MODAL -->
-  <div class="modal" id="modal" aria-hidden="true">
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <div class="modal-head">
-        <h3 id="modalTitle">เพิ่มนักเรียน</h3>
-        <button class="btn" id="btnClose" type="button">ปิด</button>
+  <!-- Modal (เหมือนหน้าสมัคร) -->
+  <div id="studentModal" class="auth-modal" hidden>
+    <div class="auth-card">
+      <div class="auth-head">
+        <div>
+          <h2 id="modalTitle" class="auth-title">เพิ่มนักเรียน</h2>
+          <p class="auth-sub">ใช้รหัสนักเรียนที่มีอยู่ในระบบเท่านั้น</p>
+        </div>
+        <button type="button" class="chip-btn" id="btnCloseModal">ปิด</button>
       </div>
 
-      <div class="modal-body">
-        <div class="field">
-          <label for="fId">STUDENT_ID</label>
-          <input id="fId" placeholder="เช่น 12345" />
-        </div>
+      <div class="auth-body">
+        <label class="field">
+          <span>รหัสนักเรียน</span>
+          <input id="fId" type="text" placeholder="เช่น 66001" />
+        </label>
 
-        <div class="field">
-          <label for="fName">NAME</label>
-          <input id="fName" placeholder="ชื่อ-สกุล" />
-        </div>
+        <label class="field">
+          <span>ชื่อ – นามสกุล</span>
+          <input id="fName" type="text" placeholder="ชื่อนักเรียนตามระบบ" />
+        </label>
 
-        <div class="field">
-          <label for="fPass">PASSWORD (ใส่เฉพาะตอนเพิ่ม/หรือเปลี่ยนรหัส)</label>
-          <input id="fPass" type="password" placeholder="••••••••" />
-        </div>
-      </div>
+        <label class="field">
+          <span>PASSWORD (ใส่ตอนเพิ่ม/หรือเปลี่ยนรหัส)</span>
+          <input id="fPass" type="password" placeholder="กำหนดรหัสผ่านของคุณ" />
+        </label>
 
-      <div class="modal-foot">
-        <button class="btn" id="btnCancel" type="button">ยกเลิก</button>
-        <button class="btn primary" id="btnSave" type="button">บันทึก</button>
+        <button class="btn-primary" id="btnSave" type="button">บันทึก</button>
+        <button class="btn-ghost" id="btnCancel" type="button">ยกเลิก</button>
       </div>
     </div>
   </div>

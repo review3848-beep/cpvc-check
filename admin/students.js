@@ -1,279 +1,224 @@
-import { callApi, getAdminSession, clearAllSession } from "../api.js";
+import { callApi } from "../api.js";
 
+/* ===== DOM ===== */
 const tbody = document.getElementById("tbody");
 const q = document.getElementById("q");
-const countEl = document.getElementById("count");
-const msg = document.getElementById("msg");
-
+const msgEl = document.getElementById("msg");
 const btnAdd = document.getElementById("btnAdd");
-const btnExport = document.getElementById("btnExport");
-const btnLogout = document.getElementById("btnLogout");
 
-const modal = document.getElementById("modal");
+/* modal */
+const modal = document.getElementById("studentModal");
 const modalTitle = document.getElementById("modalTitle");
-const btnClose = document.getElementById("btnClose");
+const btnCloseModal = document.getElementById("btnCloseModal");
 const btnCancel = document.getElementById("btnCancel");
 const btnSave = document.getElementById("btnSave");
 
+/* fields */
 const fId = document.getElementById("fId");
 const fName = document.getElementById("fName");
 const fPass = document.getElementById("fPass");
+const passField = fPass?.closest(".field") || fPass?.parentElement;
 
 let rows = [];
 let editingId = null;
 
 document.addEventListener("DOMContentLoaded", init);
 
+/* ================== GUARD ================== */
 function guardAdmin() {
-  const admin = getAdminSession();
-  if (!admin) {
-    location.replace("./login.html");
+  const candidates = [
+    "adminSession", "admin_session", "ADMIN_SESSION",
+    "admin", "adminUser", "cpvcAdmin", "cpvc_adminSession"
+  ];
+
+  const allKeys = [
+    ...new Set([
+      ...Object.keys(localStorage || {}),
+      ...Object.keys(sessionStorage || {})
+    ])
+  ];
+  const adminLike = allKeys.filter(k => String(k).toLowerCase().includes("admin"));
+  const keys = [...candidates, ...adminLike];
+
+  let raw = null;
+  for (const k of keys) {
+    raw = localStorage.getItem(k) || sessionStorage.getItem(k);
+    if (raw) break;
+  }
+
+  if (!raw) {
+    location.href = "./login.html";
     return null;
   }
-  return admin;
+
+  try { return JSON.parse(raw); }
+  catch { return { token: raw }; }
 }
 
+/* ================== INIT ================== */
 async function init() {
-  const ses = guardAdmin();
-  if (!ses) return;
+  const admin = guardAdmin();
+  if (!admin) return;
 
-  btnAdd?.addEventListener("click", () => openModal());
-  btnExport?.addEventListener("click", exportCsv);
+  wireEvents();
+  await loadStudents();
+  render();
+}
 
-  btnLogout?.addEventListener("click", () => {
-    if (!confirm("ออกจากระบบ?")) return;
-    clearAllSession();
-    localStorage.removeItem("admin");
-    location.replace("./login.html");
-  });
-
-  btnClose?.addEventListener("click", closeModal);
+/* ================== EVENTS ================== */
+function wireEvents() {
+  btnAdd?.addEventListener("click", () => openModal("add"));
+  btnCloseModal?.addEventListener("click", closeModal);
   btnCancel?.addEventListener("click", closeModal);
 
   modal?.addEventListener("click", (e) => {
     if (e.target === modal) closeModal();
   });
 
-  // ✅ ESC to close modal
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && modal?.classList.contains("show")) closeModal();
-  });
-
-  btnSave?.addEventListener("click", save);
-  q?.addEventListener("input", render);
-
-  await load();
+  q?.addEventListener("input", () => render());
+  btnSave?.addEventListener("click", onSave);
 }
 
-async function load() {
-  msg.textContent = "Loading...";
+/* ================== API ACTIONS ================== */
+const ACTION_LIST = "adminGetStudents";
+const ACTION_UPSERT = "adminUpsertStudent";
+
+/* ================== LOAD ================== */
+async function loadStudents() {
+  msgEl.textContent = "กำลังโหลด...";
   try {
-    const res = await callApi("adminGetStudents", {});
-    if (!res?.success) {
-      msg.textContent = res?.message || "โหลดไม่สำเร็จ";
-      rows = [];
-      render();
-      return;
-    }
+    const res = await callApi({ action: ACTION_LIST });
+    rows = Array.isArray(res?.rows) ? res.rows
+      : Array.isArray(res?.data) ? res.data
+      : Array.isArray(res) ? res
+      : [];
 
-    const rawRows = res.rows || res.data?.rows || res.data || res.list || [];
-    rows = normalizeRows(rawRows);
-
-    msg.textContent = "";
-    render();
-  } catch (e) {
-    console.error(e);
-    msg.textContent = "โหลดไม่สำเร็จ (เชื่อมต่อผิดพลาด)";
+    msgEl.textContent = rows.length ? `พบ ${rows.length} รายการ` : "ยังไม่มีข้อมูล";
+  } catch (err) {
+    console.error(err);
+    msgEl.textContent = "โหลดข้อมูลไม่สำเร็จ";
     rows = [];
-    render();
   }
 }
 
-function normalizeRows(raw) {
-  if (!Array.isArray(raw)) return [];
-  return raw.map((r) => {
-    if (Array.isArray(r)) return { __raw: r };
-    const o = { ...r };
-
-    o.STUDENT_ID = o.STUDENT_ID ?? o.studentId ?? o.STUDENTID ?? o.id ?? o.UID ?? o.uid ?? "";
-    o.NAME = o.NAME ?? o.name ?? o.FullName ?? o.fullname ?? "";
-    o.PASSWORD = o.PASSWORD ?? o.password ?? "";
-    o.CREATED_AT = o.CREATED_AT ?? o.createdAt ?? o.timestamp ?? o.เวลา ?? "";
-
-    return o;
-  });
-}
-
-function norm(v) {
-  return String(v ?? "").toLowerCase().trim();
-}
-
+/* ================== RENDER ================== */
 function render() {
-  const key = norm(q?.value);
-  const filtered = !key
-    ? rows
-    : rows.filter((r) => norm(r.STUDENT_ID).includes(key) || norm(r.NAME).includes(key));
+  const keyword = (q?.value || "").trim().toLowerCase();
 
-  countEl && (countEl.textContent = `${filtered.length} รายการ`);
+  const filtered = !keyword ? rows : rows.filter(r => {
+    const id = String(r.STUDENT_ID ?? r.studentId ?? r.id ?? r.UID ?? "").toLowerCase();
+    const name = String(r.NAME ?? r.name ?? "").toLowerCase();
+    return id.includes(keyword) || name.includes(keyword);
+  });
 
-  if (!tbody) return;
-
-  if (!filtered.length) {
-    tbody.innerHTML = `<tr><td class="empty" colspan="4">ไม่พบข้อมูล</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = filtered
-    .map((r) => {
-      const id = esc(r.STUDENT_ID);
-      const name = esc(r.NAME);
-      const created = esc(r.CREATED_AT || "");
-      return `
+  tbody.innerHTML = filtered.map((r) => {
+    const id = esc(String(r.STUDENT_ID ?? r.studentId ?? r.id ?? r.UID ?? ""));
+    const name = esc(String(r.NAME ?? r.name ?? ""));
+    return `
       <tr>
-        <td class="mono muted" data-label="STUDENT_ID">${id}</td>
-        <td data-label="NAME">${name}</td>
-        <td class="muted nowrap" data-label="CREATED_AT">${created}</td>
-        <td data-label="ACTIONS">
-          <div class="right">
-            <button class="btn" data-edit="${id}">แก้ไข</button>
-            <button class="btn btn--danger" data-del="${id}">ลบ</button>
+        <td>${id}</td>
+        <td>${name}</td>
+        <td>
+          <div class="row-actions">
+            <button class="btn-mini" data-edit="${id}">แก้ไข</button>
           </div>
         </td>
       </tr>
     `;
-    })
-    .join("");
+  }).join("");
 
-  tbody.querySelectorAll("[data-edit]").forEach((b) => {
-    b.addEventListener("click", () => {
-      const id = b.getAttribute("data-edit");
-      const r = rows.find((x) => String(x.STUDENT_ID) === String(id));
-      openModal(r);
+  tbody.querySelectorAll("[data-edit]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-edit");
+      const row = rows.find(r => String(r.STUDENT_ID ?? r.studentId ?? r.id ?? r.UID ?? "") === String(id));
+      openModal("edit", row);
     });
   });
 
-  tbody.querySelectorAll("[data-del]").forEach((b) => {
-    b.addEventListener("click", () => del(b.getAttribute("data-del")));
-  });
+  msgEl.textContent = filtered.length
+    ? `แสดง ${filtered.length} จาก ${rows.length} รายการ`
+    : "ไม่พบข้อมูลตามที่ค้นหา";
 }
 
-/* ✅ FIX: aria-hidden warning + focus management */
-function openModal(r = null) {
-  editingId = r ? String(r.STUDENT_ID) : null;
-  modalTitle && (modalTitle.textContent = r ? "แก้ไขนักเรียน" : "เพิ่มนักเรียน");
+/* ================== MODAL ================== */
+function openModal(mode, row = null) {
+  const isAdd = (mode === "add");
 
-  fId.value = r ? (r.STUDENT_ID || "") : "";
-  fId.disabled = !!r;
+  if (isAdd) {
+    editingId = null;
+    modalTitle.textContent = "เพิ่มนักเรียน";
+    fId.value = "";
+    fName.value = "";
+    fPass.value = "";
+    fId.disabled = false;
 
-  fName.value = r ? (r.NAME || "") : "";
-  fPass.value = "";
+    if (passField) passField.style.display = "none";
+  } else {
+    editingId = String(row?.STUDENT_ID ?? row?.studentId ?? row?.id ?? row?.UID ?? "");
+    modalTitle.textContent = "แก้ไขนักเรียน";
+    fId.value = editingId;
+    fName.value = String(row?.NAME ?? row?.name ?? "");
+    fPass.value = "";
+    fId.disabled = true;
 
-  modal?.classList.add("show");
+    if (passField) passField.style.display = "";
+  }
 
-  // ถ้า HTML มี aria-hidden="true" ติดมา ต้องเอาออกตอนเปิด
-  modal?.removeAttribute("aria-hidden"); // หรือจะ set "false" ก็ได้
-
-  // โฟกัสเข้า modal
-  setTimeout(() => {
-    const target = fId.disabled ? fName : fId;
-    target?.focus();
-  }, 0);
+  modal.hidden = false;
+  setTimeout(() => (fId.disabled ? fName.focus() : fId.focus()), 0);
 }
 
 function closeModal() {
-  // ย้ายโฟกัสออกจาก modal ก่อน กัน Chrome เตือน
-  btnAdd?.focus();
-
-  modal?.classList.remove("show");
-  modal?.setAttribute("aria-hidden", "true");
+  modal.hidden = true;
 }
 
-async function save() {
-  const STUDENT_ID = String(fId.value || "").trim();
-  const NAME = String(fName.value || "").trim();
-  const PASSWORD = String(fPass.value || "").trim();
+/* ================== SAVE ================== */
+async function onSave() {
+  const studentId = (fId.value || "").trim();
+  const name = (fName.value || "").trim();
+  const password = (fPass.value || "").trim();
 
-  if (!NAME) return toast("กรอกชื่อ (NAME)");
-  if (!STUDENT_ID) return toast("กรอก STUDENT_ID");
-  if (!editingId && !PASSWORD) return toast("เพิ่มนักเรียนต้องใส่ PASSWORD");
+  if (!studentId) { toast("กรอกรหัสนักเรียนก่อน"); fId.focus(); return; }
+  if (!name) { toast("กรอกชื่อ-นามสกุลก่อน"); fName.focus(); return; }
+
+  const isEdit = !!editingId;
+
+  const payload = {
+    action: ACTION_UPSERT,
+    studentId,
+    STUDENT_ID: studentId,
+    NAME: name,
+    name,
+  };
+
+  if (isEdit && password) payload.password = password;
 
   btnSave.disabled = true;
-
+  btnSave.textContent = "กำลังบันทึก...";
   try {
-    const params = { STUDENT_ID, NAME };
-    if (PASSWORD) params.PASSWORD = PASSWORD;
+    const res = await callApi(payload);
+    if (res?.success === false) throw new Error(res?.message || "save failed");
 
-    const res = await callApi("adminUpsertStudent", params);
-    if (!res?.success) return toast(res?.message || "บันทึกไม่สำเร็จ");
-
+    toast("บันทึกเรียบร้อย");
     closeModal();
-    await load();
-    toast("บันทึกแล้ว ✅");
-  } catch (e) {
-    console.error(e);
-    toast("บันทึกไม่สำเร็จ (เชื่อมต่อผิดพลาด)");
+    await loadStudents();
+    render();
+  } catch (err) {
+    console.error(err);
+    toast("บันทึกไม่สำเร็จ");
   } finally {
     btnSave.disabled = false;
+    btnSave.textContent = "บันทึก";
   }
 }
 
-async function del(id) {
-  if (!confirm(`ลบนักเรียน ${id} ?`)) return;
-
-  try {
-    const res = await callApi("adminDeleteStudent", { STUDENT_ID: id });
-    if (!res?.success) return toast(res?.message || "ลบไม่สำเร็จ");
-
-    await load();
-    toast("ลบแล้ว 🧹");
-  } catch (e) {
-    console.error(e);
-    toast("ลบไม่สำเร็จ (เชื่อมต่อผิดพลาด)");
-  }
-}
-
-function exportCsv() {
-  const headers = ["STUDENT_ID", "NAME", "PASSWORD", "CREATED_AT"];
-  const lines = [headers.join(",")];
-
-  rows.forEach((r) => {
-    lines.push(headers.map((h) => csvCell(r[h] ?? "")).join(","));
-  });
-
-  download(`students_${Date.now()}.csv`, lines.join("\n"));
-  toast("Export CSV ✅");
-}
-
-function toast(t) {
-  if (!msg) return alert(t);
-  msg.textContent = String(t);
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => {
-    if (msg.textContent === t) msg.textContent = "";
-  }, 2500);
-}
-
-function csvCell(v) {
-  const s = String(v ?? "").replaceAll(`"`, `""`);
-  return `"${s}"`;
-}
-
-function download(filename, content) {
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-
+/* ================== UTILS ================== */
 function esc(s) {
-  return String(s ?? "").replace(/[&<>"']/g, (m) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  }[m]));
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function toast(text) {
+  if (msgEl) msgEl.textContent = text;
 }
