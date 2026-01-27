@@ -405,7 +405,8 @@
     }
   </style>
 
-  <script type="module" src="../admin/teachers.js" defer></script>
+  <!-- ✅ เหมือน students: อ้างอิง js ในโฟลเดอร์เดียวกัน -->
+  <script type="module" src="./teachers.js" defer></script>
 </head>
 
 <body>
@@ -423,10 +424,18 @@
         <a class="chip" href="./dashboard.html" title="กลับหน้าแดชบอร์ด">
           <span class="chip__dot"></span> Dashboard
         </a>
-        <a class="chip" href="./students.html" title="จัดการนักเรียน">
+
+        <!-- ✅ Teachers active -->
+        <a class="chip" href="./teachers.html" title="จัดการครู">
           <span class="chip__dot" style="background:rgba(99,102,241,.95); box-shadow:0 0 0 4px rgba(99,102,241,.16)"></span>
+          Teachers
+        </a>
+
+        <a class="chip" href="./students.html" title="จัดการนักเรียน">
+          <span class="chip__dot" style="background:rgba(56,189,248,.9); box-shadow:0 0 0 4px rgba(56,189,248,.15)"></span>
           Students
         </a>
+
         <button class="chip chip--danger" id="btnLogout" type="button" title="ออกจากระบบ">
           <span class="chip__dot"></span> ออกจากระบบ
         </button>
@@ -439,7 +448,7 @@
       <div class="hero__inner">
         <div>
           <h1>Admin • จัดการครู</h1>
-          
+          <p>เพิ่ม/แก้ไข/ลบข้อมูลครู </p>
         </div>
       </div>
 
@@ -505,7 +514,7 @@
 
           <div class="field" style="grid-column: 1 / -1;">
             <div class="label">PASSWORD</div>
-            <input class="input" id="fPass" type="password" placeholder="กรอกเมื่อต้องการตั้ง/เปลี่ยนรหัสผ่าน" />
+            <input class="input" id="fPass" type="password" placeholder="กรอกเมื่อต้องการตั้ง/เปลี่ยนรหัสผ่าน (เพิ่มครูไม่กรอกก็ได้)" />
           </div>
         </div>
       </div>
