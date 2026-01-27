@@ -83,11 +83,28 @@ function wireEvents() {
 const ACTION_LIST = "adminGetStudents";
 const ACTION_UPSERT = "adminUpsertStudent";
 
+/**
+ * ✅ รองรับ callApi ได้ 2 แบบ:
+ * 1) callApi("actionString", payloadObj)
+ * 2) callApi({ action:"...", ...payloadObj })
+ */
+async function apiCall(action, payload = {}) {
+  // try: แบบมาตรฐาน (actionString, payload)
+  try {
+    return await callApi(action, payload);
+  } catch (e) {
+    // fallback: แบบส่ง object เดียว
+    return await callApi({ action, ...payload });
+  }
+}
+
 /* ================== LOAD ================== */
 async function loadStudents() {
   msgEl.textContent = "กำลังโหลด...";
   try {
-    const res = await callApi({ action: ACTION_LIST });
+    // ✅ แก้ตรงนี้: ห้ามส่ง object เข้าเป็น action
+    const res = await apiCall(ACTION_LIST, {});
+
     rows = Array.isArray(res?.rows) ? res.rows
       : Array.isArray(res?.data) ? res.data
       : Array.isArray(res) ? res
@@ -152,6 +169,7 @@ function openModal(mode, row = null) {
     fPass.value = "";
     fId.disabled = false;
 
+    // ✅ เพิ่ม: ไม่ต้องตั้งรหัสผ่าน
     if (passField) passField.style.display = "none";
   } else {
     editingId = String(row?.STUDENT_ID ?? row?.studentId ?? row?.id ?? row?.UID ?? "");
@@ -183,20 +201,23 @@ async function onSave() {
 
   const isEdit = !!editingId;
 
+  // ✅ payload “ไม่ใส่ action” แล้วให้ apiCall จัดการ
   const payload = {
-    action: ACTION_UPSERT,
     studentId,
     STUDENT_ID: studentId,
     NAME: name,
     name,
   };
 
+  // ✅ เฉพาะตอนแก้ไข + กรอก password เท่านั้น ถึงส่งไป
   if (isEdit && password) payload.password = password;
 
   btnSave.disabled = true;
   btnSave.textContent = "กำลังบันทึก...";
   try {
-    const res = await callApi(payload);
+    // ✅ แก้ตรงนี้: ห้าม callApi(payload) ตรง ๆ
+    const res = await apiCall(ACTION_UPSERT, payload);
+
     if (res?.success === false) throw new Error(res?.message || "save failed");
 
     toast("บันทึกเรียบร้อย");
