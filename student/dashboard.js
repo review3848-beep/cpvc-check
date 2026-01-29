@@ -1,5 +1,5 @@
 // student/dashboard.js
-import { callApi } from "../api.js";
+import { callApi, getStudentSession, clearAllSession } from "../api.js";
 
 /* ================== DOM (ยืดหยุ่น ไม่มีก็ไม่พัง) ================== */
 const nameEl   = document.getElementById("studentName") || document.getElementById("studentNameDisplay");
@@ -32,35 +32,29 @@ let chartInstance = null;
 
 /* ================== INIT ================== */
 document.addEventListener("DOMContentLoaded", async () => {
-  const student = guardStudent();
+  const student = guardStudent();   // ✅ ใช้ cpvc_student แล้ว
   if (!student) return;
 
   hydrateHeader(student);
 
   logoutBtn?.addEventListener("click", logoutStudent);
 
-  await loadDashboard();
+  await loadDashboard(student);
 });
 
 /* ================== AUTH ================== */
 function guardStudent(){
-  const raw = localStorage.getItem("studentSession");
-  if(!raw){
-    // ถ้านายใช้ชื่อ key อื่น ปรับตรงนี้
+  // ✅ ใช้ helper ที่อ่าน cpvc_student
+  const s = getStudentSession();
+  if(!s || !(s.studentId || s.id || s.code)){
+    clearAllSession();
     location.href = "login.html";
     return null;
   }
-  try{
-    return JSON.parse(raw);
-  }catch{
-    localStorage.removeItem("studentSession");
-    location.href = "login.html";
-    return null;
-  }
+  return s;
 }
 
 function hydrateHeader(student){
-  // รองรับได้หลายชื่อฟิลด์
   const name  = student.name || student.fullname || student.displayName || "STUDENT";
   const email = student.email || "-";
   const sid   = student.studentId || student.id || student.code || "";
@@ -71,23 +65,22 @@ function hydrateHeader(student){
 }
 
 function logoutStudent(){
-  try{ localStorage.removeItem("studentSession"); }catch(e){}
+  clearAllSession(); // ✅ ลบ cpvc_student ด้วย
   location.href = "login.html";
 }
 
 /* ================== LOAD DASHBOARD ================== */
-async function loadDashboard(){
+async function loadDashboard(student){
   setMsg("กำลังโหลดข้อมูล...", "info");
 
-  // ✅ คาดหวัง endpoint แนวนี้ (ถ้าของนายชื่ออื่น เปลี่ยน action)
-  // ควรคืนค่า:
-  // {
-  //   success: true,
-  //   stats: { totalSessions, attended, late, absent },
-  //   currentSession: { status, token, subject, room },
-  //   recent: [ { date, subject, room, teacherName, status } ]
-  // }
-  const res = await callApi("studentGetDashboard", {});
+  const studentId = (student.studentId || student.id || student.code || "").toString().trim();
+  if(!studentId){
+    setMsg("ไม่พบ studentId ใน session", "error");
+    return;
+  }
+
+  // ✅ ฝั่ง GAS ต้องรับ studentId
+  const res = await callApi("studentGetDashboard", { studentId });
 
   if(!res || !res.success){
     setMsg(res?.message || "โหลดข้อมูลไม่สำเร็จ", "error");
@@ -117,20 +110,16 @@ function renderStats(stats){
 
 /* ================== RENDER: CURRENT SESSION ================== */
 function renderCurrentSession(session){
-  // token
   if(tokenEl) tokenEl.textContent = session?.token || "-";
-
-  // status badge
   setStatusBadge(statusEl, session?.status);
 
-  // ถ้าอยากโชว์รายละเอียดเพิ่ม (ถ้า HTML มี element)
   const subjectEl = document.getElementById("subjectDisplay");
   const roomEl    = document.getElementById("roomDisplay");
   if(subjectEl) subjectEl.textContent = session?.subject || "-";
   if(roomEl)    roomEl.textContent = session?.room || "-";
 }
 
-/* ================== STATUS BADGE (สวยแบบองค์กร) ================== */
+/* ================== STATUS BADGE ================== */
 function setStatusBadge(el, statusRaw){
   if(!el) return;
 
@@ -158,7 +147,6 @@ function renderRecent(rows){
     return;
   }
 
-  // พยายาม map ฟิลด์ให้ได้หลายแบบ
   const safe = rows.slice(0, 10).map(r => ({
     date:  r.date || r.createdAt || r.time || r.timestamp || "-",
     subject: r.subject || r.className || r.course || "-",
@@ -168,7 +156,6 @@ function renderRecent(rows){
     token: r.token || ""
   }));
 
-  // สร้างแถว (รองรับ table ที่อาจมี 5 คอลัมน์แบบ admin: วิชา ห้อง ครู TOKEN สถานะ)
   tbodyEl.innerHTML = safe.map(item => {
     const badge = statusBadgeHtml(item.status);
     const isAdminStyleTable = guessAdminStyleTable();
@@ -185,7 +172,6 @@ function renderRecent(rows){
       `;
     }
 
-    // default student history style: วันที่ วิชา ห้อง สถานะ
     return `
       <tr>
         <td>${esc(item.date)}</td>
@@ -198,7 +184,6 @@ function renderRecent(rows){
 }
 
 function guessAdminStyleTable(){
-  // ถ้าหัวตารางมี 5 ช่องและมีคำว่า TOKEN ก็ถือว่าเป็นตารางแบบแอดมิน
   const table = tbodyEl.closest("table");
   const ths = table?.querySelectorAll("thead th");
   if(!ths || ths.length === 0) return false;
@@ -207,10 +192,8 @@ function guessAdminStyleTable(){
 }
 
 function statusBadgeHtml(status){
-  // สถานะนักเรียนอาจเป็น OK/LATE/ABSENT หรือ OPEN/CLOSED ก็ได้
   const s = String(status || "-").toUpperCase();
 
-  // map หลายแบบให้ดูดี
   const map = {
     OPEN:   ["status-open", "OPEN"],
     CLOSED: ["status-closed", "CLOSED"],
@@ -219,7 +202,7 @@ function statusBadgeHtml(status){
     PRESENT:["status-open", "PRESENT"],
     ATTENDED:["status-open", "ATTENDED"],
 
-    LATE:   ["status-closed", "LATE"],   // ถ้านายอยากแยกสี LATE เป็นเหลือง บอก เดี๋ยวเพิ่มให้
+    LATE:   ["status-closed", "LATE"],
     ABSENT: ["status-closed", "ABSENT"],
     MISS:   ["status-closed", "ABSENT"]
   };
@@ -239,7 +222,6 @@ function renderChart(stats){
   const late     = n(stats.late ?? 0);
   const absent   = n(stats.absent ?? 0);
 
-  // destroy old
   try{ chartInstance?.destroy(); }catch(e){}
 
   chartInstance = new Chart(chartCanvas, {
