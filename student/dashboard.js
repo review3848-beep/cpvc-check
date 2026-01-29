@@ -1,229 +1,214 @@
-// student/dashboard.js
-import { callApi, getStudentSession, clearAllSession } from "../api.js";
+import { callApi } from "../api.js";
 
-/* ================== DOM ================== */
-const nameEl = document.getElementById("studentName");
-const idEl   = document.getElementById("studentIdDisplay");
-const msgEl  = document.getElementById("msg");
+/* ================= DOM ================= */
+const nameEl = pickEl(["studentName", "nameEl", "name", "hdrName", "profileName"]);
+const idEl   = pickEl(["studentId", "idEl", "studentCode", "codeEl", "hdrId", "profileId"]);
 
-const totalEl = document.getElementById("totalSessions");
-const okEl    = document.getElementById("attendedCount");
-const lateEl  = document.getElementById("lateCount");
-const absEl   = document.getElementById("absentCount");
+const totalEl  = pickEl(["totalClasses", "total", "statTotal", "totalCount"]);
+const okEl     = pickEl(["presentCount", "okCount", "statOk", "ok"]);
+const lateEl   = pickEl(["lateCount", "statLate", "late"]);
+const absentEl = pickEl(["absentCount", "statAbsent", "absent"]);
 
-const tbodyEl = document.getElementById("recentAttendance");
-const chartCanvas = document.getElementById("attendanceChart");
+const tbodyEl  = pickEl(["recentTbody", "recentBody", "tbody", "recentSessions", "recentHistory"]);
+const msgEl    = pickEl(["msg", "message", "statusMsg"]);
 
-const btnScan    = document.getElementById("btnScan");
-const btnHistory = document.getElementById("btnHistory");
-const btnRefresh = document.getElementById("btnRefresh");
-const logoutBtn  = document.getElementById("logoutBtn");
+const btnScan   = pickEl(["btnScan", "goScan", "scanBtn"]);
+const btnHistory= pickEl(["btnHistory", "goHistory", "historyBtn"]);
+const btnRefresh= pickEl(["btnRefresh", "refreshBtn"]);
 
-/* ================== STATE ================== */
-let student = null;
-let chart = null;
-let refreshing = false;
+/* ================= INIT ================= */
+document.addEventListener("DOMContentLoaded", init);
 
-/* ================== INIT ================== */
-document.addEventListener("DOMContentLoaded", async () => {
-  student = guardStudent();
-  if (!student) return;
-
-  hydrateHeader(student);
+async function init(){
   wireButtons();
 
-  await loadDashboard();
-
-  // อัปเดตเองทุก 25 วิ (ถ้าไม่อยากให้ auto ปิดบรรทัดนี้)
-  setInterval(() => {
-    if (!refreshing) loadDashboard(true);
-  }, 25000);
-});
-
-/* ================== AUTH ================== */
-function guardStudent() {
-  // ✅ ใช้ helper ที่มาจาก api.js (key ที่โปรเจกต์ใช้จริงคือ cpvc_student)
-  const s = getStudentSession();
-  if (!s) {
-    location.href = "./login.html";
-    return null;
+  const session = getStudentSession();
+  if(!session){
+    toast("ยังไม่ได้เข้าสู่ระบบ");
+    // ปรับ path login ให้ตรงโปรเจกต์ของคุณ
+    // location.href = "./login.html";
+    return;
   }
 
-  // normalize รูปแบบ session ให้ชัวร์
-  // บางหน้าชอบเก็บเป็น { student:{...} } ก็จัดให้รองรับ
-  if (s.student) return s.student;
-  return s;
+  hydrateHeader(session);
+
+  await loadDashboard(session.studentId);
 }
 
-function hydrateHeader(s) {
+/* ================= SESSION ================= */
+function getStudentSession(){
+  // รองรับหลาย key เผื่อของเดิมคุณเก็บต่างกัน
+  const raw =
+    localStorage.getItem("studentSession") ||
+    localStorage.getItem("student") ||
+    localStorage.getItem("session") ||
+    "";
+
+  if(!raw) return null;
+
+  try{
+    const s = JSON.parse(raw);
+    // รองรับสไตล์ {student:{studentId,name}} หรือ {studentId,name}
+    if(s && s.student) return { ...s.student, studentId: s.student.studentId, name: s.student.name };
+    if(s && (s.studentId || s.id)) return { studentId: s.studentId || s.id, name: s.name || s.studentName || "STUDENT" };
+    return null;
+  }catch{
+    return null;
+  }
+}
+
+/* ================= UI ================= */
+function hydrateHeader(s){
   const name = s.name || s.studentName || s.fullname || "STUDENT";
   const sid  = s.studentId || s.id || s.code || s.STUDENT_ID || "";
 
-  nameEl.textContent = name;
-  idEl.textContent = sid || "-";
+  // ✅ กัน null ไม่ให้พังทั้งหน้า
+  if(nameEl) nameEl.textContent = name;
+  if(idEl)   idEl.textContent = sid ? sid : "-";
 }
 
-function wireButtons() {
-  btnScan.addEventListener("click", () => {
-    // เปลี่ยนชื่อไฟล์ปลายทางตรงนี้ได้ตามที่เธอใช้จริง
-    // เช่น scan.html / checkin.html / scanner.html
-    location.href = "./scan.html";
-  });
+function wireButtons(){
+  if(btnScan){
+    btnScan.addEventListener("click", ()=> {
+      // ปรับ path ตามไฟล์จริงของคุณ
+      location.href = "./scan.html"; // หรือ ./checkin.html / ./scanner.html
+    });
+  }
 
-  btnHistory.addEventListener("click", async () => {
-    // ถ้ามีหน้า history.html ก็ไปเลย
-    // ถ้ายังไม่มี จะ fallback เป็น alert พร้อม export json ให้ดู
-    try {
-      // ถ้ามีไฟล์อยู่แล้ว ให้ใช้บรรทัดนี้
+  if(btnHistory){
+    btnHistory.addEventListener("click", ()=> {
       location.href = "./history.html";
-    } catch (e) {
-      alert("ยังไม่มีหน้า history.html");
-    }
-  });
-
-  btnRefresh.addEventListener("click", () => loadDashboard());
-
-  logoutBtn.addEventListener("click", () => {
-    clearAllSession();
-    location.href = "./login.html";
-  });
-}
-
-/* ================== LOAD DASHBOARD ================== */
-async function loadDashboard(silent = false) {
-  const sid = (student.studentId || student.id || student.code || "").toString().trim();
-  if (!sid) {
-    setMsg("ไม่พบ studentId ใน session (เช็คตอน login ว่าเก็บ studentId ไหม)", "err");
-    return;
+    });
   }
 
-  if (!silent) setMsg("กำลังโหลดข้อมูล...", "info");
-  refreshing = true;
+  if(btnRefresh){
+    btnRefresh.addEventListener("click", async ()=>{
+      const s = getStudentSession();
+      if(!s) return;
+      await loadDashboard(s.studentId, true);
+    });
+  }
+}
 
-  try {
-    // ✅ ต้องส่ง studentId ไปด้วย ไม่งั้นจะได้ 0 หมด
-    const res = await callApi("studentGetDashboard", { studentId: sid });
+/* ================= DATA ================= */
+async function loadDashboard(studentId, silent=false){
+  try{
+    if(!silent) toast("กำลังอัปเดตข้อมูล...");
 
-    if (!res || !res.success) {
-      // ถ้าโดนหลุด session (เผื่อบางคนไปลบ key)
-      if (String(res?.message || "").toLowerCase().includes("login")) {
-        clearAllSession();
-        location.href = "./login.html";
-        return;
-      }
-      throw new Error(res?.message || "โหลดข้อมูลไม่สำเร็จ");
+    // ✅ เรียก action ฝั่ง GAS ที่คุณมีอยู่แล้ว
+    const res = await callApi("studentGetDashboard", { studentId });
+
+    if(!res || res.success !== true){
+      throw new Error(res && res.message ? res.message : "โหลดข้อมูลไม่สำเร็จ");
     }
 
-    const stats = res.stats || res.data?.stats || {};
-    const recent = res.recent || res.data?.recent || [];
+    const stats  = res.stats || (res.data && res.data.stats) || {};
+    const recent = res.recent || (res.data && res.data.recent) || [];
 
-    renderStats(stats);
+    setStats(stats);
     renderRecent(recent);
-    renderChart(stats);
 
-    setMsg(silent ? "" : "อัปเดตล่าสุดเรียบร้อย ✅", silent ? "": "ok");
-  } catch (err) {
-    setMsg("❌ " + (err.message || err), "err");
-  } finally {
-    refreshing = false;
+    toast("อัปเดตแล้ว ✅");
+  }catch(err){
+    toast("โหลดข้อมูลไม่ได้: " + String(err.message || err));
   }
 }
 
-/* ================== RENDER ================== */
-function renderStats(stats) {
-  const total = num(stats.total ?? stats.totalSessions ?? 0);
-  const ok    = num(stats.ok ?? stats.attended ?? stats.present ?? 0);
-  const late  = num(stats.late ?? 0);
-  const abs   = num(stats.absent ?? 0);
+function setStats(stats){
+  // รองรับ key หลายแบบ
+  const total  = num(stats.total ?? stats.totalClasses ?? 0);
+  const ok     = num(stats.ok ?? stats.present ?? stats.okc ?? 0);
+  const late   = num(stats.late ?? 0);
+  const absent = num(stats.absent ?? stats.miss ?? 0);
 
-  totalEl.textContent = total;
-  okEl.textContent    = ok;
-  lateEl.textContent  = late;
-  absEl.textContent   = abs;
+  if(totalEl)  totalEl.textContent = total;
+  if(okEl)     okEl.textContent = ok;
+  if(lateEl)   lateEl.textContent = late;
+  if(absentEl) absentEl.textContent = absent;
 }
 
-function renderRecent(rows) {
-  if (!Array.isArray(rows) || rows.length === 0) {
-    tbodyEl.innerHTML = `<tr><td colspan="3" class="empty">ยังไม่มีประวัติ</td></tr>`;
+function renderRecent(rows){
+  if(!tbodyEl) return;
+
+  tbodyEl.innerHTML = "";
+
+  if(!rows || !rows.length){
+    tbodyEl.innerHTML = `
+      <tr><td colspan="4" style="text-align:center;opacity:.7;padding:14px;">ยังไม่มีประวัติ</td></tr>
+    `;
     return;
   }
 
-  // รองรับหลายฟิลด์ (GAS ของเธอคืน {time, subject, status, token, teacher, room?})
-  const list = rows.slice(0, 10).map(r => ({
-    time: r.time || r.datetime || r.createdAt || r.date || "-",
-    subject: r.subject || r.course || r.className || "-",
-    status: String(r.status || r.result || "-").toUpperCase()
-  }));
+  for(const r of rows){
+    const time = fmtTime(r.time);
+    const subject = safe(r.subject || "-");
+    const room = safe(r.room || "-");
+    const status = safe(thStatus(r.status || "-"));
 
-  tbodyEl.innerHTML = list.map(x => `
-    <tr>
-      <td>${esc(formatTime(x.time))}</td>
-      <td>${esc(x.subject)}</td>
-      <td>${badge(x.status)}</td>
-    </tr>
-  `).join("");
-}
-
-function renderChart(stats) {
-  if (!chartCanvas || !window.Chart) return;
-
-  const ok   = num(stats.ok ?? stats.attended ?? stats.present ?? 0);
-  const late = num(stats.late ?? 0);
-  const abs  = num(stats.absent ?? 0);
-
-  try { chart?.destroy(); } catch {}
-
-  chart = new Chart(chartCanvas, {
-    type: "doughnut",
-    data: {
-      labels: ["มาเรียน", "สาย", "ขาด"],
-      datasets: [{ data: [ok, late, abs], borderWidth: 0 }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { position: "bottom" } },
-      cutout: "68%"
-    }
-  });
-}
-
-/* ================== UI HELPERS ================== */
-function setMsg(text, type) {
-  msgEl.textContent = text || "";
-  msgEl.className = "msg" + (type ? " " + type : "");
-}
-
-function badge(status) {
-  const s = String(status || "-").toUpperCase();
-  if (s === "OK" || s === "PRESENT" || s === "ATTENDED") return `<span class="badge b-ok">มาเรียน</span>`;
-  if (s === "LATE") return `<span class="badge b-late">สาย</span>`;
-  if (s === "ABSENT") return `<span class="badge b-abs">ขาด</span>`;
-  return `<span class="badge">${esc(s)}</span>`;
-}
-
-function formatTime(v) {
-  // ถ้าเป็น Date string/ISO ช่วยจัดให้อ่านง่าย
-  try {
-    const d = (v instanceof Date) ? v : new Date(v);
-    if (isNaN(d.getTime())) return String(v);
-    const pad = (n) => String(n).padStart(2, "0");
-    return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  } catch {
-    return String(v);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${time}</td>
+      <td>${subject}${room && room !== "-" ? ` <span style="opacity:.7">(${room})</span>` : ""}</td>
+      <td>${statusBadge(status)}</td>
+      <td style="text-align:right;opacity:.75">${safe(r.token || "")}</td>
+    `;
+    tbodyEl.appendChild(tr);
   }
 }
 
-function num(v) {
-  const x = Number(v);
-  return Number.isFinite(x) ? x : 0;
+/* ================= HELPERS ================= */
+function pickEl(ids){
+  for(const id of ids){
+    const el = document.getElementById(id);
+    if(el) return el;
+  }
+  return null;
 }
 
-function esc(s) {
-  return String(s ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+function toast(t){
+  if(msgEl){
+    msgEl.textContent = t;
+    msgEl.style.opacity = "1";
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=>{ if(msgEl) msgEl.style.opacity="0.85"; }, 2500);
+  }else{
+    // เผื่อไม่มี msg element ก็ไม่พัง
+    console.log("[MSG]", t);
+  }
+}
+
+function num(x){
+  const n = Number(x);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function safe(s){
+  return String(s ?? "").replace(/[<>]/g, "");
+}
+
+function fmtTime(v){
+  if(!v) return "-";
+  const d = new Date(v);
+  if(isNaN(d.getTime())) return safe(String(v));
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mm = String(d.getMinutes()).padStart(2,"0");
+  const dd = String(d.getDate()).padStart(2,"0");
+  const mo = String(d.getMonth()+1).padStart(2,"0");
+  return `${dd}/${mo} ${hh}:${mm}`;
+}
+
+function thStatus(s){
+  const x = String(s).toUpperCase();
+  if(x === "OK") return "มาเรียน";
+  if(x === "LATE") return "สาย";
+  if(x === "ABSENT") return "ขาด";
+  if(x === "DUPLICATE") return "เช็คแล้ว";
+  return s;
+}
+
+function statusBadge(text){
+  // ไม่กำหนดสีแบบ hardcode เยอะ ให้เข้ากับธีมเดิม
+  return `<span style="padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.35);display:inline-block;">
+    ${safe(text)}
+  </span>`;
 }
