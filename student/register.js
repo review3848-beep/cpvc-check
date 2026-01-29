@@ -1,8 +1,6 @@
 // student/register.js
 import { callApi } from "../api.js";
 
-
-
 /* ================= DOM ================= */
 const idInput   = document.getElementById("studentId");
 const nameInput = document.getElementById("name");
@@ -17,12 +15,18 @@ let lookupTimer = null;
 /* ================= INIT ================= */
 nameInput.readOnly = true;
 
+// พิมพ์รหัสแล้วให้ค้นชื่อ
 idInput.addEventListener("input", onIdChange);
+
+// กด Enter ที่รหัส => ไปช่องรหัสผ่าน
 idInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") pwInput.focus();
 });
 
+// สมัคร
 btn.addEventListener("click", register);
+
+// Enter ที่รหัสผ่าน = สมัคร
 pwInput.addEventListener("keydown", e => {
   if (e.key === "Enter") register();
 });
@@ -32,56 +36,58 @@ function onIdChange(){
   clearTimeout(lookupTimer);
 
   const studentId = idInput.value.trim();
+
   foundName = "";
   nameInput.value = "";
   setMsg("");
 
   if (!studentId) return;
 
+  // กันยิงถี่/พิมพ์ยังไม่ครบ
   if (studentId.length < 4){
     setMsg("ℹ️ กรอกรหัสนักเรียนให้ครบเพื่อดึงชื่ออัตโนมัติ", "#93c5fd");
     return;
   }
 
-  lookupTimer = setTimeout(() => lookupStudentNameJSONP(studentId), 350);
+  lookupTimer = setTimeout(() => lookupStudentName(studentId), 350);
 }
 
-function lookupStudentNameJSONP(studentId){
+async function lookupStudentName(studentId){
   nameInput.value = "กำลังค้นชื่อ...";
   setMsg("🔎 กำลังตรวจสอบรหัสนักเรียน...", "#93c5fd");
 
-  const cb = "cb_" + Math.random().toString(36).slice(2);
-  const script = document.createElement("script");
+  try{
+    // ✅ ตอนนี้ callApi จะยิง GET ให้ studentFindById อัตโนมัติ
+    const res = await callApi("studentFindById", { studentId });
 
-  window[cb] = (res) => {
-    try{
-      // ถ้าระหว่างรอ ผู้ใช้พิมพ์เปลี่ยน id แล้ว => ทิ้งผลลัพธ์
-      if (idInput.value.trim() !== studentId) return;
+    // ถ้าระหว่างรอ ผู้ใช้พิมพ์เปลี่ยน id แล้ว => ทิ้งผลลัพธ์
+    if (idInput.value.trim() !== studentId) return;
 
-      if (!res || !res.success || !res.student){
-        foundName = "";
-        nameInput.value = "";
-        setMsg("⚠️ ไม่พบรหัสนักเรียนในระบบ", "#fbbf24");
-        return;
-      }
-
-      foundName = String(res.student.name || "").trim();
-      nameInput.value = foundName;
-
-      if(foundName){
-        setMsg("✅ พบชื่อในระบบแล้ว", "#4ade80");
-      }else{
-        setMsg("⚠️ พบรหัส แต่ยังไม่มีชื่อในระบบ", "#fbbf24");
-      }
-    } finally {
-      delete window[cb];
-      script.remove();
+    if (!res || !res.success){
+      foundName = "";
+      nameInput.value = "";
+      setMsg("⚠️ " + (res?.message || "ไม่พบรหัสนักเรียนในระบบ"), "#fbbf24");
+      return;
     }
-  };
 
-  // ✅ เรียก doGet action=studentFindById + callback (JSONP)
-  script.src = `${API_URL}?action=studentFindById&studentId=${encodeURIComponent(studentId)}&callback=${cb}`;
-  document.body.appendChild(script);
+    const name = (res.student && res.student.name) ? String(res.student.name).trim() : "";
+
+    foundName = name;
+    nameInput.value = foundName;
+
+    if(foundName){
+      setMsg("✅ พบชื่อในระบบแล้ว", "#4ade80");
+    }else{
+      setMsg("⚠️ พบรหัส แต่ยังไม่มีชื่อในระบบ", "#fbbf24");
+    }
+
+  }catch(err){
+    if (idInput.value.trim() !== studentId) return;
+
+    foundName = "";
+    nameInput.value = "";
+    setMsg("❌ ดึงชื่อไม่สำเร็จ: " + (err.message || err), "#f87171");
+  }
 }
 
 /* ================= REGISTER ================= */
@@ -96,6 +102,7 @@ async function register(){
     return;
   }
 
+  // ต้องดึงชื่อได้ก่อนถึงสมัครได้
   if (!foundName){
     setMsg("⚠️ กรุณากรอกรหัสนักเรียนให้ถูกต้อง เพื่อให้ระบบดึงชื่ออัตโนมัติ", "#fbbf24");
     return;
@@ -110,10 +117,9 @@ async function register(){
   btn.textContent = "กำลังสมัครใช้งาน...";
 
   try{
-    // ✅ สมัครยังใช้ callApi (POST) ได้ปกติ
     const res = await callApi("studentRegister", {
       studentId,
-      name: foundName,
+      name: foundName, // ส่งชื่อที่ดึงมา
       password
     });
 

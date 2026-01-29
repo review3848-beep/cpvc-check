@@ -4,23 +4,58 @@ export const API_BASE =
 
 /* ================= API CALL ================= */
 export async function callApi(action, params = {}) {
-  const body = new URLSearchParams({ action, ...params });
+  const method = pickMethod_(action);
+  const qs = new URLSearchParams({ action, ...params });
 
-  const res = await fetch(API_BASE, {
-    method: "POST",
-    body,
-    redirect: "follow",
-  });
+  let res;
+  if (method === "GET") {
+    res = await fetch(`${API_BASE}?${qs.toString()}`, {
+      method: "GET",
+      redirect: "follow",
+    });
+  } else {
+    res = await fetch(API_BASE, {
+      method: "POST",
+      body: qs,
+      redirect: "follow",
+    });
+  }
 
   const text = await res.text();
 
-  // ถ้าฝั่ง GAS ส่ง JSON กลับมา
   try {
-    return JSON.parse(text);
+    const json = JSON.parse(text);
+
+    // ✅ normalize: ถ้าโค้ดไหนเผลอส่ง ok มา ให้แปลงเป็น success
+    if (json && json.ok !== undefined && json.success === undefined) {
+      json.success = !!json.ok;
+      delete json.ok;
+    }
+
+    return json;
   } catch {
     // เผื่อ error เป็นข้อความ/HTML
-    return { ok: false, message: "Non-JSON response", raw: text };
+    return { success: false, message: "Non-JSON response", raw: text };
   }
+}
+
+/* ================= METHOD ROUTER ================= */
+function pickMethod_(action) {
+  // ✅ action ที่อยู่ doGet
+  const GET_ACTIONS = new Set([
+    "studentFindById",
+    "adminGetDashboard",
+    "adminGetTeachers",
+    "adminGetStudents",
+    "adminGetSessions",
+    "adminGetStats",
+    "teacherGetDashboard",
+    "teacherGetSessionDetail",
+    "teacherExportSession",
+    "teacherExportAll",
+  ]);
+
+  return GET_ACTIONS.has(String(action || "")) ? "GET" : "POST";
 }
 
 /* ================= helpers ================= */
