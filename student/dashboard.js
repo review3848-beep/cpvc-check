@@ -1,62 +1,59 @@
-// student/dashboard.js (พร้อมใช้กับ GAS ของเธอ)
+// student/dashboard.js
 import { callApi, getStudentSession, clearAllSession } from "../api.js";
 
 /* ================= DOM ================= */
-const nameEl   = document.getElementById("studentName") || document.getElementById("studentNameDisplay");
-const idEl     = document.getElementById("studentId")   || document.getElementById("studentIdDisplay");
-const emailEl  = document.getElementById("studentEmail")|| document.getElementById("studentEmailDisplay");
+const nameEl = document.getElementById("studentName");
+const idEl   = document.getElementById("studentId");
 
-const msgEl    = document.getElementById("msg");
+const msgEl  = document.getElementById("msg");
 
-/* stats */
-const totalEl  = document.getElementById("totalSessions") || document.getElementById("totalCount");
-const okEl     = document.getElementById("attendedCount") || document.getElementById("okCount") || document.getElementById("presentCount");
-const lateEl   = document.getElementById("lateCount");
-const absEl    = document.getElementById("absentCount");
+const totalEl = document.getElementById("totalSessions");
+const okEl    = document.getElementById("attendedCount");
+const lateEl  = document.getElementById("lateCount");
+const absEl   = document.getElementById("absentCount");
 
-/* recent table */
-const tbodyEl  = document.getElementById("recentAttendance") || document.getElementById("historyTable");
+const tbodyEl = document.getElementById("recentAttendance");
+const chartCanvas = document.getElementById("attendanceChart");
 
-/* chart */
-const chartCanvas = document.getElementById("attendanceChart") || document.getElementById("sessionChart");
-
-/* logout */
-const logoutBtn = document.getElementById("logoutBtn");
+const logoutBtn  = document.getElementById("logoutBtn");
+const refreshBtn = document.getElementById("refreshBtn");
 
 /* ================= STATE ================= */
+let student = null;
 let chartInstance = null;
 
 /* ================= INIT ================= */
-document.addEventListener("DOMContentLoaded", () => {
-  const student = guardStudent();
+document.addEventListener("DOMContentLoaded", async () => {
+  student = guardStudent();
   if (!student) return;
 
   hydrateHeader(student);
 
   logoutBtn?.addEventListener("click", logoutStudent);
+  refreshBtn?.addEventListener("click", () => loadDashboard(false));
 
-  loadDashboard(student);
+  await loadDashboard(false);
+
+  // ✅ auto refresh ทุก 20 วิ (ให้ dashboard “ไม่เน่า”)
+  setInterval(() => loadDashboard(true), 20000);
 });
 
 /* ================= AUTH ================= */
 function guardStudent(){
-  const student = getStudentSession(); // api.js ใช้ key cpvc_student อยู่แล้ว
-  if(!student || !student.studentId){
+  const s = getStudentSession(); // key: cpvc_student (ตาม api.js)
+  if(!s || !s.studentId){
     clearAllSession();
     location.href = "login.html";
     return null;
   }
-  return student;
+  return s;
 }
 
-function hydrateHeader(student){
-  const name = student.name || "STUDENT";
-  const sid  = student.studentId || "";
-  const email = student.email || "-";
-
+function hydrateHeader(s){
+  const name = s.name || "STUDENT";
+  const sid  = s.studentId || "-";
   if(nameEl) nameEl.textContent = name;
-  if(idEl)   idEl.textContent = sid ? `🆔 ${sid}` : "";
-  if(emailEl) emailEl.textContent = email;
+  if(idEl)   idEl.textContent = `🆔 ${sid}`;
 }
 
 function logoutStudent(){
@@ -65,112 +62,80 @@ function logoutStudent(){
 }
 
 /* ================= LOAD DASHBOARD ================= */
-async function loadDashboard(student){
-  setMsg("กำลังโหลดข้อมูล...", "info");
+async function loadDashboard(silent=true){
+  const studentId = String(student?.studentId || "").trim();
+  if(!studentId) return;
 
-  const studentId = String(student.studentId || "").trim();
+  if(!silent) setMsg("กำลังโหลดข้อมูล...", "info");
 
   try{
-    // ✅ ของ GAS เธอต้องส่ง studentId
     const res = await callApi("studentGetDashboard", { studentId });
 
     if(!res || !res.success){
       throw new Error(res?.message || "โหลดข้อมูลไม่สำเร็จ");
     }
 
-    setMsg("", "clear");
+    if(!silent) setMsg("", "clear");
 
-    renderStats(res.stats || {});
-    renderRecent(res.recent || []);
-    renderChart(res.stats || {});
+    const stats = res.stats || {};
+    const recent = res.recent || [];
+
+    renderStats(stats);
+    renderRecent(recent);
+    renderChart(stats);
+
   }catch(err){
-    setMsg("❌ " + (err.message || err), "error");
+    if(!silent) setMsg("❌ " + (err.message || err), "error");
   }
 }
 
-/* ================= RENDER: STATS ================= */
+/* ================= RENDER ================= */
 function renderStats(stats){
   const total = n(stats.total ?? 0);
   const ok    = n(stats.ok ?? 0);
   const late  = n(stats.late ?? 0);
   const abs   = n(stats.absent ?? 0);
 
-  if(totalEl) totalEl.textContent = total;
-  if(okEl)    okEl.textContent = ok;
-  if(lateEl)  lateEl.textContent = late;
-  if(absEl)   absEl.textContent = abs;
+  totalEl.textContent = total;
+  okEl.textContent    = ok;
+  lateEl.textContent  = late;
+  absEl.textContent   = abs;
 }
 
-/* ================= RENDER: RECENT ================= */
 function renderRecent(rows){
-  if(!tbodyEl) return;
-
   if(!Array.isArray(rows) || rows.length === 0){
-    tbodyEl.innerHTML = `<tr><td colspan="4" class="empty">ยังไม่มีประวัติ</td></tr>`;
+    tbodyEl.innerHTML = `<tr><td colspan="3" class="empty">ยังไม่มีประวัติ</td></tr>`;
     return;
   }
 
   // GAS: recent = [{ time, subject, token, status, teacher }]
-  const safe = rows.slice(0, 10).map(r => ({
+  const safe = rows.slice(0,10).map(r => ({
     time: r.time || "-",
     subject: r.subject || "-",
-    room: r.room || "-",          // เผื่ออนาคตเพิ่ม
-    status: String(r.status || "-").toUpperCase(),
-    teacher: r.teacher || "-",
-    token: r.token || ""
+    status: String(r.status || "-").toUpperCase()
   }));
 
-  // รองรับทั้งตาราง 4 ช่อง (เวลา/วิชา/ห้อง/สถานะ) และ 5 ช่อง
-  const colCount = guessColCount();
-
-  tbodyEl.innerHTML = safe.map(x => {
-    const badge = statusBadgeHtml(x.status);
-
-    if(colCount >= 5){
-      return `
-        <tr>
-          <td>${esc(x.time)}</td>
-          <td>${esc(x.subject)}</td>
-          <td>${esc(x.teacher)}</td>
-          <td>${esc(x.token || "-")}</td>
-          <td>${badge}</td>
-        </tr>
-      `;
-    }
-
-    return `
-      <tr>
-        <td>${esc(x.time)}</td>
-        <td>${esc(x.subject)}</td>
-        <td>${esc(x.room)}</td>
-        <td>${badge}</td>
-      </tr>
-    `;
-  }).join("");
-}
-
-function guessColCount(){
-  const table = tbodyEl.closest("table");
-  const ths = table?.querySelectorAll("thead th");
-  if(!ths || ths.length === 0) return 4;
-  return ths.length;
+  tbodyEl.innerHTML = safe.map(x => `
+    <tr>
+      <td>${esc(x.time)}</td>
+      <td>${esc(x.subject)}</td>
+      <td>${statusBadgeHtml(x.status)}</td>
+    </tr>
+  `).join("");
 }
 
 function statusBadgeHtml(status){
   const s = String(status || "-").toUpperCase();
-
   const map = {
     OK:     ["status-badge status-open", "มาเรียน"],
     LATE:   ["status-badge status-closed", "สาย"],
     ABSENT: ["status-badge status-closed", "ขาด"],
   };
-
   const m = map[s];
   if(!m) return `<span class="status-badge">${esc(s)}</span>`;
   return `<span class="${m[0]}">${esc(m[1])}</span>`;
 }
 
-/* ================= CHART ================= */
 function renderChart(stats){
   if(!chartCanvas || !window.Chart) return;
 
@@ -184,10 +149,7 @@ function renderChart(stats){
     type: "doughnut",
     data: {
       labels: ["มาเรียน", "สาย", "ขาด"],
-      datasets: [{
-        data: [ok, late, abs],
-        borderWidth: 0
-      }]
+      datasets: [{ data: [ok, late, abs], borderWidth: 0 }]
     },
     options: {
       responsive: true,
