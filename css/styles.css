@@ -2494,3 +2494,433 @@ input:focus, button:focus, .chip:focus{
   outline: none;
   box-shadow: 0 0 0 3px rgba(56,189,248,.35);
 }
+
+/* =============================
+   NexAttend UI (Admin Dashboard)
+   Glass + Dark + Corporate Clean
+   ============================= */
+
+:root{
+  --bg0:#020617;         /* slate-950 */
+  --bg1:#050b1d;         /* deep navy */
+  --panel: rgba(15,23,42,.82);
+  --panel2: rgba(15,23,42,.92);
+  --border: rgba(148,163,184,.22);
+  --border2: rgba(148,163,184,.32);
+
+  --text:#e5e7eb;        /* gray-200 */
+  --muted:#a3aab8;       /* muted */
+  --muted2:#94a3b8;
+
+  --accent:#60a5fa;      /* blue-400 */
+  --accent2:#22c55e;     /* green-500 */
+  --warn:#f59e0b;        /* amber-500 */
+  --danger:#ef4444;      /* red-500 */
+
+  --shadow: 0 18px 45px rgba(0,0,0,.45);
+  --shadow2: 0 12px 30px rgba(0,0,0,.35);
+
+  --r-xl: 22px;
+  --r-lg: 16px;
+  --r-md: 12px;
+
+  --pad: clamp(16px, 2.2vw, 26px);
+  --max: 1180px;
+
+  --ring: 0 0 0 3px rgba(96,165,250,.22);
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+
+body{
+  margin:0;
+  font-family: Inter, Prompt, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1200px 700px at 12% 8%, rgba(96,165,250,.18), transparent 55%),
+    radial-gradient(900px 600px at 88% 22%, rgba(34,197,94,.12), transparent 55%),
+    radial-gradient(1100px 700px at 50% 110%, rgba(245,158,11,.10), transparent 58%),
+    linear-gradient(180deg, var(--bg0), var(--bg1));
+  line-height:1.5;
+}
+
+a{ color:inherit; text-decoration:none; }
+a:focus-visible, button:focus-visible, input:focus-visible{
+  outline:none;
+  box-shadow: var(--ring);
+  border-color: rgba(96,165,250,.55) !important;
+}
+
+header, section, #msg{
+  width:min(var(--max), calc(100% - (var(--pad) * 2)));
+  margin-inline:auto;
+}
+
+/* ===== Header ===== */
+header{
+  margin-top: 20px;
+  padding: 18px 18px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(15,23,42,.78), rgba(15,23,42,.92));
+  backdrop-filter: blur(10px);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow2);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+
+header h2{
+  margin:0;
+  font-size: clamp(18px, 2.2vw, 24px);
+  letter-spacing: .2px;
+}
+
+.subhead{
+  margin-top:6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.userbox{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(2,6,23,.25);
+  min-width: 220px;
+  text-align:right;
+}
+
+.userbox #adminNameDisplay{
+  font-weight: 700;
+  letter-spacing:.2px;
+}
+
+.userbox .id{
+  font-size: 12px;
+  color: var(--muted2);
+}
+
+/* ===== Stats ===== */
+.stats{
+  margin-top: 16px;
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 12px;
+}
+
+.stat{
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(15,23,42,.70), rgba(15,23,42,.92));
+  border-radius: var(--r-lg);
+  padding: 14px 14px 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.28);
+  position:relative;
+  overflow:hidden;
+}
+
+.stat::before{
+  content:"";
+  position:absolute;
+  inset:-2px -2px auto -2px;
+  height: 54px;
+  background: linear-gradient(90deg,
+    rgba(96,165,250,.18),
+    rgba(34,197,94,.10),
+    rgba(245,158,11,.10));
+  filter: blur(8px);
+  opacity:.65;
+}
+
+.stat-label{
+  position:relative;
+  color: var(--muted2);
+  font-size: 12px;
+  letter-spacing:.2px;
+}
+
+.stat-value{
+  position:relative;
+  margin-top: 6px;
+  font-size: clamp(26px, 3.2vw, 34px);
+  font-weight: 800;
+}
+
+.stat-footer{
+  position:relative;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ===== Action Bar ===== */
+.action-bar{
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--border);
+  background: rgba(15,23,42,.70);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow2);
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  flex-wrap:wrap;
+}
+
+/* Buttons */
+.btn-main, .btn-outline{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  letter-spacing:.15px;
+  cursor:pointer;
+  user-select:none;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+  white-space:nowrap;
+}
+
+.btn-main{
+  background: linear-gradient(90deg, rgba(96,165,250,.95), rgba(59,130,246,.95));
+  color: #07101f;
+  box-shadow: 0 12px 26px rgba(59,130,246,.22);
+}
+.btn-main:hover{ transform: translateY(-1px); box-shadow: 0 16px 34px rgba(59,130,246,.28); }
+.btn-main:active{ transform: translateY(0px) scale(.99); }
+
+.btn-outline{
+  background: rgba(2,6,23,.18);
+  border-color: var(--border2);
+  color: var(--text);
+}
+.btn-outline:hover{
+  transform: translateY(-1px);
+  border-color: rgba(96,165,250,.45);
+  background: rgba(2,6,23,.26);
+}
+.btn-outline:active{ transform: translateY(0px) scale(.99); }
+
+/* ===== Message ===== */
+#msg{
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ===== Table Card ===== */
+.table-card{
+  margin: 14px auto 26px;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(15,23,42,.72), rgba(15,23,42,.92));
+  box-shadow: var(--shadow);
+  overflow:hidden;
+}
+
+.table-header{
+  padding: 16px 16px 12px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(148,163,184,.16);
+}
+
+.table-header h3{
+  margin:0;
+  font-size: 16px;
+  letter-spacing:.2px;
+}
+
+.hint{
+  font-size: 12px;
+  color: var(--muted2);
+}
+
+/* Split layout */
+.table-split{
+  display:grid;
+  grid-template-columns: 1.45fr .85fr;
+  gap: 0;
+}
+
+.table-side{
+  padding: 12px 12px 14px;
+  border-right: 1px solid rgba(148,163,184,.14);
+}
+
+/* Table */
+table{
+  width:100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow:hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(148,163,184,.16);
+  background: rgba(2,6,23,.22);
+}
+
+thead th{
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align:left;
+  font-size: 12px;
+  letter-spacing:.15px;
+  color: #cbd5e1;
+  background: rgba(2,6,23,.55);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(148,163,184,.16);
+  padding: 12px 12px;
+}
+
+tbody td{
+  padding: 12px 12px;
+  font-size: 13px;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(148,163,184,.10);
+}
+
+tbody tr:hover td{
+  background: rgba(96,165,250,.06);
+}
+
+tbody tr:last-child td{
+  border-bottom:none;
+}
+
+.empty{
+  text-align:center;
+  color: var(--muted);
+  padding: 18px 12px;
+}
+
+/* token look */
+tbody td:nth-child(4){
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  color: #dbeafe;
+}
+
+/* Status pill (ถ้าคุณใส่ class/ข้อความ OPEN/CLOSED มันจะดูแพงขึ้นเอง) */
+tbody td:last-child{
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  font-weight: 800;
+  font-size: 11px;
+}
+
+/* Auto color-ish: ถ้า cell มีคำว่า OPEN/CLOSED จะอ่านง่ายขึ้น */
+tbody td:last-child{
+  color: #e5e7eb;
+}
+/* ===== Status badge (ใช้ class จาก JS) ===== */
+.status-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,.22);
+  background: rgba(2,6,23,.25);
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: .35px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-badge::before{
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background: rgba(148,163,184,.7);
+  box-shadow: 0 0 0 3px rgba(148,163,184,.12);
+}
+
+.status-open{
+  border-color: rgba(34,197,94,.35);
+  background: rgba(34,197,94,.10);
+  color: #bbf7d0;
+}
+.status-open::before{
+  background: rgba(34,197,94,.95);
+  box-shadow: 0 0 0 3px rgba(34,197,94,.18);
+}
+
+.status-closed{
+  border-color: rgba(239,68,68,.35);
+  background: rgba(239,68,68,.10);
+  color: #fecaca;
+}
+.status-closed::before{
+  background: rgba(239,68,68,.95);
+  box-shadow: 0 0 0 3px rgba(239,68,68,.18);
+}
+
+/* ===== Chart Side ===== */
+.chart-side{
+  padding: 12px 12px 14px;
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+
+.chart-title{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(148,163,184,.16);
+  background: rgba(2,6,23,.22);
+}
+
+.chart-wrap{
+  flex: 1;
+  min-height: 240px;
+  border-radius: 16px;
+  border: 1px solid rgba(148,163,184,.16);
+  background: rgba(2,6,23,.22);
+  padding: 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* canvas sizing */
+#sessionChart{
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 320px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 980px){
+  .stats{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .table-split{ grid-template-columns: 1fr; }
+  .table-side{ border-right: none; border-bottom: 1px solid rgba(148,163,184,.14); }
+  .chart-wrap{ min-height: 260px; }
+  .userbox{ min-width: unset; }
+}
+
+@media (max-width: 520px){
+  header{ flex-direction:column; align-items:flex-start; }
+  .userbox{ width:100%; text-align:left; }
+  .stats{ grid-template-columns: 1fr; }
+  .btn-main, .btn-outline{ width:100%; }
+  .action-bar > div{ width:100%; }
+}
