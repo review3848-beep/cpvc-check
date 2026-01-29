@@ -65,6 +65,12 @@
       box-shadow:0 0 0 1px rgba(79,70,229,.55);
     }
 
+    /* ✅ เพิ่มสไตล์ตอน readonly ให้ดูเหมือนระบบกรอกให้ */
+    input[readonly]{
+      opacity:.92;
+      cursor:not-allowed;
+    }
+
     .btn {
       width:100%;
       padding:.95rem;
@@ -108,14 +114,33 @@
     <h2>สมัครนักเรียน</h2>
     <div class="subtitle">ใช้รหัสนักเรียนที่มีอยู่ในระบบเท่านั้น</div>
 
-    <label>รหัสนักเรียน</label>
-    <input type="text" id="studentId" placeholder="เช่น 66001">
+    <label for="studentId">รหัสนักเรียน</label>
+    <input
+      type="text"
+      id="studentId"
+      placeholder="เช่น 66001"
+      inputmode="numeric"
+      autocomplete="off"
+      spellcheck="false"
+    >
 
-    <label>ชื่อ – นามสกุล</label>
-    <input type="text" id="name" placeholder="ชื่อนักเรียนตามระบบ">
+    <label for="name">ชื่อ – นามสกุล</label>
+    <input
+      type="text"
+      id="name"
+      placeholder="ชื่อนักเรียนตามระบบ"
+      readonly
+      autocomplete="off"
+      spellcheck="false"
+    >
 
-    <label>รหัสผ่าน</label>
-    <input type="password" id="password" placeholder="กำหนดรหัสผ่านของคุณ">
+    <label for="password">รหัสผ่าน</label>
+    <input
+      type="password"
+      id="password"
+      placeholder="กำหนดรหัสผ่านของคุณ"
+      autocomplete="new-password"
+    >
 
     <button id="registerBtn" class="btn">สมัครใช้งาน</button>
 
