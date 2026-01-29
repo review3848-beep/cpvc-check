@@ -1,10 +1,9 @@
 // student/dashboard.js
 import { callApi, getStudentSession, clearAllSession } from "../api.js";
 
-/* ================= DOM ================= */
+/* ================== DOM ================== */
 const nameEl = document.getElementById("studentName");
-const idEl   = document.getElementById("studentId");
-
+const idEl   = document.getElementById("studentIdDisplay");
 const msgEl  = document.getElementById("msg");
 
 const totalEl = document.getElementById("totalSessions");
@@ -15,86 +14,127 @@ const absEl   = document.getElementById("absentCount");
 const tbodyEl = document.getElementById("recentAttendance");
 const chartCanvas = document.getElementById("attendanceChart");
 
+const btnScan    = document.getElementById("btnScan");
+const btnHistory = document.getElementById("btnHistory");
+const btnRefresh = document.getElementById("btnRefresh");
 const logoutBtn  = document.getElementById("logoutBtn");
-const refreshBtn = document.getElementById("refreshBtn");
 
-/* ================= STATE ================= */
+/* ================== STATE ================== */
 let student = null;
-let chartInstance = null;
+let chart = null;
+let refreshing = false;
 
-/* ================= INIT ================= */
+/* ================== INIT ================== */
 document.addEventListener("DOMContentLoaded", async () => {
   student = guardStudent();
   if (!student) return;
 
   hydrateHeader(student);
+  wireButtons();
 
-  logoutBtn?.addEventListener("click", logoutStudent);
-  refreshBtn?.addEventListener("click", () => loadDashboard(false));
+  await loadDashboard();
 
-  await loadDashboard(false);
-
-  // ✅ auto refresh ทุก 20 วิ (ให้ dashboard “ไม่เน่า”)
-  setInterval(() => loadDashboard(true), 20000);
+  // อัปเดตเองทุก 25 วิ (ถ้าไม่อยากให้ auto ปิดบรรทัดนี้)
+  setInterval(() => {
+    if (!refreshing) loadDashboard(true);
+  }, 25000);
 });
 
-/* ================= AUTH ================= */
-function guardStudent(){
-  const s = getStudentSession(); // key: cpvc_student (ตาม api.js)
-  if(!s || !s.studentId){
-    clearAllSession();
-    location.href = "login.html";
+/* ================== AUTH ================== */
+function guardStudent() {
+  // ✅ ใช้ helper ที่มาจาก api.js (key ที่โปรเจกต์ใช้จริงคือ cpvc_student)
+  const s = getStudentSession();
+  if (!s) {
+    location.href = "./login.html";
     return null;
   }
+
+  // normalize รูปแบบ session ให้ชัวร์
+  // บางหน้าชอบเก็บเป็น { student:{...} } ก็จัดให้รองรับ
+  if (s.student) return s.student;
   return s;
 }
 
-function hydrateHeader(s){
-  const name = s.name || "STUDENT";
-  const sid  = s.studentId || "-";
-  if(nameEl) nameEl.textContent = name;
-  if(idEl)   idEl.textContent = `🆔 ${sid}`;
+function hydrateHeader(s) {
+  const name = s.name || s.studentName || s.fullname || "STUDENT";
+  const sid  = s.studentId || s.id || s.code || s.STUDENT_ID || "";
+
+  nameEl.textContent = name;
+  idEl.textContent = sid || "-";
 }
 
-function logoutStudent(){
-  clearAllSession();
-  location.href = "login.html";
+function wireButtons() {
+  btnScan.addEventListener("click", () => {
+    // เปลี่ยนชื่อไฟล์ปลายทางตรงนี้ได้ตามที่เธอใช้จริง
+    // เช่น scan.html / checkin.html / scanner.html
+    location.href = "./scan.html";
+  });
+
+  btnHistory.addEventListener("click", async () => {
+    // ถ้ามีหน้า history.html ก็ไปเลย
+    // ถ้ายังไม่มี จะ fallback เป็น alert พร้อม export json ให้ดู
+    try {
+      // ถ้ามีไฟล์อยู่แล้ว ให้ใช้บรรทัดนี้
+      location.href = "./history.html";
+    } catch (e) {
+      alert("ยังไม่มีหน้า history.html");
+    }
+  });
+
+  btnRefresh.addEventListener("click", () => loadDashboard());
+
+  logoutBtn.addEventListener("click", () => {
+    clearAllSession();
+    location.href = "./login.html";
+  });
 }
 
-/* ================= LOAD DASHBOARD ================= */
-async function loadDashboard(silent=true){
-  const studentId = String(student?.studentId || "").trim();
-  if(!studentId) return;
+/* ================== LOAD DASHBOARD ================== */
+async function loadDashboard(silent = false) {
+  const sid = (student.studentId || student.id || student.code || "").toString().trim();
+  if (!sid) {
+    setMsg("ไม่พบ studentId ใน session (เช็คตอน login ว่าเก็บ studentId ไหม)", "err");
+    return;
+  }
 
-  if(!silent) setMsg("กำลังโหลดข้อมูล...", "info");
+  if (!silent) setMsg("กำลังโหลดข้อมูล...", "info");
+  refreshing = true;
 
-  try{
-    const res = await callApi("studentGetDashboard", { studentId });
+  try {
+    // ✅ ต้องส่ง studentId ไปด้วย ไม่งั้นจะได้ 0 หมด
+    const res = await callApi("studentGetDashboard", { studentId: sid });
 
-    if(!res || !res.success){
+    if (!res || !res.success) {
+      // ถ้าโดนหลุด session (เผื่อบางคนไปลบ key)
+      if (String(res?.message || "").toLowerCase().includes("login")) {
+        clearAllSession();
+        location.href = "./login.html";
+        return;
+      }
       throw new Error(res?.message || "โหลดข้อมูลไม่สำเร็จ");
     }
 
-    if(!silent) setMsg("", "clear");
-
-    const stats = res.stats || {};
-    const recent = res.recent || [];
+    const stats = res.stats || res.data?.stats || {};
+    const recent = res.recent || res.data?.recent || [];
 
     renderStats(stats);
     renderRecent(recent);
     renderChart(stats);
 
-  }catch(err){
-    if(!silent) setMsg("❌ " + (err.message || err), "error");
+    setMsg(silent ? "" : "อัปเดตล่าสุดเรียบร้อย ✅", silent ? "": "ok");
+  } catch (err) {
+    setMsg("❌ " + (err.message || err), "err");
+  } finally {
+    refreshing = false;
   }
 }
 
-/* ================= RENDER ================= */
-function renderStats(stats){
-  const total = n(stats.total ?? 0);
-  const ok    = n(stats.ok ?? 0);
-  const late  = n(stats.late ?? 0);
-  const abs   = n(stats.absent ?? 0);
+/* ================== RENDER ================== */
+function renderStats(stats) {
+  const total = num(stats.total ?? stats.totalSessions ?? 0);
+  const ok    = num(stats.ok ?? stats.attended ?? stats.present ?? 0);
+  const late  = num(stats.late ?? 0);
+  const abs   = num(stats.absent ?? 0);
 
   totalEl.textContent = total;
   okEl.textContent    = ok;
@@ -102,50 +142,38 @@ function renderStats(stats){
   absEl.textContent   = abs;
 }
 
-function renderRecent(rows){
-  if(!Array.isArray(rows) || rows.length === 0){
+function renderRecent(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) {
     tbodyEl.innerHTML = `<tr><td colspan="3" class="empty">ยังไม่มีประวัติ</td></tr>`;
     return;
   }
 
-  // GAS: recent = [{ time, subject, token, status, teacher }]
-  const safe = rows.slice(0,10).map(r => ({
-    time: r.time || "-",
-    subject: r.subject || "-",
-    status: String(r.status || "-").toUpperCase()
+  // รองรับหลายฟิลด์ (GAS ของเธอคืน {time, subject, status, token, teacher, room?})
+  const list = rows.slice(0, 10).map(r => ({
+    time: r.time || r.datetime || r.createdAt || r.date || "-",
+    subject: r.subject || r.course || r.className || "-",
+    status: String(r.status || r.result || "-").toUpperCase()
   }));
 
-  tbodyEl.innerHTML = safe.map(x => `
+  tbodyEl.innerHTML = list.map(x => `
     <tr>
-      <td>${esc(x.time)}</td>
+      <td>${esc(formatTime(x.time))}</td>
       <td>${esc(x.subject)}</td>
-      <td>${statusBadgeHtml(x.status)}</td>
+      <td>${badge(x.status)}</td>
     </tr>
   `).join("");
 }
 
-function statusBadgeHtml(status){
-  const s = String(status || "-").toUpperCase();
-  const map = {
-    OK:     ["status-badge status-open", "มาเรียน"],
-    LATE:   ["status-badge status-closed", "สาย"],
-    ABSENT: ["status-badge status-closed", "ขาด"],
-  };
-  const m = map[s];
-  if(!m) return `<span class="status-badge">${esc(s)}</span>`;
-  return `<span class="${m[0]}">${esc(m[1])}</span>`;
-}
+function renderChart(stats) {
+  if (!chartCanvas || !window.Chart) return;
 
-function renderChart(stats){
-  if(!chartCanvas || !window.Chart) return;
+  const ok   = num(stats.ok ?? stats.attended ?? stats.present ?? 0);
+  const late = num(stats.late ?? 0);
+  const abs  = num(stats.absent ?? 0);
 
-  const ok   = n(stats.ok ?? 0);
-  const late = n(stats.late ?? 0);
-  const abs  = n(stats.absent ?? 0);
+  try { chart?.destroy(); } catch {}
 
-  try{ chartInstance?.destroy(); }catch{}
-
-  chartInstance = new Chart(chartCanvas, {
+  chart = new Chart(chartCanvas, {
     type: "doughnut",
     data: {
       labels: ["มาเรียน", "สาย", "ขาด"],
@@ -160,28 +188,42 @@ function renderChart(stats){
   });
 }
 
-/* ================= UX ================= */
-function setMsg(text, type){
-  if(!msgEl) return;
-  if(type === "clear"){
-    msgEl.textContent = "";
-    msgEl.className = "";
-    return;
-  }
+/* ================== UI HELPERS ================== */
+function setMsg(text, type) {
   msgEl.textContent = text || "";
-  msgEl.className = type ? `msg-${type}` : "";
+  msgEl.className = "msg" + (type ? " " + type : "");
 }
 
-/* ================= UTIL ================= */
-function n(v){
+function badge(status) {
+  const s = String(status || "-").toUpperCase();
+  if (s === "OK" || s === "PRESENT" || s === "ATTENDED") return `<span class="badge b-ok">มาเรียน</span>`;
+  if (s === "LATE") return `<span class="badge b-late">สาย</span>`;
+  if (s === "ABSENT") return `<span class="badge b-abs">ขาด</span>`;
+  return `<span class="badge">${esc(s)}</span>`;
+}
+
+function formatTime(v) {
+  // ถ้าเป็น Date string/ISO ช่วยจัดให้อ่านง่าย
+  try {
+    const d = (v instanceof Date) ? v : new Date(v);
+    if (isNaN(d.getTime())) return String(v);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } catch {
+    return String(v);
+  }
+}
+
+function num(v) {
   const x = Number(v);
   return Number.isFinite(x) ? x : 0;
 }
-function esc(s){
+
+function esc(s) {
   return String(s ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
