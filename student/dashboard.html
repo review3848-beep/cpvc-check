@@ -1,124 +1,143 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>NexAttend | Dashboard แอดมิน</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>Dashboard นักเรียน | NexAttend</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
-
-  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-  <script type="module" src="dashboard.js" defer></script>
+  <script type="module" src="./dashboard.js" defer></script>
+
+  <style>
+    body{
+      margin:0;
+      min-height:100vh;
+      background: radial-gradient(circle at 70% 20%, #1e293b, #020617 75%);
+      font-family:"Inter",system-ui,sans-serif;
+      color:#e5e7eb;
+    }
+    .wrap{ max-width:1100px; margin:0 auto; padding:24px; }
+    .topbar{
+      display:flex; justify-content:space-between; align-items:center;
+      gap:16px; margin-bottom:18px;
+      padding:16px 18px; border-radius:16px;
+      background:rgba(15,23,42,.86);
+      border:1px solid rgba(148,163,184,.35);
+      box-shadow:0 18px 50px rgba(15,23,42,.7);
+    }
+    .who{ display:flex; flex-direction:column; gap:4px; }
+    .who b{ font-size:16px; }
+    .muted{ color:#94a3b8; font-size:13px; }
+
+    .btn{
+      border:none; cursor:pointer; font-weight:700;
+      padding:10px 14px; border-radius:999px;
+      background:linear-gradient(135deg,#ef4444,#f97316);
+      color:white; box-shadow:0 14px 32px rgba(239,68,68,.25);
+    }
+
+    .grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    .card{
+      padding:16px; border-radius:16px;
+      background:rgba(15,23,42,.86);
+      border:1px solid rgba(148,163,184,.35);
+    }
+    .card .label{ font-size:12px; color:#94a3b8; margin-bottom:8px; }
+    .card .val{ font-size:22px; font-weight:800; }
+
+    .section{ margin-top:14px; display:grid; grid-template-columns:1.2fr .8fr; gap:14px; }
+    .panel{
+      padding:16px; border-radius:16px;
+      background:rgba(15,23,42,.86);
+      border:1px solid rgba(148,163,184,.35);
+    }
+    .panel h3{ margin:0 0 12px 0; font-size:15px; }
+    #msg{ margin-top:10px; text-align:center; }
+
+    table{ width:100%; border-collapse:collapse; }
+    th,td{ padding:10px 10px; border-bottom:1px solid rgba(148,163,184,.2); font-size:13px; }
+    th{ text-align:left; color:#cbd5f5; font-weight:700; }
+    .empty{ text-align:center; color:#94a3b8; padding:18px 0; }
+
+    .status-badge{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px;
+      background:rgba(148,163,184,.14); border:1px solid rgba(148,163,184,.25);
+    }
+    .status-open{ background:rgba(34,197,94,.15); border-color:rgba(34,197,94,.35); }
+    .status-closed{ background:rgba(239,68,68,.15); border-color:rgba(239,68,68,.35); }
+
+    .chartBox{ height:260px; }
+    @media (max-width: 960px){
+      .grid{ grid-template-columns:repeat(2,1fr); }
+      .section{ grid-template-columns:1fr; }
+    }
+  </style>
 </head>
 
 <body>
-<header>
-  <div>
-    <h2>🛠 Dashboard แอดมิน</h2>
-    <div class="subhead">ภาพรวมการใช้งานระบบทั้งหมด</div>
-  </div>
-  <div class="userbox">
-    <span id="adminNameDisplay">ADMIN</span>
-    <span class="id">📧 <span id="adminEmailDisplay">-</span></span>
-  </div>
-</header>
-
-<!-- ================= STATS ================= -->
-<section class="stats">
-  <div class="stat">
-    <div class="stat-label">👩‍🏫 จำนวนครูทั้งหมด</div>
-    <div class="stat-value" id="totalTeachers">0</div>
-    <div class="stat-footer">ครูที่มีในระบบ</div>
-  </div>
-
-  <div class="stat">
-    <div class="stat-label">🎓 จำนวนนักเรียนทั้งหมด</div>
-    <div class="stat-value" id="totalStudents">0</div>
-    <div class="stat-footer">นักเรียนทั้งหมดในระบบ</div>
-  </div>
-
-  <div class="stat">
-    <div class="stat-label">📚 จำนวนคาบทั้งหมด</div>
-    <div class="stat-value" id="totalSessions">0</div>
-    <div class="stat-footer">ทุกคาบที่ถูกสร้าง</div>
-  </div>
-
-  <div class="stat">
-    <div class="stat-label">🔴 คาบที่เปิดอยู่</div>
-    <div class="stat-value" id="openSessions">0</div>
-    <div class="stat-footer">STATUS = OPEN</div>
-  </div>
-</section>
-
-<!-- ================= ACTION BAR ================= -->
-<section class="action-bar">
-  <div>
-    <a href="sessions.html" class="btn-main">📚 จัดการคาบเรียน</a>
-  </div>
-  <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
-    <a href="teachers.html" class="btn-outline">👩‍🏫 จัดการครู</a>
-    <a href="students.html" class="btn-outline">🎓 จัดการนักเรียน</a>
-    <button class="btn-outline" onclick="logoutAdmin()">🚪 ออกจากระบบ</button>
-  </div>
-</section>
-
-<div id="msg"></div>
-
-<!-- ================= TABLE + CHART ================= -->
-<section class="table-card">
-  <div class="table-header">
-    <div>
-      <h3>📋 คาบล่าสุดในระบบ</h3>
-      <div class="hint">แสดงคาบล่าสุดทั้งหมด (ทุกครู)</div>
-    </div>
-    <div class="hint">📊 สถานะคาบ</div>
-  </div>
-
-  <div class="table-split">
-
-    <!-- ซ้าย: ตาราง -->
-    <div class="table-side">
-      <table>
-        <thead>
-          <tr>
-            <th>📚 วิชา</th>
-            <th>🏫 ห้อง</th>
-            <th>👩‍🏫 ครู</th>
-            <th>🔑 TOKEN</th>
-            <th>สถานะ</th>
-          </tr>
-        </thead>
-        <tbody id="sessionTable">
-          <tr><td colspan="5" class="empty">กำลังโหลดข้อมูล...</td></tr>
-        </tbody>
-      </table>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="who">
+        <b id="studentNameDisplay">STUDENT</b>
+        <div class="muted">
+          <span id="studentEmailDisplay">-</span>
+          <span id="studentIdDisplay" style="margin-left:10px;"></span>
+        </div>
+      </div>
+      <button class="btn" id="logoutBtn">ออกจากระบบ</button>
     </div>
 
-    <!-- ขวา: กราฟ -->
-    <aside class="chart-side">
-      <div class="chart-title">
-        <div class="hint">📊 สถานะคาบ</div>
-        <div class="hint">OPEN / CLOSED</div>
+    <div class="grid">
+      <div class="card">
+        <div class="label">คาบทั้งหมด</div>
+        <div class="val" id="totalSessions">0</div>
       </div>
-      <div class="chart-wrap">
-        <canvas id="sessionChart"></canvas>
+      <div class="card">
+        <div class="label">มาเรียน</div>
+        <div class="val" id="attendedCount">0</div>
       </div>
-    </aside>
+      <div class="card">
+        <div class="label">สาย</div>
+        <div class="val" id="lateCount">0</div>
+      </div>
+      <div class="card">
+        <div class="label">ขาด</div>
+        <div class="val" id="absentCount">0</div>
+      </div>
+    </div>
 
+    <div class="section">
+      <div class="panel">
+        <h3>ประวัติล่าสุด</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>เวลา</th>
+              <th>วิชา</th>
+              <th>ห้อง</th>
+              <th>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody id="recentAttendance">
+            <tr><td colspan="4" class="empty">กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+        <div id="msg"></div>
+      </div>
+
+      <div class="panel">
+        <h3>สรุปภาพรวม</h3>
+        <div class="chartBox">
+          <canvas id="attendanceChart"></canvas>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="status-badge" id="sessionStatus">ยังไม่มีคาบที่เปิดอยู่</div>
+          <div class="muted" style="margin-top:10px;">TOKEN: <b id="tokenDisplay">-</b></div>
+        </div>
+      </div>
+    </div>
   </div>
-</section>
-
-<script>
-function logoutAdmin(){
-  try{
-    localStorage.removeItem("adminSession");
-  }catch(e){}
-  location.href = "login.html";
-}
-</script>
-
 </body>
 </html>
