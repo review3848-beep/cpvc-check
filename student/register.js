@@ -1,6 +1,8 @@
 // student/register.js
 import { callApi } from "../api.js";
 
+
+
 /* ================= DOM ================= */
 const idInput   = document.getElementById("studentId");
 const nameInput = document.getElementById("name");
@@ -9,12 +11,11 @@ const btn       = document.getElementById("registerBtn");
 const msgEl     = document.getElementById("msg");
 
 /* ================= STATE ================= */
-let foundName = "";         // ชื่อที่ได้จากระบบ
+let foundName = "";
 let lookupTimer = null;
-let lastLookupId = "";
 
 /* ================= INIT ================= */
-nameInput.readOnly = true;  // ✅ ล็อกชื่อ ไม่ให้พิมพ์เอง
+nameInput.readOnly = true;
 
 idInput.addEventListener("input", onIdChange);
 idInput.addEventListener("keydown", (e) => {
@@ -22,7 +23,6 @@ idInput.addEventListener("keydown", (e) => {
 });
 
 btn.addEventListener("click", register);
-
 pwInput.addEventListener("keydown", e => {
   if (e.key === "Enter") register();
 });
@@ -34,69 +34,54 @@ function onIdChange(){
   const studentId = idInput.value.trim();
   foundName = "";
   nameInput.value = "";
-
   setMsg("");
 
-  if (!studentId){
-    return;
-  }
+  if (!studentId) return;
 
-  // กันยิงถี่เกิน / พิมพ์ยังไม่ครบ
   if (studentId.length < 4){
     setMsg("ℹ️ กรอกรหัสนักเรียนให้ครบเพื่อดึงชื่ออัตโนมัติ", "#93c5fd");
     return;
   }
 
-  lookupTimer = setTimeout(() => lookupStudentName(studentId), 350);
+  lookupTimer = setTimeout(() => lookupStudentNameJSONP(studentId), 350);
 }
 
-async function lookupStudentName(studentId){
-  // กันยิงซ้ำ id เดิม
-  if (studentId === lastLookupId) return;
-  lastLookupId = studentId;
-
-  // UI: กำลังค้นหา
+function lookupStudentNameJSONP(studentId){
   nameInput.value = "กำลังค้นชื่อ...";
   setMsg("🔎 กำลังตรวจสอบรหัสนักเรียน...", "#93c5fd");
 
-  try{
-    // ✅ ใช้ callApi แบบเดิมของโปรเจกต์ (น่าจะเป็น JSONP/GET อยู่แล้วใน api.js)
-    const res = await callApi("studentFindById", { studentId });
+  const cb = "cb_" + Math.random().toString(36).slice(2);
+  const script = document.createElement("script");
 
-    // ถ้าระหว่างรอ ผู้ใช้พิมพ์เปลี่ยน id แล้ว => ทิ้งผลลัพธ์
-    if (idInput.value.trim() !== studentId) return;
+  window[cb] = (res) => {
+    try{
+      // ถ้าระหว่างรอ ผู้ใช้พิมพ์เปลี่ยน id แล้ว => ทิ้งผลลัพธ์
+      if (idInput.value.trim() !== studentId) return;
 
-    if (!res || !res.success){
-      foundName = "";
-      nameInput.value = "";
-      setMsg("⚠️ ไม่พบรหัสนักเรียนในระบบ", "#fbbf24");
-      return;
+      if (!res || !res.success || !res.student){
+        foundName = "";
+        nameInput.value = "";
+        setMsg("⚠️ ไม่พบรหัสนักเรียนในระบบ", "#fbbf24");
+        return;
+      }
+
+      foundName = String(res.student.name || "").trim();
+      nameInput.value = foundName;
+
+      if(foundName){
+        setMsg("✅ พบชื่อในระบบแล้ว", "#4ade80");
+      }else{
+        setMsg("⚠️ พบรหัส แต่ยังไม่มีชื่อในระบบ", "#fbbf24");
+      }
+    } finally {
+      delete window[cb];
+      script.remove();
     }
+  };
 
-    // รองรับรูปแบบตอบกลับหลายแบบ
-    const name =
-      (res.student && res.student.name) ||
-      (res.data && res.data.student && res.data.student.name) ||
-      "";
-
-    foundName = String(name || "").trim();
-    nameInput.value = foundName;
-
-    if(foundName){
-      setMsg("✅ พบชื่อในระบบแล้ว", "#4ade80");
-    }else{
-      // ถ้ารหัสมีจริงแต่ชื่อว่าง
-      setMsg("⚠️ พบรหัส แต่ยังไม่มีชื่อในระบบ", "#fbbf24");
-    }
-
-  }catch(err){
-    // ถ้าระหว่างรอ ผู้ใช้พิมพ์เปลี่ยน id แล้ว => ทิ้งผลลัพธ์
-    if (idInput.value.trim() !== studentId) return;
-
-    foundName = "";
-    nameInput.value = "";
-    setMsg("❌ ดึงชื่อไม่สำเร็จ: " + (err.message || err), "#f87171");
-  }
+  // ✅ เรียก doGet action=studentFindById + callback (JSONP)
+  script.src = `${API_URL}?action=studentFindById&studentId=${encodeURIComponent(studentId)}&callback=${cb}`;
+  document.body.appendChild(script);
 }
 
 /* ================= REGISTER ================= */
@@ -111,7 +96,6 @@ async function register(){
     return;
   }
 
-  // ✅ ต้องดึงชื่อได้ก่อนถึงสมัครได้ (กันสมัครมั่ว)
   if (!foundName){
     setMsg("⚠️ กรุณากรอกรหัสนักเรียนให้ถูกต้อง เพื่อให้ระบบดึงชื่ออัตโนมัติ", "#fbbf24");
     return;
@@ -126,9 +110,10 @@ async function register(){
   btn.textContent = "กำลังสมัครใช้งาน...";
 
   try{
+    // ✅ สมัครยังใช้ callApi (POST) ได้ปกติ
     const res = await callApi("studentRegister", {
       studentId,
-      name: foundName,     // ✅ ส่งชื่อจากระบบเท่านั้น
+      name: foundName,
       password
     });
 
@@ -138,9 +123,7 @@ async function register(){
 
     setMsg("✅ สมัครสำเร็จ กำลังพาไปหน้าเข้าสู่ระบบ...", "#4ade80");
 
-    setTimeout(()=>{
-      location.href = "login.html";
-    }, 900);
+    setTimeout(()=> location.href = "login.html", 900);
 
   }catch(err){
     setMsg("❌ " + (err.message || err), "#f87171");
