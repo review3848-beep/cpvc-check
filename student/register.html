@@ -5,146 +5,288 @@
   <title>สมัครนักเรียน | NexAttend</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <!-- Fonts ให้เข้าธีมเดียวกับหน้าอื่น -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="../css/styles.css">
   <script type="module" src="register.js" defer></script>
 
   <style>
-    body {
+    :root{
+      /* ธีมเดียวกับ history/login (Light + Glass) */
+      --bg:#f8fafc;
+      --card: rgba(255,255,255,.72);
+      --card2: rgba(255,255,255,.96);
+      --text:#0f172a;
+      --muted:#64748b;
+      --border: rgba(226,232,240,.95);
+
+      --blue:#38bdf8;
+      --violet:#8b5cf6;
+
+      --shadow: 0 18px 55px rgba(2,6,23,.10);
+      --shadow2: 0 26px 70px rgba(2,6,23,.14);
+      --r: 22px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+
+    body{
       margin:0;
       min-height:100vh;
-      display:flex;
-      justify-content:center;
+      display:grid;
+      place-items:center;
+      padding: 18px;
+      font-family:"Kanit","Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 560px at 12% 14%, rgba(56,189,248,.16), transparent 62%),
+        radial-gradient(900px 560px at 88% 16%, rgba(139,92,246,.14), transparent 62%),
+        radial-gradient(900px 560px at 50% 92%, rgba(34,197,94,.10), transparent 62%),
+        linear-gradient(180deg,#fff,var(--bg));
+    }
+
+    /* ===== Mini Topbar (Dashboard) ===== */
+    .mini-topbar{
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 10000;
+    }
+    .mini-topbar a{
+      display:inline-flex;
       align-items:center;
-      background: radial-gradient(circle at 70% 20%, #1e293b, #020617 75%);
-      font-family:"Inter",system-ui,sans-serif;
+      gap:8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      text-decoration:none;
+      font-weight: 1000;
+      font-size: .85rem;
+      color: var(--text);
+      background: rgba(255,255,255,.86);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 30px rgba(2,6,23,.10);
+      transition: .16s;
+      white-space:nowrap;
+    }
+    .mini-topbar a:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 18px 45px rgba(2,6,23,.12);
+      border-color: rgba(148,163,184,.70);
     }
 
-    .card {
+    /* ===== Card ===== */
+    .card{
       width:100%;
-      max-width:440px;
-      padding:2.7rem 2.3rem;
-      border-radius:1.4rem;
-      backdrop-filter:blur(18px);
-      background:rgba(15,23,42,0.9);
-      border:1px solid rgba(148,163,184,.35);
-      box-shadow:0 18px 50px rgba(15,23,42,.9);
+      max-width: 460px;
+      border-radius: var(--r);
+      background: var(--card2);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
     }
 
-    h2 {
+    .inner{
+      padding: 26px 24px 18px;
       text-align:center;
-      font-size:1.6rem;
-      margin:0 0 .4rem 0;
-      color:#f9fafb;
     }
-    .subtitle {
-      text-align:center;
+
+    .icon{
+      width:64px;
+      height:64px;
+      margin: 0 auto 10px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      display:grid;
+      place-items:center;
+      font-size: 1.8rem;
+      color:#04121f;
+      box-shadow: 0 16px 40px rgba(56,189,248,.35);
+    }
+
+    h2{
+      margin: 0;
+      font-size: 1.45rem;
+      font-weight: 1000;
+      letter-spacing: -.2px;
+    }
+
+    .subtitle{
+      margin-top: 6px;
       font-size:.9rem;
-      color:#94a3b8;
-      margin-bottom:1.8rem;
+      font-weight: 900;
+      color: var(--muted);
     }
 
-    label {
-      font-size:.85rem;
-      color:#cbd5f5;
+    /* ===== Form ===== */
+    .form{
+      margin-top: 18px;
+      display:grid;
+      gap: 12px;
+      text-align:left;
+    }
+
+    label{
       display:block;
-      margin-bottom:.35rem;
+      margin-bottom:6px;
+      font-size:.85rem;
+      font-weight: 1000;
+      color: rgba(15,23,42,.85);
     }
-    input {
+
+    .input{
       width:100%;
-      padding:.9rem;
-      border-radius:.9rem;
-      border:1px solid rgba(148,163,184,.35);
-      background:rgba(15,23,42,.95);
-      color:#e5e7eb;
-      margin-bottom:1.2rem;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(255,255,255,.92);
+      color: var(--text);
+      font-size:.92rem;
+      font-weight: 900;
       outline:none;
-      font-size:.95rem;
+      transition:.16s;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
     }
-    input:focus {
-      border-color:#4f46e5;
-      box-shadow:0 0 0 1px rgba(79,70,229,.55);
+    .input::placeholder{
+      color: rgba(100,116,139,.70);
+      font-weight:900;
+    }
+    .input:focus{
+      border-color: rgba(56,189,248,.85);
+      box-shadow:
+        0 0 0 3px rgba(56,189,248,.18),
+        0 10px 22px rgba(2,6,23,.05);
     }
 
-    /* ✅ เพิ่มสไตล์ตอน readonly ให้ดูเหมือนระบบกรอกให้ */
-    input[readonly]{
-      opacity:.92;
+    /* ✅ readonly ให้ดูเหมือนระบบกรอกให้ + ยังอ่านง่าย */
+    .input[readonly]{
+      background: rgba(2,6,23,.03);
+      border-color: rgba(226,232,240,.95);
+      color: rgba(15,23,42,.75);
       cursor:not-allowed;
+      box-shadow: none;
     }
 
-    .btn {
+    .btn{
+      margin-top: 6px;
       width:100%;
-      padding:.95rem;
-      border-radius:999px;
+      padding: 12px 14px;
+      border-radius: 999px;
       border:none;
       cursor:pointer;
-      font-weight:600;
-      background:linear-gradient(135deg,#4f46e5,#8b5cf6);
-      color:white;
-      box-shadow:0 14px 32px rgba(79,70,229,.45);
-      font-size:.95rem;
+      font-size:.9rem;
+      font-weight: 1000;
+      color:#04121f;
+      background: linear-gradient(90deg, var(--blue), #60a5fa);
+      box-shadow: 0 18px 45px rgba(56,189,248,.22);
+      transition:.16s;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 22px 58px rgba(56,189,248,.28);
+    }
+    .btn:disabled{
+      opacity:.7;
+      cursor:default;
+      transform:none;
+      box-shadow:none;
     }
 
-    #msg {
-      margin-top:1rem;
+    #msg{
+      margin-top: 8px;
+      min-height: 1.1rem;
       text-align:center;
       font-size:.9rem;
+      font-weight: 900;
+      color: var(--muted);
     }
 
-    .footer {
-      margin-top:1.1rem;
+    .footer{
+      border-top: 1px solid rgba(226,232,240,.95);
+      padding: 14px 16px;
       text-align:center;
       font-size:.85rem;
-      color:#94a3b8;
+      font-weight: 900;
+      color: var(--muted);
+      background: rgba(255,255,255,.7);
     }
 
-    .footer a {
-      color:#93c5fd;
+    .footer a{
+      color: #2563eb;
       text-decoration:none;
+      font-weight: 1000;
+    }
+    .footer a:hover{ text-decoration: underline; }
+
+    @media (max-width:480px){
+      body{ padding: 16px; }
+      .inner{ padding: 22px 18px 16px; }
+      .icon{ width:58px;height:58px; }
+      h2{ font-size:1.35rem; }
+      .mini-topbar{ top: 10px; right: 10px; }
+      .mini-topbar a{ padding: 9px 11px; font-size: .84rem; }
     }
   </style>
 </head>
 
 <body>
   <!-- ปุ่ม Dashboard มุมบนขวา -->
-  <div class="student-global-nav">
+  <div class="mini-topbar">
     <a href="dashboard.html">📊 Dashboard</a>
   </div>
 
   <div class="card">
-    <h2>สมัครนักเรียน</h2>
-    <div class="subtitle">ใช้รหัสนักเรียนที่มีอยู่ในระบบเท่านั้น</div>
+    <div class="inner">
+      <div class="icon">🧾</div>
+      <h2>สมัครนักเรียน</h2>
+      <div class="subtitle">ใช้รหัสนักเรียนที่มีอยู่ในระบบเท่านั้น</div>
 
-    <label for="studentId">รหัสนักเรียน</label>
-    <input
-      type="text"
-      id="studentId"
-      placeholder="เช่น 66001"
-      inputmode="numeric"
-      autocomplete="off"
-      spellcheck="false"
-    >
+      <div class="form">
+        <div>
+          <label for="studentId">รหัสนักเรียน</label>
+          <input
+            class="input"
+            type="text"
+            id="studentId"
+            placeholder="เช่น 66001"
+            inputmode="numeric"
+            autocomplete="off"
+            spellcheck="false"
+          >
+        </div>
 
-    <label for="name">ชื่อ – นามสกุล</label>
-    <input
-      type="text"
-      id="name"
-      placeholder="ชื่อนักเรียนตามระบบ"
-      readonly
-      autocomplete="off"
-      spellcheck="false"
-    >
+        <div>
+          <label for="name">ชื่อ – นามสกุล</label>
+          <input
+            class="input"
+            type="text"
+            id="name"
+            placeholder="ชื่อนักเรียนตามระบบ"
+            readonly
+            autocomplete="off"
+            spellcheck="false"
+          >
+        </div>
 
-    <label for="password">รหัสผ่าน</label>
-    <input
-      type="password"
-      id="password"
-      placeholder="กำหนดรหัสผ่านของคุณ"
-      autocomplete="new-password"
-    >
+        <div>
+          <label for="password">รหัสผ่าน</label>
+          <input
+            class="input"
+            type="password"
+            id="password"
+            placeholder="กำหนดรหัสผ่านของคุณ"
+            autocomplete="new-password"
+          >
+        </div>
 
-    <button id="registerBtn" class="btn">สมัครใช้งาน</button>
-
-    <div id="msg"></div>
+        <button id="registerBtn" class="btn">สมัครใช้งาน</button>
+        <div id="msg"></div>
+      </div>
+    </div>
 
     <div class="footer">
       มีบัญชีแล้ว? <a href="login.html">เข้าสู่ระบบ</a>

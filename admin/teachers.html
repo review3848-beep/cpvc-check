@@ -2,526 +2,549 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>NexAttend | Admin • จัดการครู</title>
+  <title>NexAttend | Admin - จัดการครู</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <!-- Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- ✅ เปลี่ยนชื่อไฟล์ให้ตรงกับของเธอ -->
+  <script type="module" src="./teachers.js" defer></script>
 
   <style>
     :root{
-      --bg0:#020617;
-      --bg1:#050b1d;
-      --panel: rgba(15,23,42,.78);
-      --panel2: rgba(15,23,42,.92);
-      --border: rgba(148,163,184,.22);
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --muted2:#94a3b8;
+      --bg0:#f8fafc;
+      --panel: rgba(255,255,255,.72);
+      --border: rgba(226,232,240,.92);
+      --text:#0f172a;
+      --muted:#64748b;
 
-      --accent1:#38bdf8;
-      --accent2:#6366f1;
-      --accent3:#ec4899;
+      --blue:#38bdf8;
+      --violet:#8b5cf6;
+      --green:#22c55e;
+      --red:#ef4444;
 
-      --shadow: 0 30px 90px rgba(0,0,0,.55);
-      --r12: 12px;
-      --r16: 16px;
-      --r20: 20px;
-
-      --focus: 0 0 0 4px rgba(56,189,248,.18);
+      --shadow: 0 18px 55px rgba(2,6,23,.10);
+      --shadow2: 0 26px 70px rgba(2,6,23,.14);
+      --radius: 28px;
     }
 
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
+
     body{
       margin:0;
-      font-family: Inter, Prompt, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-family:"Kanit","Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
       color:var(--text);
+      min-height:100vh;
       background:
-        radial-gradient(1200px 700px at 18% 15%, rgba(56,189,248,.15), rgba(2,6,23,0) 60%),
-        radial-gradient(900px 700px at 75% 22%, rgba(99,102,241,.16), rgba(2,6,23,0) 58%),
-        radial-gradient(900px 700px at 80% 78%, rgba(236,72,153,.12), rgba(2,6,23,0) 58%),
-        linear-gradient(180deg, var(--bg1), var(--bg0) 55%, #020617);
-      overflow-x:hidden;
+        radial-gradient(900px 560px at 12% 14%, rgba(56,189,248,.16), transparent 62%),
+        radial-gradient(900px 560px at 88% 16%, rgba(139,92,246,.14), transparent 62%),
+        radial-gradient(900px 560px at 50% 92%, rgba(34,197,94,.10), transparent 62%),
+        linear-gradient(180deg,#fff,var(--bg0));
     }
 
-    .topbar{
-      position:sticky; top:0; z-index:50;
-      backdrop-filter: blur(14px);
-      background: linear-gradient(180deg, rgba(2,6,23,.78), rgba(2,6,23,.35));
-      border-bottom: 1px solid rgba(148,163,184,.12);
+    /* Scrollbar */
+    html{ overflow-y: scroll; scrollbar-gutter: stable; }
+    ::-webkit-scrollbar{ width:12px; }
+    ::-webkit-scrollbar-track{ background: rgba(2,6,23,.06); }
+    ::-webkit-scrollbar-thumb{
+      background: linear-gradient(180deg, rgba(56,189,248,.65), rgba(139,92,246,.55));
+      border-radius:999px;
+      border:3px solid rgba(255,255,255,.65);
     }
-    .topbar__inner{
-      max-width: 1100px;
-      margin:0 auto;
+    ::-webkit-scrollbar-thumb:hover{
+      background: linear-gradient(180deg, rgba(56,189,248,.80), rgba(139,92,246,.70));
+    }
+    *{ scrollbar-width: thin; scrollbar-color: rgba(139,92,246,.65) rgba(2,6,23,.06); }
+
+    /* Topbar */
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+      width:100%;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(12px);
+    }
+    .topbar-inner{
+      max-width: 1180px;
+      margin: 0 auto;
       padding: 14px 18px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:12px;
+      gap: 14px;
     }
 
-    .brand{
-      display:flex; align-items:center; gap:12px;
-      min-width: 260px;
+    .brand{ display:flex; align-items:center; gap:12px; }
+    .logo{
+      width:46px;height:46px;border-radius:18px;
+      display:grid;place-items:center;
+      color:#fff;font-weight:900;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      box-shadow: 0 14px 40px rgba(2,6,23,.12);
+      user-select:none;
     }
-    .brand__logo{
-      width:44px; height:44px; border-radius: 14px;
-      background:
-        radial-gradient(circle at 30% 30%, rgba(56,189,248,.30), rgba(99,102,241,.22) 55%, rgba(236,72,153,.12) 78%),
-        rgba(15,23,42,.65);
-      border: 1px solid rgba(148,163,184,.22);
-      box-shadow: 0 18px 40px rgba(0,0,0,.35);
-      display:grid; place-items:center;
-      position:relative;
-      overflow:hidden;
+    .brand .title{
+      font-weight:900;
+      letter-spacing:-.2px;
+      font-size: 1.08rem;
+      line-height: 1.05;
     }
-    .brand__logo::after{
-      content:"";
-      position:absolute; inset:-40%;
-      background: conic-gradient(from 180deg, rgba(56,189,248,.35), rgba(99,102,241,.16), rgba(236,72,153,.18), rgba(56,189,248,.35));
-      filter: blur(16px);
-      opacity:.55;
-    }
-    .brand__logo span{
-      position:relative;
-      font-weight:800;
-      letter-spacing:.5px;
-      color:#dbeafe;
-      font-size: 16px;
-    }
-    .brand__txt{
-      display:flex; flex-direction:column; line-height:1.1;
-    }
-    .brand__name{
-      font-weight:800;
-      letter-spacing:.2px;
-      font-size: 16px;
-    }
-    .brand__sub{
-      font-size: 12px;
-      color: var(--muted2);
-      margin-top: 3px;
+    .brand .sub{
+      color:var(--muted);
+      font-weight:700;
+      font-size:.9rem;
+      line-height: 1.1;
+      margin-top: 2px;
     }
 
-    .nav{
-      display:flex; align-items:center; gap:10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-
-    .chip{
+    .top-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .pill{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.78);
+      padding:10px 14px;
+      border-radius:999px;
+      box-shadow: 0 10px 25px rgba(2,6,23,.06);
       display:inline-flex; align-items:center; gap:8px;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,.22);
-      background: rgba(15,23,42,.55);
-      color: var(--text);
-      text-decoration:none;
-      font-weight: 700;
-      box-shadow: 0 14px 30px rgba(0,0,0,.25);
-      transition: transform .15s ease, border-color .15s ease, background .15s ease;
-      user-select:none;
+      font-weight:800; color:var(--text);
+      text-decoration:none; transition:.18s;
       white-space:nowrap;
     }
-    .chip:hover{ transform: translateY(-1px); border-color: rgba(56,189,248,.28); background: rgba(15,23,42,.70); }
-    .chip:active{ transform: translateY(0px); }
-    .chip__dot{
-      width: 10px; height:10px; border-radius: 50%;
-      background: rgba(56,189,248,.9);
-      box-shadow: 0 0 0 4px rgba(56,189,248,.15);
-    }
-    .chip--danger{
-      border-color: rgba(244,63,94,.28);
-      background: rgba(244,63,94,.08);
-    }
-    .chip--danger:hover{ border-color: rgba(244,63,94,.42); background: rgba(244,63,94,.12); }
-    .chip--danger .chip__dot{ background: rgba(244,63,94,.95); box-shadow: 0 0 0 4px rgba(244,63,94,.16); }
+    .pill:hover{ transform: translateY(-1px); box-shadow: 0 18px 45px rgba(2,6,23,.10); }
+    .dot{ width:10px;height:10px;border-radius:999px;background:var(--green); box-shadow:0 0 0 4px rgba(34,197,94,.14); }
+    .pill-danger{ color:#b91c1c; border-color: rgba(239,68,68,.35); }
 
-    .wrap{
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 20px 18px 60px;
-    }
-
-    .hero{
-      margin-top: 18px;
-      border-radius: 22px;
-      border: 1px solid rgba(148,163,184,.18);
-      background:
-        radial-gradient(900px 400px at 30% 20%, rgba(56,189,248,.14), rgba(2,6,23,0) 58%),
-        radial-gradient(900px 400px at 74% 18%, rgba(99,102,241,.16), rgba(2,6,23,0) 56%),
-        rgba(15,23,42,.58);
-      box-shadow: var(--shadow);
-      padding: 22px;
-      overflow:hidden;
-      position:relative;
-    }
-    .hero::after{
-      content:"";
-      position:absolute; inset:-2px;
-      border-radius: 22px;
-      background: linear-gradient(135deg, rgba(56,189,248,.18), rgba(99,102,241,.12), rgba(236,72,153,.10));
-      filter: blur(30px);
-      opacity:.35;
-      pointer-events:none;
-    }
-    .hero__inner{ position:relative; display:flex; align-items:flex-end; justify-content:space-between; gap:14px; flex-wrap:wrap; }
-    .hero h1{
-      margin:0;
-      font-size: 22px;
-      letter-spacing:.2px;
-    }
-    .hero p{
-      margin: 6px 0 0;
-      color: var(--muted2);
-      max-width: 640px;
-      line-height: 1.55;
-    }
-
-    .toolbar{
-      margin-top: 16px;
-      display:flex;
-      gap:12px;
-      align-items:center;
-      justify-content:space-between;
-      flex-wrap:wrap;
-    }
-    .search{
-      flex: 1 1 420px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      border-radius: 16px;
-      border: 1px solid rgba(148,163,184,.18);
-      background: rgba(2,6,23,.30);
-      padding: 12px 14px;
-      box-shadow: 0 18px 50px rgba(0,0,0,.25);
-    }
-    .search svg{ opacity:.85; }
-    .search input{
-      width:100%;
-      border:none;
-      outline:none;
-      background: transparent;
-      color: var(--text);
-      font-size: 14px;
-    }
-    .pillCount{
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,.18);
-      background: rgba(15,23,42,.60);
-      color: var(--muted2);
-      font-weight: 700;
-      font-size: 12px;
-    }
-
-    .actions{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-
-    .btn{
-      border:none;
-      outline:none;
-      cursor:pointer;
-      padding: 11px 14px;
-      border-radius: 14px;
-      font-weight: 800;
-      letter-spacing:.2px;
-      color: var(--text);
-      border: 1px solid rgba(148,163,184,.20);
-      background: rgba(15,23,42,.60);
-      box-shadow: 0 16px 35px rgba(0,0,0,.20);
-      transition: transform .15s ease, border-color .15s ease, background .15s ease;
-      user-select:none;
-      white-space:nowrap;
-    }
-    .btn:hover{ transform: translateY(-1px); border-color: rgba(56,189,248,.28); background: rgba(15,23,42,.72); }
-    .btn:active{ transform: translateY(0px); }
-    .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
-
-    .btn--primary{
-      color:#04121f;
-      border-color: rgba(56,189,248,.25);
-      background: linear-gradient(90deg, rgba(56,189,248,.95), rgba(99,102,241,.85));
-      box-shadow: 0 18px 45px rgba(56,189,248,.18);
-    }
-    .btn--primary:hover{ border-color: rgba(56,189,248,.38); }
-    .btn--ghost{
-      background: rgba(2,6,23,.26);
-    }
-    .btn--danger{
-      border-color: rgba(244,63,94,.26);
-      background: rgba(244,63,94,.08);
-    }
-    .btn--danger:hover{ border-color: rgba(244,63,94,.42); background: rgba(244,63,94,.12); }
+    /* Layout */
+    .wrap{ width:min(1180px,92vw); margin:0 auto; padding:22px 0 56px; }
 
     .card{
-      margin-top: 16px;
-      border-radius: 22px;
-      border: 1px solid rgba(148,163,184,.16);
-      background: rgba(15,23,42,.58);
+      border-radius: var(--radius);
+      background: var(--panel);
+      border:1px solid var(--border);
       box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+
+    .head{
+      padding:18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:14px;
+      flex-wrap:wrap;
+      border-bottom:1px solid rgba(226,232,240,.75);
+      background: rgba(255,255,255,.18);
+    }
+
+    .h1{
+      margin:0;
+      font-size:1.7rem;
+      font-weight:900;
+      letter-spacing:-.2px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .desc{
+      margin-top:6px;
+      color:var(--muted);
+      font-weight:700;
+      font-size: 1.02rem;
+    }
+
+    .count-chip{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      color:#0369a1;
+      background: rgba(56,189,248,.18);
+      border:1px solid rgba(56,189,248,.35);
+      box-shadow: 0 10px 22px rgba(2,6,23,.06);
+    }
+
+    .tools{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .search{ position:relative; width:min(560px,78vw); }
+    .search input{
+      width:100%;
+      height:48px;
+      border-radius:999px;
+      padding:0 16px 0 46px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.92);
+      font-weight:800;
+      outline:none;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
+      transition: .18s;
+    }
+    .search input:focus{
+      border-color: rgba(56,189,248,.65);
+      box-shadow: 0 18px 45px rgba(2,6,23,.10);
+    }
+    .search .ico{
+      position:absolute;
+      left:16px;
+      top:50%;
+      transform: translateY(-50%);
+      opacity:.9;
+    }
+
+    .btn-add{
+      height:48px;
+      border:none;
+      border-radius:999px;
+      padding:0 18px;
+      font-weight:900;
+      cursor:pointer;
+      color:#04121f;
+      background: linear-gradient(90deg, var(--blue), #60a5fa);
+      box-shadow: 0 18px 45px rgba(56,189,248,.22);
+      transition:.18s;
+      white-space:nowrap;
+    }
+    .btn-add:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 26px 70px rgba(56,189,248,.26);
+    }
+
+    .body{ padding:18px; }
+
+    .table-wrap{
+      border-radius:22px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.92);
+      box-shadow: 0 14px 34px rgba(2,6,23,.07);
       overflow:hidden;
     }
 
     table{
       width:100%;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0 10px;
+      padding: 10px 10px 14px;
     }
+
+    /* Sticky header */
     thead th{
+      position: sticky;
+      top: 0;
+      z-index: 2;
       text-align:left;
       font-size: 12px;
-      letter-spacing:.12em;
-      text-transform: uppercase;
-      color: rgba(191,219,254,.95);
-      padding: 14px 16px;
-      border-bottom: 1px solid rgba(148,163,184,.12);
-      background: linear-gradient(180deg, rgba(2,6,23,.25), rgba(2,6,23,0));
+      letter-spacing:.9px;
+      color: rgba(100,116,139,.95);
+      padding: 12px 14px;
+      font-weight:900;
+      background: rgba(248,250,252,.96);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid rgba(226,232,240,.95);
+    }
+    thead th:last-child{ text-align:right; }
+
+    tbody tr{
+      background: rgba(255,255,255,.98);
+      box-shadow: 0 10px 24px rgba(2,6,23,.06);
+      transition:.18s;
+    }
+    tbody tr:nth-child(even){
+      background: rgba(248,250,252,.86);
+    }
+    tbody tr:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 18px 45px rgba(2,6,23,.10);
     }
     tbody td{
-      padding: 16px;
-      border-bottom: 1px solid rgba(148,163,184,.10);
-      color: var(--text);
+      padding: 16px 14px;
+      font-weight:900;
       vertical-align: middle;
     }
-    tbody tr:hover td{
-      background: rgba(2,6,23,.22);
+    tbody td:first-child{
+      font-variant-numeric: tabular-nums;
+      letter-spacing:.2px;
+    }
+    tbody td:last-child{ text-align:right; }
+
+    .row-actions{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+    .btn-mini{
+      border:1px solid rgba(56,189,248,.35);
+      background: rgba(56,189,248,.10);
+      padding:9px 14px;
+      border-radius:999px;
+      font-weight:900;
+      cursor:pointer;
+      transition:.18s;
+      white-space:nowrap;
+    }
+    .btn-mini:hover{
+      transform: translateY(-1px);
+      border-color: rgba(56,189,248,.60);
+      background: rgba(56,189,248,.14);
     }
 
-    .muted{ color: var(--muted2); }
-    .right{ display:flex; justify-content:flex-end; gap:10px; align-items:center; }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .nowrap{ white-space:nowrap; }
-
-    .empty{
-      text-align:center;
-      color: var(--muted2);
-      padding: 26px 16px;
+    #msg{
+      margin-top: 12px;
+      color: var(--muted);
+      font-weight: 700;
     }
 
-    /* modal */
-    .modal{
-      position:fixed; inset:0;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      background: rgba(2,6,23,.62);
+    .footer-note{
+      margin-top:12px;
+      text-align:right;
+      color: rgba(100,116,139,.85);
+      font-weight:900;
+      font-size:12px;
+    }
+
+    /* Modal */
+    .auth-modal{
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 12px;
+      background: rgba(15,23,42,.25);
       backdrop-filter: blur(10px);
-      z-index: 80;
-      padding: 18px;
+      z-index: 10000;
     }
-    .modal.show{ display:flex; }
-    .modal__panel{
-      width: min(560px, 100%);
-      border-radius: 22px;
-      border: 1px solid rgba(148,163,184,.18);
-      background: rgba(15,23,42,.92);
-      box-shadow: 0 40px 120px rgba(0,0,0,.6);
-      overflow:hidden;
+    .auth-modal[hidden]{ display:none; }
+
+    .auth-card{
+      width: min(720px, 92vw);
+      max-height: calc(100dvh - 24px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+
+      border-radius: 26px;
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow2);
     }
-    .modal__head{
-      padding: 16px 18px;
+
+    .auth-head{
       display:flex;
-      align-items:center;
-      justify-content:space-between;
-      border-bottom: 1px solid rgba(148,163,184,.12);
-      background: linear-gradient(180deg, rgba(2,6,23,.35), rgba(2,6,23,0));
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 18px 10px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.86);
     }
-    .modal__title{
-      margin:0;
-      font-size: 16px;
+    .auth-title{
+      margin: 0;
+      font-size: 1.55rem;
+      font-weight: 900;
+      letter-spacing:-.2px;
+      color: var(--text);
+    }
+    .auth-sub{
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: .95rem;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .chip-btn{
+      border: 1px solid var(--border);
+      background: rgba(2,6,23,.03);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 900;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
+      transition:.18s;
+      white-space:nowrap;
+    }
+    .chip-btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(148,163,184,.70);
+      box-shadow: 0 18px 45px rgba(2,6,23,.10);
+    }
+
+    .auth-body{
+      overflow: auto;
+      padding: 10px 18px 18px;
+      background: rgba(255,255,255,.92);
+    }
+
+    .field{ display:block; margin-top: 12px; }
+    .field span{
+      display:block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 13px;
       font-weight: 900;
       letter-spacing:.2px;
     }
-    .modal__body{ padding: 16px 18px 18px; }
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    .field{ display:flex; flex-direction:column; gap:7px; }
-    .label{
-      font-size: 12px;
-      color: var(--muted2);
-      font-weight: 800;
-      letter-spacing:.04em;
-    }
-    .input{
-      width:100%;
-      border-radius: 14px;
-      border: 1px solid rgba(148,163,184,.18);
-      background: rgba(2,6,23,.28);
+    .field input{
+      width: 100%;
+      height: 52px;
+      border-radius: 16px;
+      padding: 0 16px;
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--border);
       color: var(--text);
-      padding: 12px 12px;
-      outline:none;
-      transition: box-shadow .15s ease, border-color .15s ease;
+      outline: none;
+      transition: .18s ease;
+      font-weight: 800;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
     }
-    .input:focus{
-      box-shadow: var(--focus);
-      border-color: rgba(56,189,248,.30);
-    }
-    .input:disabled{ opacity:.65; cursor:not-allowed; }
-
-    .modal__foot{
-      padding: 14px 18px 18px;
-      border-top: 1px solid rgba(148,163,184,.12);
-      display:flex;
-      justify-content:flex-end;
-      gap:10px;
-      background: rgba(2,6,23,.18);
+    .field input:focus{
+      border-color: rgba(56,189,248,.65);
+      box-shadow: 0 18px 45px rgba(2,6,23,.10);
     }
 
-    .toast{
+    .btn-primary{
+      width: 100%;
+      height: 54px;
+      border: none;
+      border-radius: 18px;
+      margin-top: 16px;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: 16px;
+      color: #04121f;
+      background: linear-gradient(90deg, var(--blue), #60a5fa);
+      box-shadow: 0 18px 45px rgba(56,189,248,.20);
+      transition:.18s;
+    }
+    .btn-primary:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 26px 70px rgba(56,189,248,.24);
+    }
+
+    .btn-ghost{
+      width: 100%;
       margin-top: 10px;
-      font-size: 13px;
-      color: var(--muted2);
-      min-height: 18px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 10px 0;
+      font-weight: 900;
     }
+    .btn-ghost:hover{ color: var(--text); }
 
-    @media (max-width: 720px){
-      .brand{ min-width:auto; }
-      thead{ display:none; }
-      table, tbody, tr, td{ display:block; width:100%; }
-      tbody td{ border-bottom:none; padding: 12px 16px; }
-      tbody tr{ border-bottom: 1px solid rgba(148,163,184,.10); }
-      tbody td::before{
-        content: attr(data-label);
-        display:block;
-        font-size: 11px;
-        letter-spacing:.12em;
-        text-transform: uppercase;
-        color: rgba(191,219,254,.92);
-        margin-bottom: 6px;
-      }
-      .right{ justify-content:flex-start; }
-      .grid{ grid-template-columns: 1fr; }
+    @media (max-width: 640px){
+      .brand .sub{ display:none; }
+      .h1{ font-size: 1.35rem; }
+      .desc{ font-size: .95rem; }
+      .search input{ height: 46px; }
+      .btn-add{ height: 46px; }
+      table{ border-spacing: 0 8px; }
     }
   </style>
 
-  <!-- ✅ เหมือน students: อ้างอิง js ในโฟลเดอร์เดียวกัน -->
-  <script type="module" src="./teachers.js" defer></script>
+  <!-- นับจำนวนแถวอัตโนมัติ -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const chip = document.getElementById("countChip");
+      const tbody = document.getElementById("tbody");
+      const update = () => {
+        if (!chip || !tbody) return;
+        chip.textContent = tbody.querySelectorAll("tr").length;
+      };
+      update();
+      const mo = new MutationObserver(update);
+      if (tbody) mo.observe(tbody, { childList: true, subtree: true });
+    });
+  </script>
 </head>
 
 <body>
   <header class="topbar">
-    <div class="topbar__inner">
+    <div class="topbar-inner">
       <div class="brand">
-        <div class="brand__logo" aria-hidden="true"><span>N</span></div>
-        <div class="brand__txt">
-          <div class="brand__name">NexAttend | Admin</div>
-          <div class="brand__sub">Administrative Control Center</div>
+        <div class="logo">🛡️</div>
+        <div>
+          <div class="title">NexAttend | Admin</div>
+          <div class="sub">Administrative Control Center</div>
         </div>
       </div>
 
-      <nav class="nav">
-        <a class="chip" href="./dashboard.html" title="กลับหน้าแดชบอร์ด">
-          <span class="chip__dot"></span> Dashboard
-        </a>
-
-        <!-- ✅ Teachers active -->
-        <a class="chip" href="./teachers.html" title="จัดการครู">
-          <span class="chip__dot" style="background:rgba(99,102,241,.95); box-shadow:0 0 0 4px rgba(99,102,241,.16)"></span>
-          Teachers
-        </a>
-
-        <a class="chip" href="./students.html" title="จัดการนักเรียน">
-          <span class="chip__dot" style="background:rgba(56,189,248,.9); box-shadow:0 0 0 4px rgba(56,189,248,.15)"></span>
-          Students
-        </a>
-
-        <button class="chip chip--danger" id="btnLogout" type="button" title="ออกจากระบบ">
-          <span class="chip__dot"></span> ออกจากระบบ
-        </button>
-      </nav>
+      <div class="top-actions">
+        <a class="pill" href="./dashboard.html">🏠 Dashboard</a>
+        <span class="pill"><span class="dot"></span> ผู้ดูแลระบบ</span>
+        <a class="pill pill-danger" href="./login.html">🚪 ออกจากระบบ</a>
+      </div>
     </div>
   </header>
 
   <main class="wrap">
-    <section class="hero">
-      <div class="hero__inner">
-        <div>
-          <h1>Admin • จัดการครู</h1>
-          <p>เพิ่ม/แก้ไข/ลบข้อมูลครู </p>
-        </div>
-      </div>
-
-      <div class="toolbar">
-        <div class="search">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M21 21l-4.3-4.3m1.8-5.4a7.2 7.2 0 11-14.4 0 7.2 7.2 0 0114.4 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <input id="q" placeholder="ค้นหา (ชื่อ/อีเมล/ID)..." autocomplete="off" />
-          <span class="pillCount" id="count">0 รายการ</span>
-        </div>
-
-        <div class="actions">
-          <button class="btn btn--ghost" id="btnExport" type="button">Export CSV</button>
-          <button class="btn btn--primary" id="btnAdd" type="button">+ เพิ่มครู</button>
-        </div>
-      </div>
-
-      <div class="toast" id="msg"></div>
-    </section>
-
     <section class="card">
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 34%;">TEACHER_ID</th>
-            <th style="width: 18%;">NAME</th>
-            <th style="width: 24%;">EMAIL</th>
-            <th style="width: 14%;">CREATED_AT</th>
-            <th style="width: 10%; text-align:right;">ACTIONS</th>
-          </tr>
-        </thead>
-        <tbody id="tbody">
-          <tr><td class="empty" colspan="5">กำลังโหลดข้อมูล…</td></tr>
-        </tbody>
-      </table>
+      <div class="head">
+        <div>
+          <div class="h1">จัดการครู <span class="count-chip" id="countChip">0</span></div>
+          <div class="desc">เพิ่ม / แก้ไขรายชื่อครู • ค้นหาได้จาก “รหัส” หรือ “ชื่อ”</div>
+        </div>
+
+        <div class="tools">
+          <div class="search">
+            <div class="ico">🔎</div>
+            <input id="q" type="text" placeholder="ค้นหา: รหัส / ชื่อ..." />
+          </div>
+          <button id="btnAdd" class="btn-add" type="button">➕ เพิ่มครู</button>
+        </div>
+      </div>
+
+      <div class="body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:220px;">TEACHER_ID</th>
+                <th>NAME</th>
+                <th style="width:220px; text-align:right;">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+
+        <div id="msg"></div>
+        <div class="footer-note">© NexAttend • Admin Panel</div>
+      </div>
     </section>
   </main>
 
-  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal__panel">
-      <div class="modal__head">
-        <h3 class="modal__title" id="modalTitle">เพิ่มครู</h3>
-        <button class="btn btn--ghost" id="btnClose" type="button">ปิด</button>
-      </div>
-
-      <div class="modal__body">
-        <div class="grid">
-          <div class="field" style="grid-column: 1 / -1;">
-            <div class="label">TEACHER_ID</div>
-            <input class="input mono" id="fId" placeholder="เว้นว่างได้ (ระบบสร้างให้เอง) หรือใส่เองก็ได้" />
-          </div>
-
-          <div class="field">
-            <div class="label">NAME</div>
-            <input class="input" id="fName" placeholder="ชื่อ-สกุลครู" />
-          </div>
-
-          <div class="field">
-            <div class="label">EMAIL</div>
-            <input class="input" id="fEmail" placeholder="teacher@school.ac.th" />
-          </div>
-
-          <div class="field" style="grid-column: 1 / -1;">
-            <div class="label">PASSWORD</div>
-            <input class="input" id="fPass" type="password" placeholder="กรอกเมื่อต้องการตั้ง/เปลี่ยนรหัสผ่าน (เพิ่มครูไม่กรอกก็ได้)" />
-          </div>
+  <!-- Modal: ให้ teachers.js เปิดได้ -->
+  <div id="teacherModal" class="auth-modal" hidden>
+    <div class="auth-card">
+      <div class="auth-head">
+        <div>
+          <h2 id="modalTitle" class="auth-title">เพิ่มครู</h2>
+          <p class="auth-sub">เพิ่มครูใหม่ หรือแก้ไขข้อมูลครูในระบบ</p>
         </div>
+        <button type="button" class="chip-btn" id="btnCloseModal">ปิด</button>
       </div>
 
-      <div class="modal__foot">
-        <button class="btn btn--ghost" id="btnCancel" type="button">ยกเลิก</button>
-        <button class="btn btn--primary" id="btnSave" type="button">บันทึก</button>
+      <div class="auth-body">
+        <label class="field">
+          <span>รหัสครู</span>
+          <input id="fId" type="text" placeholder="เช่น T001 หรือ 1001" />
+        </label>
+
+        <label class="field">
+          <span>ชื่อ – นามสกุล</span>
+          <input id="fName" type="text" placeholder="ชื่อครูตามระบบ" />
+        </label>
+
+        <label class="field">
+          <span>PASSWORD (ใส่ตอนเพิ่ม/หรือเปลี่ยนรหัส)</span>
+          <input id="fPass" type="password" placeholder="กำหนดรหัสผ่าน" />
+        </label>
+
+        <button class="btn-primary" id="btnSave" type="button">บันทึก</button>
+        <button class="btn-ghost" id="btnCancel" type="button">ยกเลิก</button>
       </div>
     </div>
   </div>

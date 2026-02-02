@@ -5,175 +5,333 @@
   <title>รายละเอียดคาบเรียน | NexAttend</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="../css/styles.css">
   <script type="module" src="../js/teacher-session-detail.js" defer></script>
 
   <style>
-    body {
-      margin:0;
-      min-height:100vh;
-      background:#020617;
-      color:#e5e7eb;
-      font-family:"Inter",system-ui,sans-serif;
+    :root{
+      --bg:#f8fafc;
+      --card: rgba(255,255,255,.96);
+      --text:#0f172a;
+      --muted:#64748b;
+      --border: rgba(226,232,240,.95);
+
+      --blue:#38bdf8;
+      --violet:#8b5cf6;
+
+      --ok:#22c55e;
+      --late:#f59e0b;
+      --absent:#ef4444;
+
+      --shadow: 0 18px 55px rgba(2,6,23,.10);
+      --r:22px;
     }
 
-    .nav {
-      padding:1rem 1.8rem;
-      background:rgba(15,23,42,.96);
-      border-bottom:1px solid rgba(148,163,184,.3);
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+
+    body{
+      min-height:100vh;
+      font-family:"Inter","Kanit",system-ui,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 560px at 12% 14%, rgba(56,189,248,.16), transparent 62%),
+        radial-gradient(900px 560px at 88% 16%, rgba(139,92,246,.14), transparent 62%),
+        radial-gradient(900px 560px at 50% 92%, rgba(34,197,94,.10), transparent 62%),
+        linear-gradient(180deg,#fff,var(--bg));
+    }
+
+    /* ===== Topbar ===== */
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:9999;
+      width:100%;
+      border-bottom:1px solid var(--border);
+      background:rgba(255,255,255,.86);
+      backdrop-filter:blur(12px);
+    }
+    .topbar-inner{
+      max-width:1100px;
+      margin:0 auto;
+      padding:10px 18px;
       display:flex;
       justify-content:space-between;
       align-items:center;
-      position:sticky;
-      top:0;
-      z-index:10;
+      gap:12px;
     }
 
-    .nav-title { font-size:1.1rem;font-weight:600; }
-    .nav-sub   { font-size:.8rem;color:#94a3b8; }
-    .nav-user  { font-size:.85rem;color:#cbd5f5;text-align:right; }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+    .logo{
+      width:36px;height:36px;border-radius:14px;
+      background:linear-gradient(135deg,var(--blue),var(--violet));
+      box-shadow:0 12px 26px rgba(2,6,23,.10);
+      flex:0 0 auto;
+    }
 
-    .container {
+    .btitle{
+      font-weight:1000;
+      font-size:.98rem;
+      letter-spacing:-.2px;
+      white-space:nowrap;
+    }
+    .bsub{
+      margin-top:6px;
+      font-size:.86rem;
+      font-weight:900;
+      color:var(--muted);
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .pill{
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(2,6,23,.03);
+      font-size:.78rem;
+      font-weight:1000;
+      box-shadow:0 10px 22px rgba(2,6,23,.05);
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+
+    .btn{
+      padding:9px 14px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      font-weight:1000;
+      font-size:.82rem;
+      background:linear-gradient(90deg,var(--blue),#60a5fa);
+      color:#04121f;
+      box-shadow:0 16px 40px rgba(56,189,248,.18);
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .btn.secondary{
+      background:#fff;
+      border:1px solid var(--border);
+      box-shadow:0 10px 22px rgba(2,6,23,.06);
+      color:var(--text);
+    }
+
+    /* ===== Main ===== */
+    .wrap{
       max-width:1100px;
-      margin:1.8rem auto 2.4rem;
-      padding:0 1.5rem;
+      margin:0 auto;
+      padding:18px 18px 56px;
     }
 
-    .summary-grid {
+    .summary-grid{
       display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
-      gap:1.1rem;
-      margin-bottom:1.6rem;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:14px;
+      margin-bottom:14px;
     }
 
-    .card {
-      padding:1.3rem 1.2rem;
-      border-radius:1.1rem;
-      background:radial-gradient(circle at top left,rgba(56,189,248,.22),transparent 55%),
-                 rgba(15,23,42,.97);
-      border:1px solid rgba(148,163,184,.35);
-      box-shadow:0 14px 40px rgba(15,23,42,.9);
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:16px 16px 14px;
     }
 
-    .card-label { font-size:.8rem;color:#9ca3af;margin-bottom:.15rem; }
-    .card-value { font-size:1.1rem;font-weight:600; }
-    .card-sub   { font-size:.8rem;color:#a5b4fc;margin-top:.2rem; }
+    .card-label{
+      font-size:.82rem;
+      color:var(--muted);
+      font-weight:900;
+    }
+    .card-value{
+      margin-top:2px;
+      font-size:1.05rem;
+      font-weight:1000;
+    }
+    .card-sub{
+      margin-top:4px;
+      font-size:.82rem;
+      font-weight:900;
+      color:#2563eb;
+    }
 
-    table {
+    .table-card{
+      margin-top:14px;
+      padding:14px 14px 10px;
+    }
+
+    .table-head{
+      font-size:.9rem;
+      font-weight:1000;
+      margin-bottom:8px;
+      color:var(--muted);
+    }
+
+    .table-wrap{
+      max-height:420px;
+      overflow:auto;
+      border-radius:14px;
+      border:1px solid var(--border);
+      box-shadow:0 10px 22px rgba(2,6,23,.05);
+      background:#fff;
+    }
+
+    table{
       width:100%;
       border-collapse:collapse;
-      font-size:.85rem;
+      font-size:.88rem;
     }
 
-    th, td {
-      padding:.55rem .5rem;
-      border-bottom:1px solid rgba(55,65,81,.8);
+    thead th{
+      padding:10px 10px;
+      background:rgba(2,6,23,.02);
+      border-bottom:1px solid var(--border);
+      color:var(--muted);
+      font-size:.75rem;
+      letter-spacing:.04em;
+      font-weight:1000;
       text-align:left;
+      white-space:nowrap;
     }
 
-    th {
-      font-weight:500;
-      color:#93c5fd;
-      font-size:.8rem;
+    tbody td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(226,232,240,.8);
+      font-weight:800;
+      white-space:nowrap;
     }
 
-    .status-ok    { color:#4ade80;font-weight:600; }
-    .status-late  { color:#facc15;font-weight:600; }
-    .status-absent{ color:#f97373;font-weight:600; }
+    tbody tr:hover td{
+      background:rgba(56,189,248,.06);
+    }
 
-    .empty {
+    .status-ok{color:var(--ok);font-weight:1000;}
+    .status-late{color:var(--late);font-weight:1000;}
+    .status-absent{color:var(--absent);font-weight:1000;}
+
+    .empty{
       text-align:center;
-      padding:1rem 0;
-      color:#9ca3af;
+      padding:14px 0;
+      color:var(--muted);
+      font-weight:900;
+      white-space:normal;
     }
 
-    .badge {
-      display:inline-block;
-      padding:.1rem .5rem;
-      border-radius:999px;
-      font-size:.7rem;
-      border:1px solid rgba(148,163,184,.7);
-      color:#cbd5f5;
-    }
-
-    #msg {
-      margin-top:1rem;
+    #msg{
+      margin-top:10px;
       text-align:center;
       font-size:.9rem;
-      min-height:1.1rem;
+      min-height:18px;
+      font-weight:900;
+      color:var(--absent);
     }
 
-    .back-link {
-      font-size:.85rem;
-      color:#93c5fd;
-      text-decoration:none;
+    @media(max-width:768px){
+      .bsub{display:none;}
     }
   </style>
 </head>
 
 <body>
 
-  <div class="nav">
-    <div>
-      <div class="nav-title">รายละเอียดคาบเรียน</div>
-      <div class="nav-sub">
-        TOKEN: <span id="navToken">-</span>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <div class="btitle">รายละเอียดคาบเรียน</div>
+        <div class="bsub">
+          TOKEN: <span id="navToken">-</span>
+          <span class="pill">Teacher Console</span>
+        </div>
       </div>
     </div>
-    <div class="nav-user">
-      👩‍🏫 <span id="teacherName">-</span><br>
-      <span id="teacherEmail" style="font-size:.78rem;"></span>
+
+    <div class="actions">
+      <div class="pill">
+        👩‍🏫 <span id="teacherName">-</span>
+        · <span id="teacherEmail"></span>
+      </div>
+      <a href="dashboard.html" class="btn secondary">← Dashboard</a>
     </div>
   </div>
+</header>
 
-  <div class="container">
+<main class="wrap">
 
-    <a href="dashboard.html" class="back-link">← กลับ Dashboard ครู</a>
+  <section class="summary-grid">
 
-    <div class="summary-grid" style="margin-top:1rem;">
-      <div class="card">
-        <div class="card-label">รายวิชา</div>
-        <div class="card-value" id="sessSubject">-</div>
-        <div class="card-sub" id="sessRoom">-</div>
-      </div>
-      <div class="card">
-        <div class="card-label">สถานะคาบ</div>
-        <div class="card-value" id="sessStatus">-</div>
-        <div class="card-sub" id="sessStartTime">-</div>
-      </div>
-      <div class="card">
-        <div class="card-label">สรุปการเช็คชื่อ</div>
-        <div class="card-value">
-          <span id="sumTotal">0</span> คน
-        </div>
-        <div class="card-sub">
-          ✅ <span id="sumOk">0</span> ปกติ • ⏰ <span id="sumLate">0</span> สาย • ❌ <span id="sumAbsent">0</span> ขาด
-        </div>
-      </div>
+    <div class="card">
+      <div class="card-label">รายวิชา</div>
+      <div class="card-value" id="sessSubject">-</div>
+      <div class="card-sub" id="sessRoom">-</div>
     </div>
 
     <div class="card">
-      <div class="card-label" style="margin-bottom:.5rem;">รายชื่อนักเรียนในคาบนี้</div>
-      <div style="max-height:420px;overflow:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>รหัสนักเรียน</th>
-              <th>ชื่อ – นามสกุล</th>
-              <th>วันที่เวลา</th>
-              <th>สถานะ</th>
-            </tr>
-          </thead>
-          <tbody id="attTable">
-            <tr><td colspan="4" class="empty">กำลังโหลดข้อมูล...</td></tr>
-          </tbody>
-        </table>
+      <div class="card-label">สถานะคาบ</div>
+      <div class="card-value" id="sessStatus">-</div>
+      <div class="card-sub" id="sessStartTime">-</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">สรุปการเช็คชื่อ</div>
+      <div class="card-value">
+        <span id="sumTotal">0</span> คน
+      </div>
+      <div class="card-sub">
+        ✅ <span id="sumOk">0</span>
+        &nbsp;•&nbsp;
+        ⏰ <span id="sumLate">0</span>
+        &nbsp;•&nbsp;
+        ❌ <span id="sumAbsent">0</span>
       </div>
     </div>
 
-    <div id="msg"></div>
+  </section>
 
-  </div>
+  <section class="card table-card">
+    <div class="table-head">รายชื่อนักเรียนในคาบนี้</div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>รหัสนักเรียน</th>
+            <th>ชื่อ – นามสกุล</th>
+            <th>วันที่เวลา</th>
+            <th>สถานะ</th>
+          </tr>
+        </thead>
+        <tbody id="attTable">
+          <tr>
+            <td colspan="4" class="empty">กำลังโหลดข้อมูล...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div id="msg"></div>
+
+</main>
 
 </body>
 </html>

@@ -1,395 +1,504 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NexAttend | ประวัติการเข้าเรียน</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <!-- ✅ Key Bridge: กันคีย์ session คนละชื่อ -->
+  <script>
+    (function(){
+      const a = localStorage.getItem("cpvc_student");
+      const b = localStorage.getItem("studentSession");
+      if(a && !b) localStorage.setItem("studentSession", a);
+      if(b && !a) localStorage.setItem("cpvc_student", b);
+    })();
+  </script>
 
   <!-- ✅ SheetJS สำหรับ Export Excel (.xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
-
   <!-- ✅ JS หน้า history -->
   <script type="module" src="history.js" defer></script>
 
   <style>
     :root{
-      --nav-bg: rgba(32, 33, 36, 0.95);
-      --card: rgba(15,23,42,.97);
-      --border: rgba(148,163,184,.45);
-      --muted: #9ca3af;
-      --text: #e5e7eb;
+      --bg:#f8fafc;
+      --card: rgba(255,255,255,.72);
+      --card2: rgba(255,255,255,.96);
+      --text:#0f172a;
+      --muted:#64748b;
+      --border: rgba(226,232,240,.95);
 
-      --ok:#4ade80;
-      --late:#fb923c;
-      --absent:#fecaca;
+      --blue:#38bdf8;
+      --violet:#8b5cf6;
+
+      --ok:#22c55e;
+      --late:#f59e0b;
+      --absent:#ef4444;
+
+      --shadow: 0 18px 55px rgba(2,6,23,.10);
+      --shadow2: 0 26px 70px rgba(2,6,23,.14);
+      --r: 22px;
     }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
 
     body{
       margin:0;
       min-height:100vh;
-      background:
-        radial-gradient(circle at 0 0,#1d2337,transparent 55%),
-        radial-gradient(circle at 100% 0,#312e81,transparent 55%),
-        #020617;
+      font-family:"Kanit","Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
       color:var(--text);
-      font-family:"Inter",system-ui,sans-serif;
-    }
-
-    header{
-      padding:1.1rem 2rem;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      border-bottom:1px solid rgba(148,163,184,.35);
-      background:var(--nav-bg);
-      backdrop-filter:blur(16px);
-      position:sticky;top:0;z-index:40;
-    }
-    header h2{
-      margin:0;
-      font-size:1.35rem;
-      font-weight:800;
-      letter-spacing:.2px;
-      display:flex;
-      align-items:center;
-      gap:.55rem;
-    }
-    .subhead{
-      font-size:.85rem;
-      color:var(--muted);
-      margin-top:.15rem;
-      font-family:"Prompt",system-ui,sans-serif;
-    }
-    .userbox{
-      display:flex;
-      flex-direction:column;
-      align-items:flex-end;
-      font-size:.9rem;
-      color:#c7d2fe;
-    }
-    .userbox span.id{
-      font-size:.8rem;
-      color:var(--muted);
-    }
-
-    /* TOP ACTIONS */
-    .top-actions{
-      max-width:1100px;
-      margin:1.1rem auto 1rem;
-      padding:0 1.4rem;
-      display:flex;
-      gap:.8rem;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:space-between;
-    }
-    .top-actions .left,
-    .top-actions .right{
-      display:flex;
-      gap:.7rem;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
-    .btn-main,
-    .btn-outline{
-      padding:.7rem 1.25rem;
-      border-radius:999px;
-      border:none;
-      cursor:pointer;
-      font-weight:800;
-      font-size:.9rem;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      gap:.45rem;
-      white-space:nowrap;
-      transition:.2s;
-    }
-    .btn-main{
-      background:linear-gradient(135deg,#4f46e5,#6366f1);
-      color:white;
-      box-shadow:0 16px 40px rgba(79,70,229,.7);
-    }
-    .btn-main:hover{ transform:translateY(-1px); }
-    .btn-outline{
-      border:1px solid rgba(148,163,184,.7);
-      background:rgba(15,23,42,.8);
-      color:#e5e7eb;
-    }
-    .btn-outline:hover{ background:rgba(148,163,184,.16); transform:translateY(-1px); }
-
-    /* CARD */
-    .table-card{
-      max-width:1100px;
-      margin:0 auto 2.4rem;
-      padding:1.3rem 1.2rem 1.5rem;
-      border-radius:1.4rem;
       background:
-        radial-gradient(circle at 0 0, rgba(59,130,246,.35), transparent 55%),
-        radial-gradient(circle at 100% 0, rgba(16,185,129,.18), transparent 55%),
-        rgba(15,23,42,.98);
-      border:1px solid rgba(148,163,184,.5);
-      box-shadow:0 24px 60px rgba(15,23,42,.95);
+        radial-gradient(900px 560px at 12% 14%, rgba(56,189,248,.16), transparent 62%),
+        radial-gradient(900px 560px at 88% 16%, rgba(139,92,246,.14), transparent 62%),
+        radial-gradient(900px 560px at 50% 92%, rgba(34,197,94,.10), transparent 62%),
+        linear-gradient(180deg,#fff,var(--bg));
     }
 
-    .table-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      gap:1rem;
-      margin-bottom:.9rem;
+    /* ===== Scrollbar (ทั้งหน้า) ===== */
+    html{ overflow-y: scroll; scrollbar-gutter: stable; }
+    ::-webkit-scrollbar{ width: 14px; }
+    ::-webkit-scrollbar-track{
+      background: rgba(2,6,23,.06);
+      border-left: 1px solid rgba(226,232,240,.9);
     }
-    .table-header h3{
-      margin:0;
-      font-size:1rem;
+    ::-webkit-scrollbar-thumb{
+      background: linear-gradient(180deg, rgba(56,189,248,.90), rgba(139,92,246,.80));
+      border-radius: 999px;
+      border: 3px solid rgba(255,255,255,.90);
+    }
+    ::-webkit-scrollbar-thumb:hover{
+      background: linear-gradient(180deg, rgba(56,189,248,1), rgba(139,92,246,.95));
+    }
+    *{ scrollbar-width: auto; scrollbar-color: rgba(139,92,246,.80) rgba(2,6,23,.06); }
+
+    /* ===== Topbar (Sticky + Balanced) ===== */
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 10000; /* ✅ กันโดนอะไรทับ */
+      width:100%;
+      height: 66px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(12px);
+
+      /* ✅ ทำให้เลื่อนแล้วนิ่งขึ้น */
+      will-change: transform;
+      transform: translateZ(0);
+    }
+
+    .topbar-inner{
+      max-width:1100px;
+      margin:0 auto;
+      height:100%;
+      padding: 0 18px;
+
+      /* ✅ สมดุลกว่า flex */
+      display:grid;
+      grid-template-columns: 1fr auto;
+      align-items:center;
+      gap: 12px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 0;
+    }
+    .logo{
+      width:36px;height:36px;border-radius:14px;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      box-shadow: 0 12px 26px rgba(2,6,23,.10);
+      flex:0 0 auto;
+    }
+    .btext{
+      min-width:0;
+      line-height:1.05;
+    }
+    .btitle{
+      font-weight:1000;
+      letter-spacing:-.2px;
+      font-size:.98rem;
+      white-space:nowrap;
+
+      /* ✅ กันชื่อยาวแล้วดันปุ่ม */
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .bsub{
+      margin-top:6px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      color: var(--muted);
+      font-size: .86rem;
       font-weight:900;
     }
-    .hint{
-      font-size:.85rem;
-      color:var(--muted);
-      font-family:"Prompt",system-ui,sans-serif;
+    .tag{
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(2,6,23,.03);
+      color: rgba(15,23,42,.82);
+      font-weight:1000;
+      font-size: .78rem;
+      white-space:nowrap;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
     }
 
-    /* ✅ FILTER TOOLBAR */
-    .toolbar{
+    .actions{
       display:flex;
-      gap:.8rem;
-      flex-wrap:wrap;
       align-items:center;
-      justify-content:space-between;
-      margin:.6rem 0 1rem;
-      padding:.9rem;
-      border-radius:1rem;
-      border:1px solid rgba(148,163,184,.22);
-      background:rgba(2,6,23,.28);
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      justify-self:end;
     }
 
-    .toolbar .group{
+    .btn{
+      border:none;
+      cursor:pointer;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight:1000;
+      font-size:.82rem;
+      color:#04121f;
+      background: linear-gradient(90deg, var(--blue), #60a5fa);
+      box-shadow: 0 16px 40px rgba(56,189,248,.18);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      text-decoration:none;
+      user-select:none;
+      white-space:nowrap;
+      transition:.18s;
+    }
+    .btn:hover{ transform: translateY(-1px); box-shadow: 0 22px 58px rgba(56,189,248,.22); }
+
+    .btn.secondary{
+      background: transparent;
+      border: 1px solid var(--border);
+      box-shadow:none;
+      color: var(--text);
+    }
+    .btn.secondary:hover{
+      transform: translateY(-1px);
+      border-color: rgba(148,163,184,.70);
+      box-shadow: 0 16px 40px rgba(2,6,23,.10);
+    }
+
+    .btn.danger{
+      background: linear-gradient(135deg, rgba(239,68,68,.95), rgba(245,158,11,.95));
+      color:#fff;
+      box-shadow: 0 16px 40px rgba(239,68,68,.18);
+    }
+
+    /* ===== Main ===== */
+    .wrap{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 22px 18px 56px; /* ✅ หายชิดหัวเว็บ + ดูบาลานซ์ขึ้น */
+    }
+
+    #historyMsg{
+      margin: 6px 0 14px;
+      font-size: .95rem;
+      text-align:center;
+      color: var(--muted);
+      font-weight: 1000;
+      min-height: 20px;
+    }
+
+    .card{
+      border-radius: var(--r);
+      background: var(--card2);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .card-head{
+      padding: 16px 18px 12px;
       display:flex;
-      gap:.6rem;
+      align-items:flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid rgba(226,232,240,.85);
+      background: rgba(255,255,255,.70);
+      backdrop-filter: blur(10px);
+    }
+    .card-head h3{
+      margin:0;
+      font-size:1.05rem;
+      font-weight:1000;
+      letter-spacing:-.2px;
+    }
+    .hint{
+      margin-top:6px;
+      color: var(--muted);
+      font-weight:900;
+      font-size: .9rem;
+    }
+
+    /* ===== Toolbar (ไม่รก) ===== */
+    .toolbar{
+      margin: 14px 18px 16px;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(2,6,23,.02);
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+      justify-content: space-between;
+      box-shadow: 0 12px 30px rgba(2,6,23,.06);
+    }
+    .group{
+      display:flex;
+      gap:8px;
       flex-wrap:wrap;
       align-items:center;
     }
 
     .filter-btn{
-      padding:.38rem .95rem;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.45);
-      background:rgba(15,23,42,.85);
-      color:#e5e7eb;
-      font-size:.78rem;
-      font-weight:900;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(255,255,255,.90);
+      color: var(--text);
+      font-size: .82rem;
+      font-weight: 1000;
       cursor:pointer;
-      transition:.2s;
+      transition:.18s;
       display:inline-flex;
       align-items:center;
-      gap:.45rem;
+      gap:8px;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
+      white-space:nowrap;
     }
-    .filter-btn:hover{ background:rgba(148,163,184,.18); }
+    .filter-btn:hover{ transform: translateY(-1px); border-color: rgba(148,163,184,.70); }
     .filter-btn.active{
-      background:linear-gradient(135deg,#4f46e5,#6366f1);
-      border-color:transparent;
-      box-shadow:0 8px 22px rgba(79,70,229,.55);
+      background: linear-gradient(90deg, var(--blue), #60a5fa);
+      border-color: transparent;
+      color:#04121f;
+      box-shadow: 0 18px 45px rgba(56,189,248,.20);
     }
+
     .badge{
-      font-size:.72rem;
-      padding:.1rem .45rem;
+      font-size:.74rem;
+      padding:2px 8px;
       border-radius:999px;
-      background:rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.12);
-      color:#e5e7eb;
-      font-weight:900;
+      background: rgba(2,6,23,.04);
+      border: 1px solid rgba(226,232,240,.95);
+      color: rgba(15,23,42,.72);
+      font-weight: 1000;
     }
 
     .search{
-      min-width: 240px;
-      max-width: 420px;
-      width: min(420px, 100%);
+      width: min(420px, 80vw);
       display:flex;
       align-items:center;
-      gap:.55rem;
-      padding:.45rem .75rem;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.40);
-      background:rgba(15,23,42,.65);
+      gap:8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(255,255,255,.92);
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
     }
     .search input{
       width:100%;
       border:none;
       outline:none;
       background:transparent;
-      color:#e5e7eb;
-      font-size:.86rem;
-      font-weight:700;
+      color: var(--text);
+      font-size: .9rem;
+      font-weight: 900;
     }
-    .search input::placeholder{ color:#94a3b8; font-weight:700; }
+    .search input::placeholder{ color: rgba(100,116,139,.70); font-weight:900; }
 
     .export-btn{
-      padding:.45rem .95rem;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.45);
-      background:rgba(15,23,42,.85);
-      color:#e5e7eb;
-      font-size:.78rem;
-      font-weight:900;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(2,6,23,.03);
+      color: var(--text);
+      font-size: .82rem;
+      font-weight: 1000;
       cursor:pointer;
-      transition:.2s;
-    }
-    .export-btn:hover{ background:rgba(148,163,184,.18); }
-
-    /* TABLE */
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:.87rem;
-      overflow:hidden;
-      border-radius:1rem;
-    }
-    thead{
-      background:linear-gradient(90deg,#020617,#1e3a8a);
-    }
-    th,td{
-      padding:.65rem .6rem;
-      border-bottom:1px solid rgba(31,41,55,.85);
-      text-align:left;
+      transition:.18s;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
       white-space:nowrap;
     }
-    th{
-      font-size:.75rem;
-      letter-spacing:.06em;
-      color:#c7d2fe;
-    }
-    tbody tr:nth-child(even){ background:rgba(15,23,42,.96); }
-    tbody tr:hover{ background:rgba(59,130,246,.15); }
-
-    .time-col{
-      font-variant-numeric: tabular-nums;
-      font-weight:900;
-      letter-spacing:.2px;
-      color:#e5e7eb;
+    .export-btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(148,163,184,.70);
+      box-shadow: 0 18px 45px rgba(2,6,23,.10);
     }
 
-    .status-ok{ color: var(--ok); font-weight: 900; }
-    .status-late{ color: var(--late); font-weight: 900; }
-    .status-absent{ color: var(--absent); font-weight: 900; }
+    /* ===== Table ===== */
+    .table-wrap{ padding: 0 18px 18px; }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      border-radius: 16px;
+      overflow:hidden;
+      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 12px 30px rgba(2,6,23,.06);
+    }
+    thead th{
+      text-align:left;
+      font-size:.82rem;
+      color: rgba(100,116,139,.95);
+      padding: 12px;
+      background: rgba(2,6,23,.02);
+      border-bottom: 1px solid rgba(226,232,240,.95);
+      font-weight: 1000;
+      letter-spacing:.7px;
+      white-space:nowrap;
+    }
+    tbody td{
+      padding: 12px;
+      border-bottom: 1px solid rgba(226,232,240,.75);
+      font-size: .92rem;
+      color: var(--text);
+      font-weight: 800;
+      white-space:nowrap;
+    }
+    tbody tr:hover td{ background: rgba(56,189,248,.06); }
+    tbody tr:last-child td{ border-bottom:none; }
+
+    .time-col{ font-variant-numeric: tabular-nums; font-weight: 1000; letter-spacing:.2px; }
+    .status-ok{ color: var(--ok); font-weight: 1000; }
+    .status-late{ color: var(--late); font-weight: 1000; }
+    .status-absent{ color: var(--absent); font-weight: 1000; }
 
     .empty{
       text-align:center;
-      padding:1rem 0;
-      color:var(--muted);
-      font-family:"Prompt",system-ui,sans-serif;
+      padding: 18px 12px;
+      color: var(--muted);
+      font-weight: 1000;
+      white-space: normal;
     }
 
-    #historyMsg{
-      max-width:1100px;
-      margin:0 auto 1rem;
-      padding:0 1.4rem;
-      font-size:.9rem;
-      text-align:center;
-      color:#a7f3d0;
-      font-family:"Prompt",system-ui,sans-serif;
-    }
-
-    @media(max-width:768px){
-      header{padding-inline:1.2rem;}
-      .top-actions{padding-inline:1.2rem;}
-      .table-card{margin-inline:1.2rem;}
-      .userbox{align-items:flex-start;}
-      #historyMsg{padding-inline:1.2rem;}
-      .toolbar{padding:.8rem;}
+    @media (max-width: 768px){
+      .topbar{ height:auto; }
+      .topbar-inner{
+        padding: 10px 14px;
+        grid-template-columns: 1fr; /* ✅ มือถือเรียงลงให้โล่ง */
+        gap: 10px;
+      }
+      .actions{ justify-self:start; }
+      .wrap{ padding: 18px 14px 46px; }
+      .card-head{ padding: 14px 14px 10px; }
+      .toolbar{ margin: 12px 14px 14px; }
+      .table-wrap{ padding: 0 14px 14px; }
+      .bsub{ display:none; } /* มือถือซ่อนบรรทัดย่อยให้โล่ง */
     }
   </style>
 </head>
 
 <body>
-<header>
-  <div>
-    <h2>🕘 ประวัติการเข้าเรียน</h2>
-    <div class="subhead">รายการเช็คชื่อทั้งหมดของคุณในระบบ NexAttend</div>
-  </div>
-  <div class="userbox">
-    <span id="studentNameDisplay">-</span>
-    <span class="id">🆔 <span id="studentIdDisplay">-</span></span>
-  </div>
-</header>
-
-<section class="top-actions">
-  <div class="left">
-    <a href="dashboard.html" class="btn-main">📊 กลับหน้า Dashboard</a>
-    <a href="scan.html" class="btn-outline">📸 ไปหน้าเช็คชื่อ</a>
-  </div>
-  <div class="right">
-    <button class="btn-outline" type="button" onclick="logoutStudent()">🚪 ออกจากระบบ</button>
-  </div>
-</section>
-
-<div id="historyMsg"></div>
-
-<section class="table-card">
-  <div class="table-header">
-    <div>
-      <h3>🧾 รายการเช็คชื่อทั้งหมด</h3>
-      <div class="hint">แสดง เวลา / วิชา / ห้อง / สถานะ / ครูผู้สอน</div>
-    </div>
-    <div class="hint">ข้อมูลจาก ATTENDANCE</div>
-  </div>
-
-  <!-- ✅ TOOLBAR: กรองวันที่ + สถานะ + ค้นหา + export -->
-  <div class="toolbar">
-    <div class="group" aria-label="date-filter">
-      <button class="filter-btn active" data-date="ALL">ทั้งหมด</button>
-      <button class="filter-btn" data-date="TODAY">วันนี้</button>
-      <button class="filter-btn" data-date="WEEK">สัปดาห์นี้</button>
-    </div>
-
-    <div class="group" aria-label="status-filter">
-      <button class="filter-btn active" data-status="ALL">สถานะทั้งหมด <span class="badge" id="countAll">0</span></button>
-      <button class="filter-btn" data-status="OK">OK <span class="badge" id="countOK">0</span></button>
-      <button class="filter-btn" data-status="LATE">LATE <span class="badge" id="countLATE">0</span></button>
-      <button class="filter-btn" data-status="ABSENT">ABSENT <span class="badge" id="countABSENT">0</span></button>
-    </div>
-
-    <div class="group" aria-label="search-export">
-      <div class="search">
-        🔎
-        <input id="searchInput" type="search" placeholder="ค้นหา วิชา / ครู..." autocomplete="off" />
+  <!-- ✅ Sticky Topbar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo"></div>
+        <div class="btext">
+          <div class="btitle">ประวัติการเข้าเรียน</div>
+          <div class="bsub">
+            <span id="studentNameDisplay">-</span>
+            <span class="tag">🆔 <span id="studentIdDisplay">-</span></span>
+          </div>
+        </div>
       </div>
-      <button class="export-btn" id="btnExportCSV" type="button">⬇️ Export CSV</button>
-      <button class="export-btn" id="btnExportXLSX" type="button">⬇️ Export Excel</button>
+
+      <div class="actions">
+        <a class="btn secondary" href="dashboard.html">📊 Dashboard</a>
+        <a class="btn secondary" href="scan.html">📸 เช็คชื่อ</a>
+        <button class="btn danger" type="button" onclick="logoutStudent()">🚪 ออก</button>
+      </div>
     </div>
-  </div>
+  </header>
 
-  <table>
-    <thead>
-      <tr>
-        <th>⏱️ เวลา</th>
-        <th>📚 วิชา</th>
-        <th>🏫 ห้อง</th>
-        <th>✅ สถานะ</th>
-        <th>👩‍🏫 ครูผู้สอน</th>
-      </tr>
-    </thead>
-    <tbody id="historyBody">
-      <tr><td colspan="5" class="empty">กำลังโหลดข้อมูล...</td></tr>
-    </tbody>
-  </table>
-</section>
+  <main class="wrap">
+    <div id="historyMsg"></div>
 
-<script>
-  function logoutStudent() {
-    try {
-      localStorage.removeItem("cpvc_student");
-      sessionStorage.clear();
-    } catch (e) {}
-    window.location.href = "login.html";
-  }
-</script>
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h3>🧾 รายการเช็คชื่อทั้งหมด</h3>
+          <div class="hint">เวลา / วิชา / ห้อง / สถานะ / ครูผู้สอน</div>
+        </div>
+        <div class="hint">ข้อมูลจาก ATTENDANCE</div>
+      </div>
+
+      <!-- ✅ Toolbar (คง id/data-* ให้ history.js) -->
+      <div class="toolbar">
+        <div class="group" aria-label="date-filter">
+          <button class="filter-btn active" data-date="ALL">ทั้งหมด</button>
+          <button class="filter-btn" data-date="TODAY">วันนี้</button>
+          <button class="filter-btn" data-date="WEEK">สัปดาห์นี้</button>
+        </div>
+
+        <div class="group" aria-label="status-filter">
+          <button class="filter-btn active" data-status="ALL">ทั้งหมด <span class="badge" id="countAll">0</span></button>
+          <button class="filter-btn" data-status="OK">OK <span class="badge" id="countOK">0</span></button>
+          <button class="filter-btn" data-status="LATE">LATE <span class="badge" id="countLATE">0</span></button>
+          <button class="filter-btn" data-status="ABSENT">ABSENT <span class="badge" id="countABSENT">0</span></button>
+        </div>
+
+        <div class="group" aria-label="search-export">
+          <div class="search">
+            🔎
+            <input id="searchInput" type="search" placeholder="ค้นหา วิชา / ครู..." autocomplete="off" />
+          </div>
+          <button class="export-btn" id="btnExportCSV" type="button">⬇️ CSV</button>
+          <button class="export-btn" id="btnExportXLSX" type="button">⬇️ Excel</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>⏱️ เวลา</th>
+              <th>📚 วิชา</th>
+              <th>🏫 ห้อง</th>
+              <th>✅ สถานะ</th>
+              <th>👩‍🏫 ครูผู้สอน</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="5" class="empty">กำลังโหลดข้อมูล...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function logoutStudent(){
+      try{
+        localStorage.removeItem("cpvc_student");
+        localStorage.removeItem("studentSession");
+        sessionStorage.clear();
+      }catch(e){}
+      window.location.href = "login.html";
+    }
+  </script>
 </body>
 </html>

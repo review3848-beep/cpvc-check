@@ -2,209 +2,336 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>CPVC-Check | จัดการนักเรียน</title>
+  <title>NexAttend | Admin - จัดการนักเรียน</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <!-- ✅ Font: Kanit + Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
 
-  <!-- ใช้ไฟล์ css เดิมของโปรเจกต์ -->
-  <link rel="stylesheet" href="../css/styles.css" />
-
-  <!-- JS หน้านี้ -->
   <script type="module" src="./students.js" defer></script>
 
   <style>
     :root{
-      --bg0:#020617;
-      --panel: rgba(15,23,42,.82);
-      --border: rgba(148,163,184,.25);
-      --muted: rgba(255,255,255,.65);
-      --ink: rgba(255,255,255,.92);
-      --accentA:#6d28d9;
-      --accentB:#6366f1;
+      --bg0:#f8fafc;
+      --panel: rgba(255,255,255,.72);
+      --border: rgba(226,232,240,.92);
+      --text:#0f172a;
+      --muted:#64748b;
+
+      --blue:#38bdf8;
+      --violet:#8b5cf6;
+      --green:#22c55e;
+      --red:#ef4444;
+
+      --shadow: 0 18px 55px rgba(2,6,23,.10);
+      --shadow2: 0 26px 70px rgba(2,6,23,.14);
+      --radius: 28px;
     }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
 
     body{
       margin:0;
-      font-family: Inter, Prompt, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      color: var(--ink);
-      min-height: 100vh;
+      font-family:"Kanit","Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      color:var(--text);
+      min-height:100vh;
       background:
-        radial-gradient(900px 500px at 20% 20%, rgba(99,102,241,.18), transparent 60%),
-        radial-gradient(900px 500px at 80% 25%, rgba(34,197,94,.10), transparent 60%),
-        radial-gradient(900px 500px at 60% 80%, rgba(245,158,11,.08), transparent 60%),
-        var(--bg0);
+        radial-gradient(900px 560px at 12% 14%, rgba(56,189,248,.16), transparent 62%),
+        radial-gradient(900px 560px at 88% 16%, rgba(139,92,246,.14), transparent 62%),
+        radial-gradient(900px 560px at 50% 92%, rgba(34,197,94,.10), transparent 62%),
+        linear-gradient(180deg,#fff,var(--bg0));
     }
 
+    /* ===== Scrollbar ===== */
+    html{ overflow-y: scroll; scrollbar-gutter: stable; }
+    ::-webkit-scrollbar{ width:12px; }
+    ::-webkit-scrollbar-track{ background: rgba(2,6,23,.06); }
+    ::-webkit-scrollbar-thumb{
+      background: linear-gradient(180deg, rgba(56,189,248,.65), rgba(139,92,246,.55));
+      border-radius:999px;
+      border:3px solid rgba(255,255,255,.65);
+    }
+    ::-webkit-scrollbar-thumb:hover{
+      background: linear-gradient(180deg, rgba(56,189,248,.80), rgba(139,92,246,.70));
+    }
+    *{ scrollbar-width: thin; scrollbar-color: rgba(139,92,246,.65) rgba(2,6,23,.06); }
+
+    /* ===== Topbar ===== */
     .topbar{
-      position: fixed;
-      top: 18px;
-      right: 18px;
-      z-index: 20;
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+      width:100%;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(12px);
     }
-
-    .btn-dashboard{
-      border: 1px solid rgba(148,163,184,.35);
-      background: rgba(2,6,23,.35);
-      color: rgba(255,255,255,.92);
-      padding: 10px 16px;
-      border-radius: 999px;
-      cursor: pointer;
-      font-weight: 700;
-      display: inline-flex;
-      gap: 8px;
-      align-items: center;
-      text-decoration: none;
-    }
-    .btn-dashboard:hover{ background: rgba(2,6,23,.55); }
-
-    .wrap{
-      width: min(1100px, 92vw);
+    .topbar-inner{
+      max-width: 1180px;
       margin: 0 auto;
-      padding: 90px 0 40px;
+      padding: 14px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
     }
+
+    .brand{ display:flex; align-items:center; gap:12px; }
+    .logo{
+      width:46px;height:46px;border-radius:18px;
+      display:grid;place-items:center;
+      color:#fff;font-weight:900;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      box-shadow: 0 14px 40px rgba(2,6,23,.12);
+      user-select:none;
+    }
+    .brand .title{
+      font-weight:900;
+      letter-spacing:-.2px;
+      font-size: 1.08rem;
+      line-height: 1.05;
+    }
+    .brand .sub{
+      color:var(--muted);
+      font-weight:700;
+      font-size:.9rem;
+      line-height: 1.1;
+      margin-top: 2px;
+    }
+
+    .top-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .pill{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.78);
+      padding:10px 14px;
+      border-radius:999px;
+      box-shadow: 0 10px 25px rgba(2,6,23,.06);
+      display:inline-flex; align-items:center; gap:8px;
+      font-weight:800; color:var(--text);
+      text-decoration:none; transition:.18s;
+      white-space:nowrap;
+    }
+    .pill:hover{ transform: translateY(-1px); box-shadow: 0 18px 45px rgba(2,6,23,.10); }
+    .dot{ width:10px;height:10px;border-radius:999px;background:var(--green); box-shadow:0 0 0 4px rgba(34,197,94,.14); }
+    .pill-danger{ color:#b91c1c; border-color: rgba(239,68,68,.35); }
+
+    /* ===== Layout ===== */
+    .wrap{ width:min(1180px,92vw); margin:0 auto; padding:22px 0 56px; }
 
     .card{
+      border-radius: var(--radius);
       background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 26px;
-      box-shadow: 0 30px 80px rgba(0,0,0,.55);
+      border:1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
       overflow:hidden;
     }
 
     .head{
-      padding: 22px 24px 14px;
+      padding:18px;
       display:flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      border-bottom: 1px solid rgba(148,163,184,.15);
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:14px;
+      flex-wrap:wrap;
+      border-bottom:1px solid rgba(226,232,240,.75);
+      background: rgba(255,255,255,.18);
     }
 
-    .title{
+    .h1{
       margin:0;
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing:.2px;
-    }
-    .sub{
-      margin:6px 0 0;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .tools{
+      font-size:1.7rem;
+      font-weight:900;
+      letter-spacing:-.2px;
       display:flex;
-      gap: 10px;
       align-items:center;
-      flex-wrap: wrap;
-      justify-content: flex-end;
+      gap:10px;
+    }
+    .desc{
+      margin-top:6px;
+      color:var(--muted);
+      font-weight:700;
+      font-size: 1.02rem;
     }
 
-    .input{
-      height: 44px;
-      width: min(360px, 70vw);
-      border-radius: 14px;
-      padding: 0 14px;
-      background: rgba(2,6,23,.35);
-      border: 1px solid rgba(148,163,184,.22);
-      color: rgba(255,255,255,.92);
-      outline:none;
+    .count-chip{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      color:#0369a1;
+      background: rgba(56,189,248,.18);
+      border:1px solid rgba(56,189,248,.35);
+      box-shadow: 0 10px 22px rgba(2,6,23,.06);
     }
-    .input::placeholder{ color: rgba(255,255,255,.35); }
-    .input:focus{
-      border-color: rgba(99,102,241,.65);
-      box-shadow: 0 0 0 4px rgba(99,102,241,.18);
+
+    .tools{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+
+    .search{ position:relative; width:min(560px,78vw); }
+    .search input{
+      width:100%;
+      height:48px;
+      border-radius:999px;
+      padding:0 16px 0 46px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.92);
+      font-weight:800;
+      outline:none;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
+      transition: .18s;
+    }
+    .search input:focus{
+      border-color: rgba(56,189,248,.65);
+      box-shadow: 0 18px 45px rgba(2,6,23,.10);
+    }
+    .search .ico{
+      position:absolute;
+      left:16px;
+      top:50%;
+      transform: translateY(-50%);
+      opacity:.9;
     }
 
     .btn-add{
-      height: 44px;
-      border: none;
-      border-radius: 14px;
-      padding: 0 16px;
-      cursor: pointer;
-      font-weight: 800;
-      color: #fff;
-      background: linear-gradient(90deg, var(--accentA), var(--accentB));
-      box-shadow: 0 18px 40px rgba(99,102,241,.22);
+      height:48px;
+      border:none;
+      border-radius:999px;
+      padding:0 18px;
+      font-weight:900;
+      cursor:pointer;
+      color:#04121f;
+      background: linear-gradient(90deg, var(--blue), #60a5fa);
+      box-shadow: 0 18px 45px rgba(56,189,248,.22);
+      transition:.18s;
+      white-space:nowrap;
     }
-    .btn-add:hover{ filter: brightness(1.06); }
+    .btn-add:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 26px 70px rgba(56,189,248,.26);
+    }
 
-    .body{
-      padding: 18px 24px 24px;
+    .body{ padding:18px; }
+
+    .table-wrap{
+      border-radius:22px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.92);
+      box-shadow: 0 14px 34px rgba(2,6,23,.07);
+      overflow:hidden;
     }
 
     table{
       width:100%;
-      border-collapse: collapse;
-      overflow:hidden;
-      border-radius: 18px;
-      border: 1px solid rgba(148,163,184,.16);
+      border-collapse: separate;
+      border-spacing: 0 10px;
+      padding: 10px 10px 14px;
     }
+
+    /* ✅ Sticky header */
     thead th{
+      position: sticky;
+      top: 0;
+      z-index: 2;
       text-align:left;
       font-size: 12px;
-      letter-spacing:.6px;
-      color: rgba(255,255,255,.65);
-      padding: 14px 14px;
-      background: rgba(2,6,23,.25);
-      border-bottom: 1px solid rgba(148,163,184,.12);
+      letter-spacing:.9px;
+      color: rgba(100,116,139,.95);
+      padding: 12px 14px;
+      font-weight:900;
+      background: rgba(248,250,252,.96);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid rgba(226,232,240,.95);
     }
-    tbody td{
-      padding: 14px 14px;
-      border-bottom: 1px solid rgba(148,163,184,.10);
-      color: rgba(255,255,255,.9);
+    thead th:last-child{ text-align:right; }
+
+    tbody tr{
+      background: rgba(255,255,255,.98);
+      box-shadow: 0 10px 24px rgba(2,6,23,.06);
+      transition:.18s;
     }
+
+    /* ✅ Zebra soft */
+    tbody tr:nth-child(even){
+      background: rgba(248,250,252,.86);
+    }
+
     tbody tr:hover{
-      background: rgba(99,102,241,.06);
+      transform: translateY(-1px);
+      box-shadow: 0 18px 45px rgba(2,6,23,.10);
     }
-    .muted{ color: rgba(255,255,255,.6); }
 
-    .row-actions{
-      display:flex;
-      gap: 8px;
-      justify-content: flex-end;
+    tbody td{
+      padding: 16px 14px;
+      font-weight:900;
+      vertical-align: middle;
     }
+
+    tbody td:first-child{
+      font-variant-numeric: tabular-nums;
+      letter-spacing:.2px;
+    }
+    tbody td:last-child{ text-align:right; }
+
+    .row-actions{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+
     .btn-mini{
-      border: 1px solid rgba(148,163,184,.25);
-      background: rgba(2,6,23,.25);
-      color: rgba(255,255,255,.9);
-      padding: 8px 12px;
-      border-radius: 999px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 12px;
+      border:1px solid rgba(56,189,248,.35);
+      background: rgba(56,189,248,.10);
+      padding:9px 14px;
+      border-radius:999px;
+      font-weight:900;
+      cursor:pointer;
+      transition:.18s;
+      white-space:nowrap;
     }
-    .btn-mini:hover{ background: rgba(2,6,23,.45); }
+    .btn-mini:hover{
+      transform: translateY(-1px);
+      border-color: rgba(56,189,248,.60);
+      background: rgba(56,189,248,.14);
+    }
 
-    .msg{
+    #msg{
       margin-top: 12px;
-      color: rgba(255,255,255,.7);
-      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
     }
 
-    /* ===== modal (เหมือนหน้าสมัคร) ===== */
+    .footer-note{
+      margin-top:12px;
+      text-align:right;
+      color: rgba(100,116,139,.85);
+      font-weight:900;
+      font-size:12px;
+    }
+
+    /* ===== Modal (สำคัญ: เอากลับมาให้ students.js เปิดได้) ===== */
     .auth-modal{
       position: fixed;
       inset: 0;
       display: grid;
       place-items: center;
-      padding: 24px;
-      background: rgba(0,0,0,.55);
+      padding: 12px;
+      background: rgba(15,23,42,.25);
       backdrop-filter: blur(10px);
-      z-index: 9999;
+      z-index: 10000;
     }
     .auth-modal[hidden]{ display:none; }
 
     .auth-card{
       width: min(720px, 92vw);
-      border-radius: 26px;
-      background: rgba(15,23,42,.82);
-      border: 1px solid rgba(148,163,184,.25);
-      box-shadow: 0 30px 80px rgba(0,0,0,.55);
+      max-height: calc(100dvh - 24px);
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+
+      border-radius: 26px;
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow2);
     }
 
     .auth-head{
@@ -212,171 +339,192 @@
       align-items:flex-start;
       justify-content: space-between;
       gap: 12px;
-      padding: 28px 28px 12px;
-      border-bottom: 1px solid rgba(148,163,184,.12);
+      padding: 18px 18px 10px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.86);
     }
     .auth-title{
       margin: 0;
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: .2px;
+      font-size: 1.55rem;
+      font-weight: 900;
+      letter-spacing:-.2px;
+      color: var(--text);
     }
     .auth-sub{
       margin: 6px 0 0;
-      color: rgba(255,255,255,.65);
-      font-size: 14px;
+      color: var(--muted);
+      font-size: .95rem;
+      font-weight: 700;
+      line-height: 1.5;
     }
 
     .chip-btn{
-      border: 1px solid rgba(148,163,184,.35);
-      background: rgba(2,6,23,.35);
-      color: rgba(255,255,255,.9);
-      padding: 10px 16px;
+      border: 1px solid var(--border);
+      background: rgba(2,6,23,.03);
+      color: var(--text);
+      padding: 10px 14px;
       border-radius: 999px;
       cursor: pointer;
-      font-weight: 800;
+      font-weight: 900;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
+      transition:.18s;
+      white-space:nowrap;
     }
-    .chip-btn:hover{ background: rgba(2,6,23,.55); }
+    .chip-btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(148,163,184,.70);
+      box-shadow: 0 18px 45px rgba(2,6,23,.10);
+    }
 
     .auth-body{
-      padding: 16px 28px 28px;
+      overflow: auto;
+      padding: 10px 18px 18px;
+      background: rgba(255,255,255,.92);
     }
 
-    .field{
-      display:block;
-      margin-top: 14px;
-    }
+    .field{ display:block; margin-top: 12px; }
     .field span{
       display:block;
       margin-bottom: 8px;
-      color: rgba(255,255,255,.8);
-      font-size: 14px;
-      font-weight: 700;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing:.2px;
     }
-
     .field input{
       width: 100%;
-      height: 54px;
+      height: 52px;
       border-radius: 16px;
       padding: 0 16px;
-      background: rgba(2,6,23,.35);
-      border: 1px solid rgba(148,163,184,.22);
-      color: rgba(255,255,255,.92);
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--border);
+      color: var(--text);
       outline: none;
-      transition: .15s ease;
-    }
-    .field input::placeholder{
-      color: rgba(255,255,255,.35);
+      transition: .18s ease;
+      font-weight: 800;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
     }
     .field input:focus{
-      border-color: rgba(99,102,241,.65);
-      box-shadow: 0 0 0 4px rgba(99,102,241,.18);
+      border-color: rgba(56,189,248,.65);
+      box-shadow: 0 18px 45px rgba(2,6,23,.10);
     }
 
     .btn-primary{
       width: 100%;
-      height: 56px;
+      height: 54px;
       border: none;
       border-radius: 18px;
-      margin-top: 18px;
+      margin-top: 16px;
       cursor: pointer;
       font-weight: 900;
       font-size: 16px;
-      color: white;
-      background: linear-gradient(90deg, var(--accentA), var(--accentB));
-      box-shadow: 0 18px 40px rgba(99,102,241,.22);
+      color: #04121f;
+      background: linear-gradient(90deg, var(--blue), #60a5fa);
+      box-shadow: 0 18px 45px rgba(56,189,248,.20);
+      transition:.18s;
     }
-    .btn-primary:hover{ filter: brightness(1.06); }
+    .btn-primary:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 26px 70px rgba(56,189,248,.24);
+    }
 
     .btn-ghost{
       width: 100%;
       margin-top: 10px;
       background: transparent;
       border: none;
-      color: rgba(255,255,255,.65);
+      color: var(--muted);
       cursor: pointer;
       padding: 10px 0;
-      font-weight: 800;
+      font-weight: 900;
     }
-    .btn-ghost:hover{ color: rgba(255,255,255,.92); }
+    .btn-ghost:hover{ color: var(--text); }
 
-    /* ====== ทำให้ modal พอดีกับจอ ====== */
-.auth-modal{
-  padding: 12px;                 /* เดิม 24px -> เล็กลง */
-  place-items: center;
-}
-
-.auth-card{
-  width: min(720px, 92vw);
-  max-height: calc(100dvh - 24px);  /* กันล้นจอ (ใช้ dvh แก้ mobile address bar) */
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ให้หัวอยู่กับที่ และเนื้อหาเลื่อน */
-.auth-head{
-  flex: 0 0 auto;
-  padding: 18px 18px 10px;       /* กระชับ */
-}
-
-.auth-body{
-  flex: 1 1 auto;
-  overflow: auto;                 /* ถ้าเนื้อหาสูงเกิน ให้เลื่อนใน modal */
-  padding: 10px 18px 18px;
-}
-
-/* กระชับช่องและปุ่มบนจอเล็ก */
-@media (max-width: 520px){
-  .auth-title{ font-size: 22px; }
-  .auth-sub{ font-size: 12px; }
-  .field{ margin-top: 10px; }
-  .field input{ height: 48px; border-radius: 14px; }
-  .btn-primary{ height: 50px; border-radius: 16px; margin-top: 14px; }
-  .chip-btn{ padding: 8px 12px; }
-}
-
+    @media (max-width: 640px){
+      .brand .sub{ display:none; }
+      .h1{ font-size: 1.35rem; }
+      .desc{ font-size: .95rem; }
+      .search input{ height: 46px; }
+      .btn-add{ height: 46px; }
+      table{ border-spacing: 0 8px; }
+    }
   </style>
+
+  <!-- ✅ อัปเดต chip นับจำนวนแถวแบบอัตโนมัติ -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const chip = document.getElementById("countChip");
+      const tbody = document.getElementById("tbody");
+
+      const update = () => {
+        if (!chip || !tbody) return;
+        chip.textContent = tbody.querySelectorAll("tr").length;
+      };
+
+      update();
+      const mo = new MutationObserver(update);
+      if (tbody) mo.observe(tbody, { childList: true, subtree: true });
+    });
+  </script>
 </head>
 
 <body>
-  <div class="topbar">
-    <!-- เปลี่ยนลิงก์กลับแดชบอร์ดให้ตรงของเธอ -->
-    <a class="btn-dashboard" href="./dashboard.html">📊 Dashboard</a>
-  </div>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo">🛡️</div>
+        <div>
+          <div class="title">NexAttend | Admin</div>
+          <div class="sub">Administrative Control Center</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <a class="pill" href="./dashboard.html">🏠 Dashboard</a>
+        <span class="pill"><span class="dot"></span> ผู้ดูแลระบบ</span>
+        <a class="pill pill-danger" href="./login.html">🚪 ออกจากระบบ</a>
+      </div>
+    </div>
+  </header>
 
   <main class="wrap">
     <section class="card">
       <div class="head">
         <div>
-          <h1 class="title">จัดการนักเรียน</h1>
-          <p class="sub">เพิ่ม/แก้ไขรายชื่อนักเรียน </p>
+          <div class="h1">จัดการนักเรียน <span class="count-chip" id="countChip">0</span></div>
+         
         </div>
 
         <div class="tools">
-          <input id="q" class="input" type="text" placeholder="ค้นหา: รหัส / ชื่อ..." />
-          <button id="btnAdd" class="btn-add" type="button">+ เพิ่มนักเรียน</button>
+          <div class="search">
+            <div class="ico">🔎</div>
+            <input id="q" type="text" placeholder="ค้นหา: รหัส / ชื่อ..." />
+          </div>
+          <button id="btnAdd" class="btn-add" type="button">➕ เพิ่มนักเรียน</button>
         </div>
       </div>
 
       <div class="body">
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 160px;">STUDENT_ID</th>
-              <th>NAME</th>
-              <th class="muted" style="width: 170px; text-align:right;">ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:220px;">STUDENT_ID</th>
+                <th>NAME</th>
+                <th style="width:220px; text-align:right;">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
 
-        <div id="msg" class="msg muted"></div>
+        <div id="msg"></div>
+        <div class="footer-note">© NexAttend • Admin Panel</div>
       </div>
     </section>
   </main>
 
-  <!-- Modal (เหมือนหน้าสมัคร) -->
+  <!-- ✅ Modal (ID ต้องตรงกับ students.js) -->
   <div id="studentModal" class="auth-modal" hidden>
     <div class="auth-card">
       <div class="auth-head">
@@ -400,7 +548,7 @@
 
         <label class="field">
           <span>PASSWORD (ใส่ตอนเพิ่ม/หรือเปลี่ยนรหัส)</span>
-          <input id="fPass" type="password" placeholder="กำหนดรหัสผ่านของคุณ" />
+          <input id="fPass" type="password" placeholder="กำหนดรหัสผ่าน" />
         </label>
 
         <button class="btn-primary" id="btnSave" type="button">บันทึก</button>

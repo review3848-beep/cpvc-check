@@ -2,36 +2,169 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>Nex | เข้าสู่ระบบผู้ดูแล</title>
+  <title>NexAttend | เข้าสู่ระบบผู้ดูแล</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Prompt:wght@400;600;700;800&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="../css/styles.css" />
   <script type="module" src="./login.js" defer></script>
 
   <style>
+    /* ===== theme sync (white + clean accents) ===== */
     :root{
-      --accent-main: linear-gradient(90deg,#6d5cf6,#ec4899);
-      --accent-soft: rgba(236,72,153,.18);
-      --border: rgba(148,163,184,.35);
+      --bg:#f8fafc;
+      --card: rgba(255,255,255,.86);
+      --text:#0f172a;
+      --muted:#64748b;
+      --border: rgba(226,232,240,.95);
+
+      --blue:#38bdf8;
+      --violet:#8b5cf6;
+      --shadow: 0 18px 55px rgba(2,6,23,.10);
+      --shadow2: 0 26px 70px rgba(2,6,23,.14);
     }
+
+    /* กัน styles.css เดิมลากไปทับโทน */
+    body.auth-body{
+      margin:0;
+      min-height:100vh;
+      font-family:"Inter","Prompt",system-ui,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 560px at 12% 14%, rgba(56,189,248,.16), transparent 62%),
+        radial-gradient(900px 560px at 88% 16%, rgba(139,92,246,.14), transparent 62%),
+        radial-gradient(900px 560px at 50% 92%, rgba(34,197,94,.10), transparent 62%),
+        linear-gradient(180deg,#fff,var(--bg));
+      display:grid;
+      place-items:center;
+      padding: 18px;
+    }
+
+    .auth-shell{ width:100%; max-width: 440px; }
+
+    .auth-card{
+      border-radius: 28px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.68);
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+      padding: 22px 22px;
+      position:relative;
+      overflow:hidden;
+    }
+    .auth-card::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(700px 240px at 20% 0%, rgba(56,189,248,.14), transparent 62%),
+        radial-gradient(700px 240px at 80% 0%, rgba(139,92,246,.12), transparent 62%);
+      pointer-events:none;
+    }
+
+    /* ===== header ===== */
     .auth-avatar{
-      background: radial-gradient(circle at 30% 25%, rgba(109,92,246,.32), rgba(236,72,153,.20) 55%, rgba(2,6,23,0) 72%);
-      border: 1px solid rgba(236,72,153,.22);
+      width:64px; height:64px;
+      border-radius: 22px;
+      display:grid;
+      place-items:center;
+      background: linear-gradient(135deg, rgba(56,189,248,.22), rgba(139,92,246,.18));
+      border:1px solid var(--border);
+      box-shadow: 0 14px 40px rgba(2,6,23,.12);
+      position:relative;
+      margin: 0 auto 10px;
     }
-    .auth-avatar__dot{
-      background: conic-gradient(from 180deg, rgba(109,92,246,.55), rgba(236,72,153,.10), rgba(109,92,246,.55));
+    .auth-avatar__dot{ display:none; } /* ไม่ต้องมีลูกเล่นรก ๆ */
+    .auth-avatar__icon{ font-size: 26px; }
+
+    .auth-title{
+      margin: 6px 0 0;
+      text-align:center;
+      font-size: 1.45rem;
+      font-weight: 1000;
+      letter-spacing:-.2px;
+      position:relative;
     }
-    .auth-btn{
-      background: var(--accent-main);
-      box-shadow: 0 16px 40px rgba(236,72,153,.18);
-      color:#04121f;
+    .auth-subtitle{
+      margin: 6px 0 16px;
+      text-align:center;
+      color: var(--muted);
       font-weight: 800;
+      position:relative;
     }
-    .auth-link{ color:#c4b5fd; }
+
+    /* ===== form ===== */
+    .auth-form{ position:relative; }
+
+    .auth-label{
+      display:block;
+      margin: 10px 0 6px;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: .9rem;
+    }
+
+    .auth-input{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.86);
+      color: var(--text);
+      outline:none;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
+      transition: .18s;
+    }
+    .auth-input:focus{
+      border-color: rgba(56,189,248,.65);
+      box-shadow: 0 18px 45px rgba(2,6,23,.10);
+    }
+
+    .auth-btn{
+      width:100%;
+      margin-top: 14px;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: none;
+      cursor:pointer;
+
+      background: linear-gradient(90deg, var(--blue), #60a5fa);
+      color:#04121f;
+      font-weight: 1000;
+      box-shadow: 0 18px 45px rgba(56,189,248,.20);
+      transition: .18s;
+      position:relative;
+    }
+    .auth-btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 26px 70px rgba(56,189,248,.24);
+    }
+    .auth-btn:active{ transform: translateY(0); }
+
+    .auth-msg{
+      margin: 10px 0 0;
+      min-height: 18px;
+      text-align:center;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    /* small polish */
+    .hint{
+      margin-top: 12px;
+      text-align:center;
+      color: rgba(100,116,139,.85);
+      font-weight: 700;
+      font-size: .86rem;
+    }
+
+    @media (max-width: 420px){
+      .auth-card{ padding: 18px; }
+      .auth-title{ font-size: 1.3rem; }
+    }
   </style>
 </head>
 
@@ -39,12 +172,11 @@
   <main class="auth-shell">
     <section class="auth-card">
       <div class="auth-avatar" aria-hidden="true">
-        <span class="auth-avatar__dot"></span>
         <span class="auth-avatar__icon">🛡️</span>
       </div>
 
       <h1 class="auth-title">เข้าสู่ระบบผู้ดูแล</h1>
-      <p class="auth-subtitle">Nex Administration</p>
+      <p class="auth-subtitle">NexAttend Administration</p>
 
       <form id="loginForm" class="auth-form" autocomplete="on">
         <label class="auth-label" for="username">ชื่อผู้ใช้</label>
@@ -56,6 +188,7 @@
         <button id="loginBtn" class="auth-btn" type="submit">เข้าสู่ระบบ</button>
 
         <p id="msg" class="auth-msg" role="status" aria-live="polite"></p>
+        <div class="hint">ล็อกอินเพื่อจัดการครู / นักเรียน / คาบเรียน</div>
       </form>
     </section>
   </main>

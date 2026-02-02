@@ -1,245 +1,332 @@
-<html lang="th"><head>
+<!doctype html>
+<html lang="th">
+<head>
   <meta charset="UTF-8">
   <title>เช็คชื่อเข้าเรียน | NexAttend</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+  <!-- Fonts ให้เข้าธีมเดียวกับหน้าอื่น -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
 
   <!-- JS -->
-  <script type="module" src="scan.js" defer=""></script>
+  <script type="module" src="scan.js" defer></script>
 
   <style>
     :root{
-      --bg:#020617;
-      --panel:rgba(15,23,42,.96);
-      --border:rgba(148,163,184,.3);
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --blue1:#38bdf8;
-      --blue2:#2563eb;
-      --green:#22c55e;
-      --red:#f97373;
+      /* ธีมเดียวกับ history/login */
+      --bg:#f8fafc;
+      --card: rgba(255,255,255,.72);
+      --card2: rgba(255,255,255,.96);
+      --text:#0f172a;
+      --muted:#64748b;
+      --border: rgba(226,232,240,.95);
+
+      --blue:#38bdf8;
+      --violet:#8b5cf6;
+
+      --ok:#22c55e;
+      --late:#f59e0b;
+      --bad:#ef4444;
+
+      --shadow: 0 18px 55px rgba(2,6,23,.10);
+      --shadow2: 0 26px 70px rgba(2,6,23,.14);
+      --r: 22px;
     }
 
-    *{box-sizing:border-box}
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
 
     body{
       margin:0;
       min-height:100vh;
-      font-family:"Prompt",system-ui,sans-serif;
-      background:
-        radial-gradient(circle at 0 0,#0f172a,transparent 55%),
-        radial-gradient(circle at 100% 100%,#020617,#020617 70%);
+      font-family:"Kanit","Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
       color:var(--text);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:.8rem;
+      background:
+        radial-gradient(900px 560px at 12% 14%, rgba(56,189,248,.16), transparent 62%),
+        radial-gradient(900px 560px at 88% 16%, rgba(139,92,246,.14), transparent 62%),
+        radial-gradient(900px 560px at 50% 92%, rgba(34,197,94,.10), transparent 62%),
+        linear-gradient(180deg,#fff,var(--bg));
+      display:grid;
+      place-items:center;
+      padding: 18px;
     }
 
     /* ===== MAIN CARD ===== */
     .scan-shell{
       width:100%;
-      max-width:520px;
-      background:
-        radial-gradient(circle at 0 0,rgba(56,189,248,.25),transparent 60%),
-        radial-gradient(circle at 100% 100%,rgba(37,99,235,.3),transparent 60%),
-        var(--panel);
-      border-radius:26px;
-      padding:20px 18px 18px;
-      border:1px solid var(--border);
-      box-shadow:0 26px 80px rgba(0,0,0,.9);
-      transition:.35s;
+      max-width: 560px;
+      border-radius: var(--r);
+      background: var(--card2);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow2);
+      padding: 18px;
+      overflow:hidden;
+      position:relative;
     }
 
+    /* subtle top glow */
+    .scan-shell::before{
+      content:"";
+      position:absolute;
+      inset:-1px -1px auto -1px;
+      height: 120px;
+      background:
+        radial-gradient(650px 140px at 20% 0%, rgba(56,189,248,.18), transparent 60%),
+        radial-gradient(650px 140px at 85% 0%, rgba(139,92,246,.12), transparent 60%);
+      pointer-events:none;
+    }
+
+    /* ผลลัพธ์ (คง class เดิมไว้เผื่อ js ใส่) */
     .scan-shell.result-ok{
       box-shadow:
-        0 0 0 1px rgba(34,197,94,.6),
-        0 0 40px rgba(34,197,94,.35);
+        0 0 0 1px rgba(34,197,94,.45),
+        0 18px 55px rgba(2,6,23,.10),
+        0 0 50px rgba(34,197,94,.12);
     }
     .scan-shell.result-error{
       box-shadow:
-        0 0 0 1px rgba(248,113,113,.6),
-        0 0 40px rgba(248,113,113,.35);
+        0 0 0 1px rgba(239,68,68,.45),
+        0 18px 55px rgba(2,6,23,.10),
+        0 0 50px rgba(239,68,68,.10);
     }
 
     /* ===== HEADER ===== */
     .scan-header{
+      position:relative;
       display:flex;
       justify-content:space-between;
-      align-items:center;
-      gap:12px;
+      align-items:flex-start;
+      gap: 12px;
+      padding: 2px 2px 10px;
     }
 
     .scan-left{
       display:flex;
       gap:12px;
       align-items:center;
+      min-width:0;
     }
 
     .scan-icon{
       width:56px;height:56px;
-      border-radius:999px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:1.6rem;
-      background:
-        radial-gradient(circle at 30% 0,var(--blue1),transparent 60%),
-        radial-gradient(circle at 100% 100%,#1d4ed8,transparent 60%);
-      box-shadow:0 12px 32px rgba(59,130,246,.9);
+      border-radius:18px;
+      display:grid;
+      place-items:center;
+      font-size:1.55rem;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      box-shadow: 0 16px 40px rgba(56,189,248,.24);
+      flex: 0 0 auto;
+      color:#04121f;
     }
 
     h1{
       margin:0;
-      font-size:1.45rem;
+      font-size:1.28rem;
+      font-weight: 1000;
+      letter-spacing: -.2px;
+      line-height:1.15;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .sub{
-      font-size:.78rem;
-      color:var(--muted);
+      margin-top:4px;
+      font-size:.9rem;
+      color: var(--muted);
+      font-weight: 900;
     }
 
     .user-pill{
-      padding:6px 14px;
-      border-radius:999px;
-      background:rgba(15,23,42,.98);
-      border:1px solid rgba(148,163,184,.4);
-      font-size:.75rem;
-      color:var(--muted);
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.86);
+      border: 1px solid var(--border);
+      font-size: .85rem;
+      font-weight: 1000;
+      color: rgba(15,23,42,.72);
+      box-shadow: 0 12px 30px rgba(2,6,23,.08);
+      white-space:nowrap;
+      align-self:center;
     }
-    .user-pill span{color:#fff}
+    .user-pill span{ color: var(--text); }
 
     /* ===== STATUS ===== */
     .status-row{
       display:flex;
       align-items:center;
-      gap:8px;
-      margin:12px 0 6px;
-      font-size:.75rem;
-      color:var(--muted);
+      gap:10px;
+      margin: 10px 2px 12px;
+      font-size:.9rem;
+      color: var(--muted);
+      font-weight: 900;
+      position:relative;
     }
 
     .dot{
-      width:.55rem;height:.55rem;
+      width:.6rem;height:.6rem;
       border-radius:999px;
-      background:#64748b;
-      box-shadow:0 0 0 3px rgba(148,163,184,.35);
+      background: rgba(100,116,139,.65);
+      box-shadow: 0 0 0 4px rgba(148,163,184,.25);
     }
     .dot.open{
-      background:var(--green);
-      box-shadow:0 0 0 3px rgba(34,197,94,.4);
+      background: var(--ok);
+      box-shadow: 0 0 0 4px rgba(34,197,94,.18);
     }
     .dot.error{
-      background:var(--red);
-      box-shadow:0 0 0 3px rgba(248,113,113,.4);
+      background: var(--bad);
+      box-shadow: 0 0 0 4px rgba(239,68,68,.16);
     }
 
-    /* ===== FORM ===== */
+    /* ===== FORM CARD ===== */
     .card{
-      background:rgba(15,23,42,.97);
-      border-radius:20px;
-      border:1px solid var(--border);
-      padding:16px;
-      margin-top:8px;
+      background: rgba(255,255,255,.92);
+      border-radius: 20px;
+      border: 1px solid rgba(226,232,240,.95);
+      padding: 16px;
+      box-shadow: 0 12px 30px rgba(2,6,23,.06);
+      position:relative;
     }
 
     label{
-      font-size:.78rem;
-      color:#bae6fd;
+      font-size:.86rem;
+      font-weight: 1000;
+      color: rgba(15,23,42,.85);
+      display:block;
     }
 
     #tokenInput{
       width:100%;
-      margin-top:4px;
-      padding:12px 14px;
-      border-radius:14px;
-      border:1px solid rgba(148,163,184,.8);
-      background:#020617;
-      color:#fff;
-      font-size:.95rem;
+      margin-top:6px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(255,255,255,.96);
+      color: var(--text);
+      font-size: .95rem;
+      font-weight: 1000;
       letter-spacing:.12em;
       text-transform:uppercase;
       outline:none;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
+      transition: .16s;
+    }
+    #tokenInput::placeholder{
+      color: rgba(100,116,139,.70);
+      font-weight: 900;
+    }
+    #tokenInput:focus{
+      border-color: rgba(56,189,248,.85);
+      box-shadow:
+        0 0 0 3px rgba(56,189,248,.18),
+        0 10px 22px rgba(2,6,23,.05);
     }
 
     #submitTokenBtn{
       width:100%;
       margin-top:12px;
-      padding:13px;
+      padding: 12px 14px;
       border:none;
-      border-radius:999px;
-      font-size:.95rem;
-      font-weight:500;
-      color:#fff;
+      border-radius: 999px;
+      font-size: .92rem;
+      font-weight: 1000;
+      color:#04121f;
       cursor:pointer;
-      background:linear-gradient(135deg,var(--blue1),var(--blue2));
-      box-shadow:0 14px 40px rgba(59,130,246,.9);
-      transition:.15s;
+      background: linear-gradient(90deg, var(--blue), #60a5fa);
+      box-shadow: 0 18px 45px rgba(56,189,248,.22);
+      transition:.16s;
     }
-    #submitTokenBtn:hover{filter:brightness(1.05)}
+    #submitTokenBtn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 22px 58px rgba(56,189,248,.28);
+    }
+    #submitTokenBtn:disabled{
+      opacity:.7;
+      cursor:default;
+      transform:none;
+      box-shadow:none;
+    }
 
     #scanMsg{
-      margin-top:8px;
-      min-height:1rem;
-      font-size:.8rem;
-      color:var(--red);
+      margin-top:10px;
+      min-height: 1rem;
+      font-size:.9rem;
+      font-weight: 900;
+      color: var(--bad);
+      text-align:center;
     }
-    .scanMsg-success{color:var(--green)!important}
+    .scanMsg-success{ color: var(--ok)!important; }
 
     /* ===== FOOTER ===== */
     footer{
       display:flex;
       justify-content:space-between;
-      margin-top:10px;
-      font-size:.72rem;
-      color:var(--muted);
+      gap:10px;
+      margin-top:12px;
+      font-size:.86rem;
+      color: var(--muted);
+      font-weight: 900;
+      flex-wrap: wrap;
+      padding: 0 2px;
     }
     footer a{
-      color:#93c5fd;
+      color:#2563eb;
       text-decoration:none;
+      font-weight: 1000;
+    }
+    footer a:hover{ text-decoration: underline; }
+
+    /* ===== Popup (Light version) ===== */
+    .popup-backdrop{
+      position:fixed; inset:0;
+      background: rgba(2,6,23,.35);
+      backdrop-filter: blur(10px);
+      display:flex; align-items:center; justify-content:center;
+      z-index: 10001;
+      animation: fadeIn .25s;
+      padding: 18px;
+    }
+    .popup{
+      width: min(360px, 92vw);
+      background: rgba(255,255,255,.96);
+      border-radius: 24px;
+      padding: 22px 18px;
+      text-align:center;
+      color: var(--text);
+      border: 1px solid rgba(226,232,240,.95);
+      box-shadow: 0 26px 70px rgba(2,6,23,.18);
+      animation: pop .35s cubic-bezier(.2,.8,.2,1);
+    }
+    .popup.ok{ box-shadow: 0 26px 70px rgba(34,197,94,.12); }
+    .popup.late{ box-shadow: 0 26px 70px rgba(245,158,11,.12); }
+    .popup.error{ box-shadow: 0 26px 70px rgba(239,68,68,.12); }
+
+    .popup-icon{ font-size:2.2rem; margin-bottom:.4rem; }
+    .popup h3{ margin:.2rem 0; font-size:1.2rem; font-weight: 1000; }
+    .popup p{ margin:.2rem 0 .6rem; font-size:.92rem; color: var(--muted); font-weight: 900; }
+    .popup small{ font-size:.75rem; color: rgba(100,116,139,.85); font-weight: 900; }
+
+    @keyframes pop{ from{ transform:scale(.92); opacity:0 } to{ transform:scale(1); opacity:1 } }
+    @keyframes fadeIn{ from{ opacity:0 } to{ opacity:1 } }
+
+    @media (max-width: 480px){
+      body{ padding: 14px; }
+      .scan-shell{ padding: 16px; }
+      .user-pill{ font-size: .83rem; }
+      h1{ font-size: 1.18rem; }
+      .sub{ font-size: .88rem; }
     }
   </style>
-<style>
-.popup-backdrop{
-  position:fixed;inset:0;
-  background:rgba(2,6,23,.65);
-  backdrop-filter:blur(10px);
-  display:flex;align-items:center;justify-content:center;
-  z-index:9999;
-  animation:fadeIn .25s;
-}
-.popup{
-  width:85%;max-width:320px;
-  background:rgba(15,23,42,.98);
-  border-radius:24px;
-  padding:22px 18px;
-  text-align:center;
-  color:#fff;
-  animation:pop .35s cubic-bezier(.2,.8,.2,1);
-}
-.popup.ok{box-shadow:0 0 40px rgba(34,197,94,.5)}
-.popup.late{box-shadow:0 0 40px rgba(250,204,21,.5)}
-.popup.error{box-shadow:0 0 40px rgba(248,113,113,.5)}
-
-.popup-icon{font-size:2.2rem;margin-bottom:.4rem}
-.popup h3{margin:.2rem 0;font-size:1.2rem}
-.popup p{margin:.2rem 0 .6rem;font-size:.9rem;color:#cbd5f5}
-.popup small{font-size:.7rem;color:#94a3b8}
-
-@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-</style></head>
+</head>
 
 <body>
-
   <main class="scan-shell">
     <div class="scan-header">
       <div class="scan-left">
         <div class="scan-icon">🎓</div>
-        <div>
+        <div style="min-width:0">
           <h1>เช็คชื่อเข้าเรียน</h1>
           <div class="sub">กรอก TOKEN ที่ครูให้ เพื่อบันทึกเวลาเข้าเรียน</div>
         </div>
@@ -256,8 +343,8 @@
 
     <section class="card">
       <label for="tokenInput">TOKEN คาบเรียน</label>
-      <input id="tokenInput" type="text" placeholder="เช่น AK2GAE">
-      <button id="submitTokenBtn">ยืนยันเช็คชื่อ</button>
+      <input id="tokenInput" type="text" placeholder="เช่น AK2GAE" autocomplete="off" />
+      <button id="submitTokenBtn" type="button">ยืนยันเช็คชื่อ</button>
       <div id="scanMsg"></div>
     </section>
 
@@ -266,7 +353,5 @@
       <a href="dashboard.html">ดูสรุปการเข้าเรียน</a>
     </footer>
   </main>
-
-
-
-</body></html>
+</body>
+</html>

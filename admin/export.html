@@ -7,253 +7,380 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Prompt:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Prompt:wght@400;600;700;800&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="../css/styles.css" />
   <script type="module" src="../admin/export.js" defer></script>
 
   <style>
     :root{
-      --bg0:#020617;
-      --panel: rgba(15,23,42,.78);
-      --border: rgba(148,163,184,.18);
-      --muted:#9ca3af;
+      --bg:#f8fafc;
+      --card: rgba(255,255,255,.86);
+      --text:#0f172a;
+      --muted:#64748b;
+      --border: rgba(226,232,240,.95);
 
-      --t: rgba(56,189,248,.14);
-      --s: rgba(34,197,94,.14);
-      --c: rgba(245,158,11,.14);
-      --a: rgba(244,63,94,.14);
+      --blue:#38bdf8;
+      --green:#22c55e;
+      --violet:#8b5cf6;
+      --amber:#f59e0b;
+      --red:#ef4444;
+
+      --shadow: 0 18px 55px rgba(2,6,23,.10);
+      --shadow2: 0 26px 70px rgba(2,6,23,.14);
+      --radius: 22px;
     }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
 
     body{
       margin:0;
       min-height:100vh;
-      background: radial-gradient(circle at 20% 10%, #0b3a6b, #020617 62%);
       font-family:"Inter","Prompt",system-ui,sans-serif;
-      color:#e5e7eb;
+      color:var(--text);
+      background:
+        radial-gradient(900px 560px at 12% 14%, rgba(56,189,248,.16), transparent 62%),
+        radial-gradient(900px 560px at 88% 16%, rgba(139,92,246,.14), transparent 62%),
+        radial-gradient(900px 560px at 50% 92%, rgba(34,197,94,.10), transparent 62%),
+        linear-gradient(180deg,#fff,var(--bg));
     }
 
+    /* ===== Topbar (บาง ๆ) ===== */
     .topbar{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:18px 22px;
-      border-bottom:1px solid rgba(148,163,184,.12);
-      background: rgba(2,6,23,.55);
+      position:sticky; top:0; z-index:50;
+      border-bottom:1px solid var(--border);
+      background: rgba(255,255,255,.70);
       backdrop-filter: blur(12px);
-      position: sticky; top:0; z-index:10;
     }
-    .brand{ display:flex; align-items:center; gap:12px; font-weight:900; }
-    .logo{
-      width:42px;height:42px;border-radius:14px;
-      display:grid;place-items:center;
-      border:1px solid rgba(56,189,248,.18);
-      background: radial-gradient(circle at 30% 25%, rgba(56,189,248,.22), rgba(96,165,250,.08) 55%, rgba(2,6,23,0) 74%);
+    .topbar-inner{
+      max-width:1100px; margin:0 auto;
+      padding:14px 18px;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
     }
-    .brand small{ display:block; color:var(--muted); font-weight:700; margin-top:2px; }
 
-    .actions{ display:flex; gap:10px; }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      min-width: 220px;
+    }
+    .logo{
+      width:42px;height:42px;border-radius:16px;
+      display:grid; place-items:center;
+      color:#fff; font-weight:900;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      box-shadow: 0 14px 40px rgba(2,6,23,.12);
+      user-select:none;
+    }
+    .brand .txt{ line-height:1.1; }
+    .brand .title{ font-weight:1000; letter-spacing:-.2px; }
+    .brand .sub{ margin-top:4px; color:var(--muted); font-weight:700; font-size:.85rem; }
+
+    .actions{ display:flex; align-items:center; gap:10px; }
     .chip{
-      display:inline-flex; align-items:center;
-      padding:10px 14px; border-radius:999px;
-      border:1px solid rgba(148,163,184,.20);
-      background: rgba(15,23,42,.45);
-      color:#e5e7eb; text-decoration:none;
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(2,6,23,.03);
+      color:var(--text);
+      text-decoration:none;
       font-weight:900;
+      box-shadow: 0 10px 25px rgba(2,6,23,.05);
+      transition:.18s;
+      white-space:nowrap;
+    }
+    .chip:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 18px 45px rgba(2,6,23,.10);
+      border-color: rgba(148,163,184,.70);
     }
     .chip.primary{
-      background: linear-gradient(90deg,#38bdf8,#60a5fa);
-      color:#04121f; border:none;
+      border:none;
+      background: linear-gradient(90deg, var(--blue), #60a5fa);
+      color:#04121f;
+      font-weight:1000;
     }
 
-    .wrap{ max-width:1200px; margin: 18px auto; padding: 0 18px 50px; }
+    /* ===== Layout ===== */
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:18px 18px 44px;
+    }
 
     .hero{
-      border-radius: 24px;
-      border:1px solid rgba(148,163,184,.14);
-      background:
-        radial-gradient(900px 220px at 22% 35%, rgba(56,189,248,.14), rgba(2,6,23,0) 60%),
-        radial-gradient(700px 220px at 78% 20%, rgba(99,102,241,.10), rgba(2,6,23,0) 62%),
-        linear-gradient(180deg, rgba(15,23,42,.62), rgba(15,23,42,.42));
-      box-shadow:
-        0 30px 90px rgba(0,0,0,.28),
-        inset 0 1px 0 rgba(255,255,255,.05);
-      padding: 18px;
-      display:flex; align-items:flex-end; justify-content:space-between;
-      gap:14px; flex-wrap:wrap;
-      position:relative;
+      border-radius: 28px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.68);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      padding:18px 18px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
       overflow:hidden;
-      backdrop-filter: blur(14px);
+      position:relative;
     }
-    .hero::after{
+    .hero::before{
       content:"";
-      position:absolute; inset:0;
+      position:absolute; inset:-2px;
       background:
-        radial-gradient(420px 420px at 88% -10%, rgba(56,189,248,.16), rgba(2,6,23,0) 62%),
-        radial-gradient(520px 520px at -10% 110%, rgba(59,130,246,.10), rgba(2,6,23,0) 66%);
+        radial-gradient(700px 240px at 20% 0%, rgba(56,189,248,.14), transparent 62%),
+        radial-gradient(700px 240px at 80% 0%, rgba(139,92,246,.12), transparent 62%);
       pointer-events:none;
     }
+    .hero h1{
+      margin:0;
+      font-size:1.45rem;
+      font-weight:1000;
+      letter-spacing:-.2px;
+      position:relative;
+    }
+    .hero p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-weight:700;
+      position:relative;
+    }
 
-    .hero h1{ margin:0; font-size:26px; font-weight:900; }
-    .hero p{ margin:6px 0 0; color:var(--muted); font-weight:800; }
-
-    .meta{ display:flex; gap:10px; align-items:center; }
+    .meta{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      position:relative;
+    }
     .pill{
       display:inline-flex; align-items:center; gap:8px;
-      padding:8px 10px; border-radius:999px;
-      border:1px solid rgba(148,163,184,.16);
-      background: rgba(2,6,23,.22);
-      font-weight:900; font-size:12px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(2,6,23,.03);
+      font-weight:900;
+      font-size:12px;
+      color:var(--muted);
+      box-shadow: 0 10px 25px rgba(2,6,23,.04);
     }
-    .dot{ width:8px;height:8px;border-radius:50%;background:#22c55e; }
+    .dot{ width:8px;height:8px;border-radius:50%; background: var(--green); box-shadow: 0 0 0 6px rgba(34,197,94,.14); }
 
+    /* ===== Cards ===== */
     .grid{
       margin-top:14px;
       display:grid;
       grid-template-columns: repeat(4, minmax(0,1fr));
-      gap:14px;
-    }
-
-    .card{
-      border-radius: 22px;
-      border:1px solid rgba(148,163,184,.14);
-      background: rgba(15,23,42,.62);
-      box-shadow: 0 24px 70px rgba(0,0,0,.26);
-      min-height: 156px;
-      display:flex;
-      flex-direction:column;
-      padding:16px;
       gap:12px;
     }
 
-    .head{ display:flex; justify-content:space-between; align-items:center; }
-    .left{ display:flex; gap:12px; align-items:center; }
-    .ico{
-      width:44px;height:44px;border-radius:14px;
-      display:grid;place-items:center;
-      border:1px solid rgba(148,163,184,.14);
-      background: rgba(2,6,23,.22);
-      font-size:20px;
+    .card{
+      border-radius: 24px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.86);
+      box-shadow: 0 12px 30px rgba(2,6,23,.06);
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      min-height: 160px;
+      overflow:hidden;
+      position:relative;
     }
-    .title{ font-weight:900; font-size:16px; margin:0; }
-    .sub{ font-size:12px; color:var(--muted); font-weight:800; }
+    .card::before{
+      content:"";
+      position:absolute; inset:-2px;
+      opacity:.9;
+      pointer-events:none;
+    }
+
+    .head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; position:relative; }
+    .left{ display:flex; gap:12px; align-items:center; min-width:0; }
+    .ico{
+      width:46px;height:46px;border-radius:18px;
+      display:grid;place-items:center;
+      border:1px solid var(--border);
+      box-shadow: 0 10px 22px rgba(2,6,23,.06);
+      font-size:22px;
+      background: rgba(2,6,23,.03);
+      flex:0 0 auto;
+    }
+
+    .title{
+      font-weight:1000;
+      letter-spacing:-.1px;
+      font-size:1.02rem;
+      margin:0;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .sub{
+      margin-top:3px;
+      font-size:.86rem;
+      color:var(--muted);
+      font-weight:800;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
 
     .count{
       padding:7px 10px;
       border-radius:999px;
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(2,6,23,.18);
-      font-weight:900;
+      border:1px solid var(--border);
+      background: rgba(2,6,23,.03);
+      font-weight:1000;
       font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+      position:relative;
     }
 
     .btn{
       margin-top:auto;
-      padding:12px;
-      border-radius:14px;
-      border:1px solid rgba(148,163,184,.20);
-      background: rgba(2,6,23,.18);
-      color:#e5e7eb;
-      font-weight:900;
+      padding:12px 12px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background: rgba(2,6,23,.03);
+      color:var(--text);
+      font-weight:1000;
       cursor:pointer;
+      transition:.18s;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
+      position:relative;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 18px 45px rgba(2,6,23,.10);
+      border-color: rgba(148,163,184,.70);
     }
 
-    .card[data-type="teachers"] .btn{ background:var(--t); }
-    .card[data-type="students"] .btn{ background:var(--s); }
-    .card[data-type="sessions"] .btn{ background:var(--c); }
-    .card[data-type="attendance"] .btn{ background:var(--a); }
+    /* สีชัดเจน (แต่ยังขาวสะอาด) */
+    .card[data-type="teachers"]::before{ background: radial-gradient(420px 200px at 20% 0%, rgba(56,189,248,.16), transparent 65%); }
+    .card[data-type="students"]::before{ background: radial-gradient(420px 200px at 20% 0%, rgba(34,197,94,.14), transparent 65%); }
+    .card[data-type="sessions"]::before{ background: radial-gradient(420px 200px at 20% 0%, rgba(139,92,246,.14), transparent 65%); }
+    .card[data-type="attendance"]::before{ background: radial-gradient(420px 200px at 20% 0%, rgba(245,158,11,.14), transparent 65%); }
+
+    .card[data-type="teachers"] .ico{ background: rgba(56,189,248,.10); }
+    .card[data-type="students"] .ico{ background: rgba(34,197,94,.09); }
+    .card[data-type="sessions"] .ico{ background: rgba(139,92,246,.09); }
+    .card[data-type="attendance"] .ico{ background: rgba(245,158,11,.09); }
+
+    .card[data-type="teachers"] .btn{ background: rgba(56,189,248,.12); }
+    .card[data-type="students"] .btn{ background: rgba(34,197,94,.11); }
+    .card[data-type="sessions"] .btn{ background: rgba(139,92,246,.11); }
+    .card[data-type="attendance"] .btn{ background: rgba(245,158,11,.11); }
+
+    .foot{
+      margin-top:12px;
+      color:var(--muted);
+      font-weight:700;
+      text-align:right;
+      font-size:.9rem;
+    }
 
     @media (max-width: 1050px){
       .grid{ grid-template-columns: repeat(2,1fr); }
     }
     @media (max-width: 620px){
       .grid{ grid-template-columns: 1fr; }
+      .brand .sub{ display:none; }
     }
   </style>
 </head>
 
 <body>
-<header class="topbar">
-  <div class="brand">
-    <div class="logo">📤</div>
-    <div>
-      <div>NexAttend Admin</div>
-      <small>Export</small>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo">📤</div>
+        <div class="txt">
+          <div class="title">NexAttend | Admin</div>
+          <div class="sub">Export Center</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="chip" href="./dashboard.html">🏠 Dashboard</a>
+        <a class="chip primary" href="./sessions.html">📚 คาบเรียน</a>
+      </div>
     </div>
-  </div>
-  <div class="actions">
-    <a class="chip" href="./dashboard.html">Dashboard</a>
-    <a class="chip primary" href="./sessions.html">คาบเรียน</a>
-  </div>
-</header>
+  </header>
 
-<main class="wrap">
-  <section class="hero">
-    <div>
-      <h1>ส่งออกข้อมูล</h1>
-      <p>เลือกประเภท แล้วดาวน์โหลด CSV</p>
-    </div>
-    <div class="meta">
-      <span class="pill"><span class="dot"></span>พร้อมใช้งาน</span>
-      <span class="pill">CSV (UTF-8)</span>
-    </div>
-  </section>
-
-  <section class="grid">
-    <article class="card" data-type="teachers">
-      <div class="head">
-        <div class="left">
-          <div class="ico">👩‍🏫</div>
-          <div>
-            <div class="title">ครู</div>
-            <div class="sub">ทั้งหมด</div>
-          </div>
-        </div>
-        <div class="count" data-count="teachers">—</div>
+  <main class="wrap">
+    <section class="hero">
+      <div>
+        <h1>ส่งออกข้อมูล</h1>
+    
       </div>
-      <button class="btn" data-export="teachers">ดาวน์โหลด CSV</button>
-    </article>
-
-    <article class="card" data-type="students">
-      <div class="head">
-        <div class="left">
-          <div class="ico">👨‍🎓</div>
-          <div>
-            <div class="title">นักเรียน</div>
-            <div class="sub">ทั้งหมด</div>
-          </div>
-        </div>
-        <div class="count" data-count="students">—</div>
+      <div class="meta">
+        <span class="pill"><span class="dot"></span>พร้อมใช้งาน</span>
+        <span class="pill">CSV • UTF-8</span>
       </div>
-      <button class="btn" data-export="students">ดาวน์โหลด CSV</button>
-    </article>
+    </section>
 
-    <article class="card" data-type="sessions">
-      <div class="head">
-        <div class="left">
-          <div class="ico">🗓️</div>
-          <div>
-            <div class="title">คาบเรียน</div>
-            <div class="sub">ทั้งหมด</div>
+    <section class="grid">
+      <article class="card" data-type="teachers">
+        <div class="head">
+          <div class="left">
+            <div class="ico">👩‍🏫</div>
+            <div style="min-width:0">
+              <div class="title">ครู</div>
+              <div class="sub">ข้อมูลทั้งหมด</div>
+            </div>
           </div>
+          <div class="count" data-count="teachers">—</div>
         </div>
-        <div class="count" data-count="sessions">—</div>
-      </div>
-      <button class="btn" data-export="sessions">ดาวน์โหลด CSV</button>
-    </article>
+        <button class="btn" data-export="teachers">⬇️ ดาวน์โหลด CSV</button>
+      </article>
 
-    <article class="card" data-type="attendance">
-      <div class="head">
-        <div class="left">
-          <div class="ico">✅</div>
-          <div>
-            <div class="title">เช็คชื่อ</div>
-            <div class="sub">ทั้งหมด</div>
+      <article class="card" data-type="students">
+        <div class="head">
+          <div class="left">
+            <div class="ico">👨‍🎓</div>
+            <div style="min-width:0">
+              <div class="title">นักเรียน</div>
+              <div class="sub">ข้อมูลทั้งหมด</div>
+            </div>
           </div>
+          <div class="count" data-count="students">—</div>
         </div>
-        <div class="count" data-count="attendance">—</div>
-      </div>
-      <button class="btn" data-export="attendance">ดาวน์โหลด CSV</button>
-    </article>
-  </section>
-</main>
+        <button class="btn" data-export="students">⬇️ ดาวน์โหลด CSV</button>
+      </article>
+
+      <article class="card" data-type="sessions">
+        <div class="head">
+          <div class="left">
+            <div class="ico">🗓️</div>
+            <div style="min-width:0">
+              <div class="title">คาบเรียน</div>
+              <div class="sub">ข้อมูลทั้งหมด</div>
+            </div>
+          </div>
+          <div class="count" data-count="sessions">—</div>
+        </div>
+        <button class="btn" data-export="sessions">⬇️ ดาวน์โหลด CSV</button>
+      </article>
+
+      <article class="card" data-type="attendance">
+        <div class="head">
+          <div class="left">
+            <div class="ico">✅</div>
+            <div style="min-width:0">
+              <div class="title">เช็คชื่อ</div>
+              <div class="sub">ข้อมูลทั้งหมด</div>
+            </div>
+          </div>
+          <div class="count" data-count="attendance">—</div>
+        </div>
+        <button class="btn" data-export="attendance">⬇️ ดาวน์โหลด CSV</button>
+      </article>
+    </section>
+
+    <div class="foot">© NexAttend • Admin Panel</div>
+  </main>
 </body>
 </html>
