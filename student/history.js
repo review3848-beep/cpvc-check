@@ -1,9 +1,7 @@
-// student/history.js
 import { callApi } from "../api.js";
 
-/* =========================
-   DOM
-========================= */
+/* ================= DOM ================= */
+
 const nameEl = document.getElementById("studentNameDisplay");
 const idEl   = document.getElementById("studentIdDisplay");
 
@@ -15,276 +13,380 @@ const searchInput = document.getElementById("searchInput");
 const btnExportCSV  = document.getElementById("btnExportCSV");
 const btnExportXLSX = document.getElementById("btnExportXLSX");
 
-const dateBtns   = document.querySelectorAll('[data-date]');
-const statusBtns = document.querySelectorAll('[data-status]');
-
 const countAll    = document.getElementById("countAll");
 const countOK     = document.getElementById("countOK");
 const countLATE   = document.getElementById("countLATE");
 const countABSENT = document.getElementById("countABSENT");
 
-/* =========================
-   STATE
-========================= */
-let rawData = [];
-let viewData = [];
+const dateBtns   = [...document.querySelectorAll("[data-date]")];
+const statusBtns = [...document.querySelectorAll("[data-status]")];
 
-let activeDate   = "ALL";   // ALL | TODAY | WEEK
-let activeStatus = "ALL";   // ALL | OK | LATE | ABSENT
+/* ================= STATE ================= */
 
-/* =========================
-   INIT
-========================= */
+let allRows = [];
+
+let currentDateFilter   = "ALL";
+let currentStatusFilter = "ALL";
+
+/* ================= INIT ================= */
+
 document.addEventListener("DOMContentLoaded", init);
 
 async function init(){
-  const student = getStudentSession();
-  if (!student){
-    location.href = "login.html";
+
+  const session = getStudentSession();
+  if(!session){
+    setMsg("ยังไม่ได้เข้าสู่ระบบ");
     return;
   }
 
-  nameEl.textContent = student.name || "-";
-  idEl.textContent   = student.studentId || "-";
+  hydrateHeader(session);
 
-  bindEvents();
-  await loadHistory(student.studentId);
+  wireFilterButtons();
+  wireSearch();
+  wireExport();
+
+  await loadHistory(session.studentId);
 }
 
-/* =========================
-   SESSION
-========================= */
+/* ================= SESSION ================= */
+
 function getStudentSession(){
+
+  const raw =
+    localStorage.getItem("studentSession") ||
+    localStorage.getItem("cpvc_student") ||
+    localStorage.getItem("student") ||
+    "";
+
+  if(!raw) return null;
+
   try{
-    return JSON.parse(localStorage.getItem("cpvc_student"));
-  }catch(e){
+    const s = JSON.parse(raw);
+
+    if(s.student){
+      return {
+        studentId: s.student.studentId || s.student.id || s.student.code,
+        name: s.student.name || s.student.studentName
+      };
+    }
+
+    return {
+      studentId: s.studentId || s.id || s.code,
+      name: s.name || s.studentName
+    };
+
+  }catch{
     return null;
   }
 }
 
-/* =========================
-   LOAD DATA
-========================= */
+/* ================= UI ================= */
+
+function hydrateHeader(s){
+  if(nameEl) nameEl.textContent = s.name || "-";
+  if(idEl)   idEl.textContent   = s.studentId || "-";
+}
+
+function setMsg(t){
+  if(msgEl) msgEl.textContent = t || "";
+}
+
+/* ================= LOAD ================= */
+
 async function loadHistory(studentId){
-  setMsg("กำลังโหลดข้อมูล...");
+
   try{
+    setMsg("กำลังโหลดข้อมูล...");
+
+    // 👉 action ฝั่ง GAS
     const res = await callApi("studentGetHistory", { studentId });
 
-    if (!res || !res.success){
-      throw new Error(res?.message || "โหลดข้อมูลไม่สำเร็จ");
+    if(!res || res.success !== true){
+      throw new Error(res?.message || "โหลดไม่สำเร็จ");
     }
 
-    rawData = res.records || [];
-    applyFilters();
+    allRows =
+      res.rows ||
+      res.data?.rows ||
+      res.history ||
+      res.data?.history ||
+      [];
 
-    setMsg(`โหลดข้อมูลทั้งหมด ${rawData.length} รายการ`);
+    updateCounters();
+    render();
+
+    setMsg("");
+
   }catch(err){
-    rawData = [];
-    applyFilters();
-    setMsg("❌ " + err.message);
+    setMsg("โหลดข้อมูลไม่ได้");
+    console.error(err);
   }
 }
 
-/* =========================
-   FILTERS
-========================= */
-function bindEvents(){
-  // date filter
+/* ================= FILTER / SEARCH ================= */
+
+function wireFilterButtons(){
+
   dateBtns.forEach(btn=>{
     btn.addEventListener("click", ()=>{
       dateBtns.forEach(b=>b.classList.remove("active"));
       btn.classList.add("active");
-      activeDate = btn.dataset.date;
-      applyFilters();
+      currentDateFilter = btn.dataset.date;
+      render();
     });
   });
 
-  // status filter
   statusBtns.forEach(btn=>{
     btn.addEventListener("click", ()=>{
       statusBtns.forEach(b=>b.classList.remove("active"));
       btn.classList.add("active");
-      activeStatus = btn.dataset.status;
-      applyFilters();
+      currentStatusFilter = btn.dataset.status;
+      render();
     });
   });
-
-  // search
-  searchInput.addEventListener("input", ()=>{
-    applyFilters();
-  });
-
-  // export
-  btnExportCSV.addEventListener("click", exportCSV);
-  btnExportXLSX.addEventListener("click", exportXLSX);
 }
 
-function applyFilters(){
-  const keyword = searchInput.value.trim().toLowerCase();
-  const now = new Date();
+function wireSearch(){
+  if(!searchInput) return;
 
-  viewData = rawData.filter(r=>{
-    // ---- date ----
-    if (activeDate !== "ALL"){
-      const d = new Date(r.time);
-      if (activeDate === "TODAY"){
-        if (!isSameDay(d, now)) return false;
-      }
-      if (activeDate === "WEEK"){
-        if (!isSameWeek(d, now)) return false;
+  searchInput.addEventListener("input", ()=>{
+    render();
+  });
+}
+
+/* ================= EXPORT ================= */
+
+function wireExport(){
+
+  btnExportCSV?.addEventListener("click", ()=>{
+    exportCSV(getFilteredRows());
+  });
+
+  btnExportXLSX?.addEventListener("click", ()=>{
+    exportXLSX(getFilteredRows());
+  });
+}
+
+/* ================= COUNTERS ================= */
+
+function updateCounters(){
+
+  let ok=0, late=0, absent=0;
+
+  for(const r of allRows){
+    const s = String(r.status || "").toUpperCase();
+    if(s==="OK") ok++;
+    else if(s==="LATE") late++;
+    else if(s==="ABSENT") absent++;
+  }
+
+  if(countAll)    countAll.textContent    = allRows.length;
+  if(countOK)     countOK.textContent     = ok;
+  if(countLATE)   countLATE.textContent   = late;
+  if(countABSENT) countABSENT.textContent = absent;
+}
+
+/* ================= RENDER ================= */
+
+function render(){
+
+  const rows = getFilteredRows();
+
+  tbody.innerHTML = "";
+
+  if(!rows.length){
+    tbody.innerHTML =
+      `<tr><td colspan="5" class="empty">ไม่พบข้อมูล</td></tr>`;
+    return;
+  }
+
+  for(const r of rows){
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td class="time-col">${fmtTime(r.time || r.datetime || r.ts)}</td>
+      <td>${safe(r.subject || "-")}</td>
+      <td>${safe(r.room || "-")}</td>
+      <td>${statusHTML(r.status)}</td>
+      <td>${safe(r.teacher || r.teacherName || "-")}</td>
+    `;
+
+    tbody.appendChild(tr);
+  }
+}
+
+function getFilteredRows(){
+
+  const q = (searchInput?.value || "").trim().toLowerCase();
+
+  return allRows.filter(r=>{
+
+    /* status */
+    if(currentStatusFilter !== "ALL"){
+      if(String(r.status || "").toUpperCase() !== currentStatusFilter){
+        return false;
       }
     }
 
-    // ---- status ----
-    if (activeStatus !== "ALL"){
-      if ((r.status || "").toUpperCase() !== activeStatus) return false;
+    /* date */
+    if(currentDateFilter !== "ALL"){
+      if(!matchDateFilter(r.time || r.datetime || r.ts)){
+        return false;
+      }
     }
 
-    // ---- search ----
-    if (keyword){
-      const hay = `
-        ${r.subject || ""}
-        ${r.teacher || ""}
-        ${r.room || ""}
+    /* search */
+    if(q){
+      const text = `
+        ${r.subject||""}
+        ${r.room||""}
+        ${r.teacher||""}
+        ${r.teacherName||""}
       `.toLowerCase();
-      if (!hay.includes(keyword)) return false;
+
+      if(!text.includes(q)) return false;
     }
 
     return true;
   });
-
-  updateBadges();
-  renderTable();
 }
 
-/* =========================
-   TABLE
-========================= */
-function renderTable(){
-  tbody.innerHTML = "";
+/* ================= DATE FILTER ================= */
 
-  if (!viewData.length){
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="5" class="empty">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</td>
-      </tr>
-    `;
-    return;
+function matchDateFilter(value){
+
+  if(!value) return false;
+
+  const d = new Date(value);
+  if(isNaN(d)) return false;
+
+  const now = new Date();
+
+  if(currentDateFilter === "TODAY"){
+    return sameDay(d, now);
   }
 
-  viewData.forEach(r=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="time-col">${fmtTime(r.time)}</td>
-      <td>${safe(r.subject)}</td>
-      <td>${safe(r.room)}</td>
-      <td class="${statusClass(r.status)}">${safe(r.status)}</td>
-      <td>${safe(r.teacher)}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+  if(currentDateFilter === "WEEK"){
+    const start = startOfWeek(now);
+    const end   = new Date(start);
+    end.setDate(start.getDate()+7);
+    return d >= start && d < end;
+  }
+
+  return true;
 }
 
-/* =========================
-   BADGES
-========================= */
-function updateBadges(){
-  const total = viewData.length;
-  const ok    = viewData.filter(r=>r.status==="OK").length;
-  const late  = viewData.filter(r=>r.status==="LATE").length;
-  const abs   = viewData.filter(r=>r.status==="ABSENT").length;
-
-  countAll.textContent    = total;
-  countOK.textContent     = ok;
-  countLATE.textContent   = late;
-  countABSENT.textContent = abs;
+function sameDay(a,b){
+  return a.getFullYear()===b.getFullYear()
+      && a.getMonth()===b.getMonth()
+      && a.getDate()===b.getDate();
 }
 
-/* =========================
-   EXPORT
-========================= */
-function exportCSV(){
-  if (!viewData.length) return;
+function startOfWeek(d){
+  const x = new Date(d);
+  const day = x.getDay() || 7; // monday first
+  if(day!==1) x.setDate(x.getDate()-day+1);
+  x.setHours(0,0,0,0);
+  return x;
+}
 
-  const header = ["เวลา","วิชา","ห้อง","สถานะ","ครู"];
-  const rows = viewData.map(r=>[
-    fmtTime(r.time),
+/* ================= EXPORT ================= */
+
+function exportCSV(rows){
+
+  if(!rows.length) return;
+
+  const head = ["เวลา","วิชา","ห้อง","สถานะ","ครูผู้สอน"];
+
+  const data = rows.map(r=>[
+    fmtTime(r.time || r.datetime || r.ts),
     r.subject || "",
     r.room || "",
-    r.status || "",
-    r.teacher || ""
+    thStatus(r.status),
+    r.teacher || r.teacherName || ""
   ]);
 
-  const csv = [header, ...rows]
-    .map(r=>r.map(v=>`"${v}"`).join(","))
+  const csv = [head, ...data]
+    .map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(","))
     .join("\n");
 
-  downloadFile(csv, "history.csv", "text/csv");
+  const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+
+  download(url,"attendance-history.csv");
 }
 
-function exportXLSX(){
-  if (!viewData.length) return;
+function exportXLSX(rows){
 
-  const rows = viewData.map(r=>({
-    เวลา: fmtTime(r.time),
+  if(!rows.length) return;
+
+  const data = rows.map(r=>({
+    เวลา: fmtTime(r.time || r.datetime || r.ts),
     วิชา: r.subject || "",
     ห้อง: r.room || "",
-    สถานะ: r.status || "",
-    ครู: r.teacher || ""
+    สถานะ: thStatus(r.status),
+    ครูผู้สอน: r.teacher || r.teacherName || ""
   }));
 
-  const ws = XLSX.utils.json_to_sheet(rows);
+  const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "History");
-  XLSX.writeFile(wb, "history.xlsx");
+
+  XLSX.writeFile(wb,"attendance-history.xlsx");
 }
 
-/* =========================
-   HELPERS
-========================= */
-function fmtTime(ts){
-  if (!ts) return "-";
-  const d = new Date(ts);
-  return d.toLocaleString("th-TH", {
-    dateStyle:"short",
-    timeStyle:"short"
-  });
-}
+/* ================= HELPERS ================= */
 
-function statusClass(s){
-  s = (s || "").toUpperCase();
-  if (s === "OK") return "status-ok";
-  if (s === "LATE") return "status-late";
-  if (s === "ABSENT") return "status-absent";
-  return "";
-}
-
-function isSameDay(a,b){
-  return a.toDateString() === b.toDateString();
-}
-
-function isSameWeek(a,b){
-  const start = new Date(b);
-  start.setDate(b.getDate() - b.getDay());
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  return a >= start && a <= end;
-}
-
-function safe(v){
-  return v ?? "-";
-}
-
-function setMsg(t){
-  msgEl.textContent = t || "";
-}
-
-function downloadFile(content, filename, type){
-  const blob = new Blob([content], { type });
-  const url = URL.createObjectURL(blob);
+function download(url,filename){
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
+  document.body.appendChild(a);
   a.click();
+  a.remove();
   URL.revokeObjectURL(url);
+}
+
+function fmtTime(v){
+
+  if(!v) return "-";
+
+  const d = new Date(v);
+  if(isNaN(d)) return safe(v);
+
+  const dd = String(d.getDate()).padStart(2,"0");
+  const mo = String(d.getMonth()+1).padStart(2,"0");
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mm = String(d.getMinutes()).padStart(2,"0");
+
+  return `${dd}/${mo} ${hh}:${mm}`;
+}
+
+function thStatus(s){
+
+  const x = String(s||"").toUpperCase();
+
+  if(x==="OK") return "มาเรียน";
+  if(x==="LATE") return "สาย";
+  if(x==="ABSENT") return "ขาด";
+  if(x==="DUPLICATE") return "เช็คแล้ว";
+
+  return s || "-";
+}
+
+function statusHTML(s){
+
+  const x = String(s||"").toUpperCase();
+
+  if(x==="OK")      return `<span class="status-ok">OK</span>`;
+  if(x==="LATE")    return `<span class="status-late">LATE</span>`;
+  if(x==="ABSENT")  return `<span class="status-absent">ABSENT</span>`;
+
+  return safe(s||"-");
+}
+
+function safe(t){
+  return String(t||"").replace(/[<>]/g,"");
 }

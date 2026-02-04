@@ -31,13 +31,14 @@
       --shadow: 0 18px 55px rgba(2,6,23,.10);
       --shadow2: 0 26px 70px rgba(2,6,23,.14);
       --r: 22px;
+      --topbarH: 74px;
     }
 
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
+    html, body { margin:0; padding:0; }
 
     body{
-      margin:0;
       min-height:100vh;
       font-family:"Kanit","Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
       color:var(--text);
@@ -46,6 +47,7 @@
         radial-gradient(900px 560px at 88% 16%, rgba(139,92,246,.14), transparent 62%),
         radial-gradient(900px 560px at 50% 92%, rgba(34,197,94,.10), transparent 62%),
         linear-gradient(180deg,#fff,var(--bg));
+      padding-top: var(--topbarH); /* ✅ กันโดนหัวเว็บ fixed ทับ */
     }
 
     /* ===== Scrollbar ===== */
@@ -65,20 +67,23 @@
     }
     *{ scrollbar-width: auto; scrollbar-color: rgba(139,92,246,.80) rgba(2,6,23,.06); }
 
-    /* ===== Topbar (Sticky + Compact) ===== */
+    /* ===== Topbar (FIXED + ชิดขอบบน) ===== */
     .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 9999;
+      position: fixed; /* ✅ ชิดขอบบนจริง */
+      top: 0; left: 0; right: 0;
       width:100%;
+      z-index: 9999;
       border-bottom: 1px solid var(--border);
       background: rgba(255,255,255,.86);
       backdrop-filter: blur(12px);
+      margin:0;
+      border-radius:0;
     }
     .topbar-inner{
       max-width: 1200px;
       margin: 0 auto;
       padding: 10px 18px;
+      min-height: var(--topbarH);
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -91,12 +96,31 @@
       gap:10px;
       min-width: 0;
     }
+
+    /* ✅ โลโก้ 🎓 */
     .logo{
-      width:34px;height:34px;border-radius:14px;
+      width:40px;height:40px;border-radius:14px;
       background: linear-gradient(135deg, var(--blue), var(--violet));
       box-shadow: 0 12px 26px rgba(2,6,23,.10);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 1.15rem;
+      font-weight: 1000;
       flex:0 0 auto;
+      user-select:none;
     }
+    .logo-link{
+      display:inline-flex;
+      align-items:center;
+      text-decoration:none;
+    }
+    .logo-link:focus-visible{
+      outline: 3px solid rgba(56,189,248,.35);
+      outline-offset: 4px;
+      border-radius: 16px;
+    }
+
     .btext{ min-width:0; line-height:1.05; }
     .btitle{
       font-weight:1000;
@@ -392,7 +416,6 @@
       color: rgba(185,28,28,1);
     }
 
-    /* JS มักสร้างปุ่มในตาราง -> ทำให้ดูเข้าธีม */
     .btn-mini{
       padding: 8px 10px;
       border-radius: 12px;
@@ -554,16 +577,36 @@
       .chips{ padding: 12px 14px 0; }
       .bsub{ display:none; }
     }
+    /* ✅ FIX: กัน styles.css ล็อกการเลื่อน */
+html, body{
+  height: auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* ถ้ามีอะไรไป fixed ทั้งหน้า (บางธีมทำแบบนั้น) */
+body{
+  position: relative !important;
+}
+
+/* กัน iOS/มือถือบางเครื่องสกรอลแปลก ๆ */
+body{
+  -webkit-overflow-scrolling: touch;
+}
+
   </style>
 </head>
 
 <body>
 
-  <!-- ✅ Sticky Topbar: Teacher -->
+  <!-- ✅ Fixed Topbar: ชิดขอบบน -->
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <div class="logo"></div>
+        <a class="logo-link" href="./dashboard.html" aria-label="NexAttend Dashboard">
+          <div class="logo">🎓</div>
+        </a>
+
         <div class="btext">
           <div class="btitle">Dashboard ครู</div>
           <div class="bsub">
@@ -756,6 +799,9 @@
         sessionModal.setAttribute("aria-hidden","true");
       }
     });
+
+    // ✅ ทำให้ modal เปิดได้แม้ JS เดิมสั่ง display:flex / class open
+    // (ถ้า teacher-dashboard.js ใช้ classList.add("open") อยู่แล้ว อันนี้ก็ไม่รบกวน)
   </script>
 
 </body>
