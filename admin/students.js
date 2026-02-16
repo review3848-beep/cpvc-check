@@ -1,6 +1,6 @@
 import { callApi } from "../api.js";
 
-/* ===== DOM ===== */
+/* ================== DOM ================== */
 const tbody = document.getElementById("tbody");
 const q = document.getElementById("q");
 const msgEl = document.getElementById("msg");
@@ -19,10 +19,15 @@ const fName = document.getElementById("fName");
 const fPass = document.getElementById("fPass");
 const passField = fPass?.closest(".field") || fPass?.parentElement;
 
+/* ================== STATE ================== */
 let rows = [];
 let editingId = null;
 
 document.addEventListener("DOMContentLoaded", init);
+
+/* ================== CONFIG ================== */
+const ACTION_LIST = "adminGetStudents";
+const ACTION_UPSERT = "adminUpsertStudent";
 
 /* ================== GUARD ================== */
 function guardAdmin() {
@@ -55,6 +60,16 @@ function guardAdmin() {
   catch { return { token: raw }; }
 }
 
+/* ================== API WRAPPER ==================
+   ทำให้ "ส่ง action เข้า payload" เสมอ
+   ลดปัญหา callApi มีหลายรูปแบบ / backend อ่าน action ไม่เจอ
+*/
+async function apiCall(action, payload = {}) {
+  // ✅ โยนเป็น object เดียวเสมอ
+  // callApi ฝั่งคุณจะไปทำ fetch ให้เอง
+  return await callApi({ action, ...payload });
+}
+
 /* ================== INIT ================== */
 async function init() {
   const admin = guardAdmin();
@@ -79,32 +94,13 @@ function wireEvents() {
   btnSave?.addEventListener("click", onSave);
 }
 
-/* ================== API ACTIONS ================== */
-const ACTION_LIST = "adminGetStudents";
-const ACTION_UPSERT = "adminUpsertStudent";
-
-/**
- * ✅ รองรับ callApi ได้ 2 แบบ:
- * 1) callApi("actionString", payloadObj)
- * 2) callApi({ action:"...", ...payloadObj })
- */
-async function apiCall(action, payload = {}) {
-  // try: แบบมาตรฐาน (actionString, payload)
-  try {
-    return await callApi(action, payload);
-  } catch (e) {
-    // fallback: แบบส่ง object เดียว
-    return await callApi({ action, ...payload });
-  }
-}
-
 /* ================== LOAD ================== */
 async function loadStudents() {
   msgEl.textContent = "กำลังโหลด...";
   try {
-    // ✅ แก้ตรงนี้: ห้ามส่ง object เข้าเป็น action
     const res = await apiCall(ACTION_LIST, {});
 
+    // รองรับหลาย shape
     rows = Array.isArray(res?.rows) ? res.rows
       : Array.isArray(res?.data) ? res.data
       : Array.isArray(res) ? res
@@ -123,14 +119,14 @@ function render() {
   const keyword = (q?.value || "").trim().toLowerCase();
 
   const filtered = !keyword ? rows : rows.filter(r => {
-    const id = String(r.STUDENT_ID ?? r.studentId ?? r.id ?? r.UID ?? "").toLowerCase();
-    const name = String(r.NAME ?? r.name ?? "").toLowerCase();
+    const id = String(getId(r)).toLowerCase();
+    const name = String(getName(r)).toLowerCase();
     return id.includes(keyword) || name.includes(keyword);
   });
 
   tbody.innerHTML = filtered.map((r) => {
-    const id = esc(String(r.STUDENT_ID ?? r.studentId ?? r.id ?? r.UID ?? ""));
-    const name = esc(String(r.NAME ?? r.name ?? ""));
+    const id = esc(String(getId(r)));
+    const name = esc(String(getName(r)));
     return `
       <tr>
         <td>${id}</td>
@@ -147,7 +143,7 @@ function render() {
   tbody.querySelectorAll("[data-edit]").forEach(btn => {
     btn.addEventListener("click", () => {
       const id = btn.getAttribute("data-edit");
-      const row = rows.find(r => String(r.STUDENT_ID ?? r.studentId ?? r.id ?? r.UID ?? "") === String(id));
+      const row = rows.find(r => String(getId(r)) === String(id));
       openModal("edit", row);
     });
   });
@@ -169,16 +165,17 @@ function openModal(mode, row = null) {
     fPass.value = "";
     fId.disabled = false;
 
-    // ✅ เพิ่ม: ไม่ต้องตั้งรหัสผ่าน
+    // ✅ เพิ่มนักเรียน: ซ่อนช่องรหัสผ่าน (ตาม requirement เดิมคุณ)
     if (passField) passField.style.display = "none";
   } else {
-    editingId = String(row?.STUDENT_ID ?? row?.studentId ?? row?.id ?? row?.UID ?? "");
+    editingId = String(getId(row));
     modalTitle.textContent = "แก้ไขนักเรียน";
     fId.value = editingId;
-    fName.value = String(row?.NAME ?? row?.name ?? "");
+    fName.value = String(getName(row));
     fPass.value = "";
     fId.disabled = true;
 
+    // ✅ แก้ไข: โชว์ช่องรหัสผ่าน (กรอกเมื่ออยากเปลี่ยนเท่านั้น)
     if (passField) passField.style.display = "";
   }
 
@@ -201,23 +198,24 @@ async function onSave() {
 
   const isEdit = !!editingId;
 
-  // ✅ payload “ไม่ใส่ action” แล้วให้ apiCall จัดการ
+  // ✅ payload ส่งทั้งแบบ lower + UPPER เผื่อ backend ใช้คนละชื่อคอลัมน์
   const payload = {
     studentId,
+    name,
     STUDENT_ID: studentId,
     NAME: name,
-    name,
   };
 
-  // ✅ เฉพาะตอนแก้ไข + กรอก password เท่านั้น ถึงส่งไป
+  // ✅ เฉพาะตอนแก้ไข + กรอกรหัสผ่านเท่านั้นถึงส่ง
   if (isEdit && password) payload.password = password;
 
   btnSave.disabled = true;
   btnSave.textContent = "กำลังบันทึก...";
+
   try {
-    // ✅ แก้ตรงนี้: ห้าม callApi(payload) ตรง ๆ
     const res = await apiCall(ACTION_UPSERT, payload);
 
+    // รองรับ backend คืน {success:false, message:"..."}
     if (res?.success === false) throw new Error(res?.message || "save failed");
 
     toast("บันทึกเรียบร้อย");
@@ -226,14 +224,22 @@ async function onSave() {
     render();
   } catch (err) {
     console.error(err);
-    toast("บันทึกไม่สำเร็จ");
+    toast(err?.message ? `บันทึกไม่สำเร็จ: ${err.message}` : "บันทึกไม่สำเร็จ");
   } finally {
     btnSave.disabled = false;
     btnSave.textContent = "บันทึก";
   }
 }
 
-/* ================== UTILS ================== */
+/* ================== HELPERS ================== */
+function getId(r) {
+  return r?.STUDENT_ID ?? r?.studentId ?? r?.id ?? r?.UID ?? "";
+}
+
+function getName(r) {
+  return r?.NAME ?? r?.name ?? "";
+}
+
 function esc(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
