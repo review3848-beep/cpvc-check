@@ -61,13 +61,11 @@ function guardAdmin() {
 }
 
 /* ================== API WRAPPER ==================
-   ทำให้ "ส่ง action เข้า payload" เสมอ
-   ลดปัญหา callApi มีหลายรูปแบบ / backend อ่าน action ไม่เจอ
+   ✅ บังคับใช้รูปแบบ: callApi("action", payload)
+   เพราะ api.js ของคุณมีโอกาสสูงมากที่รองรับแค่นี้
 */
 async function apiCall(action, payload = {}) {
-  // ✅ โยนเป็น object เดียวเสมอ
-  // callApi ฝั่งคุณจะไปทำ fetch ให้เอง
-  return await callApi({ action, ...payload });
+  return await callApi(action, payload);
 }
 
 /* ================== INIT ================== */
@@ -165,7 +163,7 @@ function openModal(mode, row = null) {
     fPass.value = "";
     fId.disabled = false;
 
-    // ✅ เพิ่มนักเรียน: ซ่อนช่องรหัสผ่าน (ตาม requirement เดิมคุณ)
+    // เพิ่มนักเรียน: ซ่อนช่องรหัสผ่าน
     if (passField) passField.style.display = "none";
   } else {
     editingId = String(getId(row));
@@ -175,7 +173,7 @@ function openModal(mode, row = null) {
     fPass.value = "";
     fId.disabled = true;
 
-    // ✅ แก้ไข: โชว์ช่องรหัสผ่าน (กรอกเมื่ออยากเปลี่ยนเท่านั้น)
+    // แก้ไข: โชว์ช่องรหัสผ่าน (กรอกเมื่ออยากเปลี่ยน)
     if (passField) passField.style.display = "";
   }
 
@@ -198,7 +196,6 @@ async function onSave() {
 
   const isEdit = !!editingId;
 
-  // ✅ payload ส่งทั้งแบบ lower + UPPER เผื่อ backend ใช้คนละชื่อคอลัมน์
   const payload = {
     studentId,
     name,
@@ -206,7 +203,6 @@ async function onSave() {
     NAME: name,
   };
 
-  // ✅ เฉพาะตอนแก้ไข + กรอกรหัสผ่านเท่านั้นถึงส่ง
   if (isEdit && password) payload.password = password;
 
   btnSave.disabled = true;
@@ -215,7 +211,6 @@ async function onSave() {
   try {
     const res = await apiCall(ACTION_UPSERT, payload);
 
-    // รองรับ backend คืน {success:false, message:"..."}
     if (res?.success === false) throw new Error(res?.message || "save failed");
 
     toast("บันทึกเรียบร้อย");
