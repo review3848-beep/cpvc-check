@@ -1,7 +1,6 @@
 import { callApi } from "../api.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-
   /* ================= DOM ================= */
   const teacherNameEl   = document.getElementById("teacherName");
   const teacherEmailEl  = document.getElementById("teacherEmail");
@@ -13,17 +12,33 @@ document.addEventListener("DOMContentLoaded", () => {
   const tableBody       = document.getElementById("sessionTable");
   const msgEl           = document.getElementById("msg");
 
-  // ✅ Export button (ต้องมีใน HTML)
-  const exportBtn       = document.getElementById("btnExportAll");
+  const exportAllBtn    = document.getElementById("exportAllBtn");
+  const exportAllBtn2   = document.getElementById("exportAllBtn2");
 
-  /* close-session modal */
-  const closeModal      = document.getElementById("closeModal");
-  const modalText       = document.getElementById("modalText");
-  const btnCancel       = document.getElementById("btnCancel");
-  const btnConfirm      = document.getElementById("btnConfirm");
+  const subjectFilter   = document.getElementById("subjectFilter");
+  const chipsEl         = document.getElementById("subjectSummaryChips");
 
-  let currentSessionToken = null;
-  let currentButton = null;
+  /* ===== Session detail modal ===== */
+  const sessionModal     = document.getElementById("sessionModal");
+  const modalCloseBtn    = document.getElementById("modalCloseBtn");
+  const modalSubtitle    = document.getElementById("modalSubtitle");
+  const modalStats       = document.getElementById("modalStats");
+  const modalTableBody   = document.getElementById("modalTableBody");
+  const modalFooterInfo  = document.getElementById("modalFooterInfo");
+  const exportSessionBtn = document.getElementById("exportSessionBtn");
+
+  /* ===== Close session modal ===== */
+  const closeModal   = document.getElementById("closeModal");
+  const modalText    = document.getElementById("modalText");
+  const btnCancelX   = document.getElementById("btnCancel");
+  const btnCancel2   = document.getElementById("btnCancel2");
+  const btnConfirm   = document.getElementById("btnConfirm");
+
+  /* ================= STATE ================= */
+  let allSessions = [];
+  let selectedSession = null;     // { sessionId, token, subject, room, startTime, status }
+  let selectedRecords = [];       // [{studentId, studentName, time, status}]
+  let closeToken = null;
 
   /* ================= INIT ================= */
   const teacher = getTeacherSession();
@@ -35,28 +50,60 @@ document.addEventListener("DOMContentLoaded", () => {
   teacherNameEl.textContent  = teacher.name || "-";
   teacherEmailEl.textContent = teacher.email || "-";
 
-  btnCancel?.addEventListener("click", closeCloseModal);
+  exportAllBtn?.addEventListener("click", exportAllCSV);
+  exportAllBtn2?.addEventListener("click", exportAllCSV);
+
+  subjectFilter?.addEventListener("change", renderFiltered);
+
+  // ตาราง: event delegation
+  tableBody?.addEventListener("click", (e) => {
+    const btn = e.target?.closest("button");
+    if (!btn) return;
+
+    const action = btn.dataset.action || "";
+    const sessionId = btn.dataset.sessionId || "";
+    const token = btn.dataset.token || "";
+
+    if (action === "detail") openSessionDetail(sessionId);
+    if (action === "close")  openCloseModal(token);
+  });
+
+  // ปิด modal รายละเอียด
+  modalCloseBtn?.addEventListener("click", closeDetailModal);
+  sessionModal?.addEventListener("click", (e) => {
+    if (e.target === sessionModal) closeDetailModal();
+  });
+
+  // ปิด modal ปิดคาบ
+  btnCancelX?.addEventListener("click", closeCloseModal);
+  btnCancel2?.addEventListener("click", closeCloseModal);
+  closeModal?.addEventListener("click", (e) => {
+    if (e.target === closeModal) closeCloseModal();
+  });
+
   btnConfirm?.addEventListener("click", confirmCloseSession);
 
-  // ✅ bind export
-  exportBtn?.addEventListener("click", exportAllCSV);
+  // Export รายคาบ: ทำจากข้อมูล modal (ไม่พึ่ง GAS exportSession ที่บั๊ก)
+  exportSessionBtn?.addEventListener("click", exportCurrentSessionCSV);
 
   loadDashboard();
 
   /* ================= LOAD DASHBOARD ================= */
   async function loadDashboard(){
     try{
-      msgEl.textContent = "กำลังโหลด...";
+      setMsg("กำลังโหลด...");
       const res = await callApi("teacherGetDashboard", {});
       if(!res?.success) throw new Error(res?.message || "โหลดข้อมูลไม่สำเร็จ");
 
+      allSessions = Array.isArray(res.sessions) ? res.sessions : [];
       renderStats(res.stats || {});
-      renderTable(Array.isArray(res.sessions) ? res.sessions : []);
-      msgEl.textContent = "";
+      buildSubjectFilter(allSessions);
+      renderFiltered();
 
+      setMsg("");
     }catch(err){
       console.error(err);
-      msgEl.textContent = err?.message || "โหลดข้อมูลไม่สำเร็จ";
+      setMsg(err?.message || "โหลดข้อมูลไม่สำเร็จ");
     }
   }
 
@@ -66,7 +113,43 @@ document.addEventListener("DOMContentLoaded", () => {
     totalAttendEl.textContent   = stats.totalAttendance ?? 0;
   }
 
+  function buildSubjectFilter(list){
+    if(!subjectFilter) return;
+    const subjects = Array.from(new Set(
+      list.map(s => String(s.subject || "").trim()).filter(Boolean)
+    )).sort((a,b)=>a.localeCompare(b,"th"));
+
+    subjectFilter.innerHTML = `<option value="">ทั้งหมด</option>`;
+    subjects.forEach(sub => {
+      const opt = document.createElement("option");
+      opt.value = sub;
+      opt.textContent = sub;
+      subjectFilter.appendChild(opt);
+    });
+  }
+
+  function renderFiltered(){
+    const sub = String(subjectFilter?.value || "").trim();
+    const list = sub ? allSessions.filter(s => String(s.subject || "").trim() === sub) : allSessions;
+    renderChips(list, sub);
+    renderTable(list);
+  }
+
+  function renderChips(list, sub){
+    if(!chipsEl) return;
+    const total = list.length;
+    const open = list.filter(s => String(s.status || "").toUpperCase() === "OPEN").length;
+
+    chipsEl.innerHTML = `
+      <div class="chip">แสดง: <span class="highlight">${escapeHtml(sub || "ทั้งหมด")}</span></div>
+      <div class="chip">คาบ: <span class="highlight">${total}</span></div>
+      <div class="chip">OPEN: <span class="highlight">${open}</span></div>
+    `;
+  }
+
   function renderTable(list){
+    if(!tableBody) return;
+
     if(!list.length){
       tableBody.innerHTML = `<tr><td colspan="5" class="empty">ยังไม่มีข้อมูลคาบ</td></tr>`;
       return;
@@ -75,76 +158,218 @@ document.addEventListener("DOMContentLoaded", () => {
     tableBody.innerHTML = "";
 
     list.forEach(s => {
-      const tr = document.createElement("tr");
-
+      const sid = String(s.sessionId || s.id || s.SESSION_ID || "").trim();
+      const token = String(s.token || "-").trim();
       const start = s.startTime ?? s.startedAt ?? s.START_TIME ?? "-";
       const status = String(s.status || "-").toUpperCase();
 
+      const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>
           <div class="session-subject">${escapeHtml(s.subject || "-")}</div>
           <div class="session-room">${escapeHtml(s.room || "-")}</div>
         </td>
-        <td>${escapeHtml(s.token || "-")}</td>
+        <td>${escapeHtml(token)}</td>
         <td>${escapeHtml(start)}</td>
         <td>
-          <span class="status-pill ${status === "OPEN" ? "status-open" : "status-closed"}">
-            ${escapeHtml(status)}
-          </span>
+          <span class="status-pill ${status === "OPEN" ? "open" : "closed"}">${escapeHtml(status)}</span>
         </td>
-        <td>
+        <td style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-mini" data-action="detail" data-session-id="${escapeHtml(sid)}">ดู</button>
           ${status === "OPEN"
-            ? `<button class="btn-small btn-close-session" data-token="${escapeHtml(s.token)}">ปิดคาบ</button>`
-            : `-`
-          }
+            ? `<button class="btn-mini danger" data-action="close" data-token="${escapeHtml(token)}">ปิดคาบ</button>`
+            : ``}
         </td>
       `;
-
       tableBody.appendChild(tr);
     });
-
-    bindCloseButtons();
   }
 
-  /* ================= EXPORT CSV ================= */
+  /* ================= EXPORT ALL ================= */
   async function exportAllCSV(){
-    if(!exportBtn){
-      alert("ไม่พบปุ่ม Export (btnExportAll)");
-      return;
-    }
-
     try{
-      exportBtn.disabled = true;
-      msgEl.textContent = "กำลังสร้างไฟล์ CSV...";
+      setMsg("กำลังสร้างไฟล์ CSV...");
+      setExportDisabled(true);
 
-      // ✅ ต้องมี action นี้ใน GAS: teacherExportAll
       const res = await callApi("teacherExportAll", {});
       if(!res?.success) throw new Error(res?.message || "Export ไม่สำเร็จ");
 
-      // รองรับหลายรูปแบบ response
-      const csvText =
-        res.csvText ||
-        res.csv ||
-        res.data?.csvText ||
-        res.data?.csv ||
-        (Array.isArray(res.rows) ? rowsToCSV(res.rows) : "");
+      const csv = String(res.csv || res.csvText || "");
+      if(!csv) throw new Error("Server ไม่ส่ง CSV กลับมา");
 
-      if(!csvText) throw new Error("Server ไม่ได้ส่งข้อมูล CSV กลับมา");
-
-      downloadCSV(csvText, `attendance_all_${new Date().toISOString().slice(0,10)}.csv`);
-      msgEl.textContent = "ดาวน์โหลดแล้ว ✅";
-
+      downloadCSV(csv, `attendance_all_${todayKey()}.csv`);
+      setMsg("ดาวน์โหลดแล้ว ✅");
     }catch(err){
       console.error(err);
       alert(err?.message || "Export ไม่สำเร็จ");
-      msgEl.textContent = err?.message || "Export ไม่สำเร็จ";
+      setMsg(err?.message || "Export ไม่สำเร็จ");
     }finally{
-      exportBtn.disabled = false;
+      setExportDisabled(false);
     }
   }
 
+  function setExportDisabled(disabled){
+    if(exportAllBtn) exportAllBtn.disabled = disabled;
+    if(exportAllBtn2) exportAllBtn2.disabled = disabled;
+  }
+
+  /* ================= SESSION DETAIL ================= */
+  async function openSessionDetail(sessionId){
+    const sid = String(sessionId || "").trim();
+    if(!sid) return alert("ไม่มี sessionId");
+
+    selectedSession = null;
+    selectedRecords = [];
+    exportSessionBtn.disabled = true;
+
+    openDetailModal();
+    modalSubtitle.textContent = "กำลังโหลดรายละเอียด...";
+    modalStats.innerHTML = "";
+    modalFooterInfo.innerHTML = "";
+    modalTableBody.innerHTML = `<tr><td colspan="4" class="empty">กำลังโหลด...</td></tr>`;
+
+    try{
+      const res = await callApi("teacherGetSessionDetail", { sessionId: sid });
+      if(!res?.success) throw new Error(res?.message || "โหลดรายละเอียดไม่สำเร็จ");
+
+      const sess = res.session || {};
+      const stats = res.stats || {};
+      const records = Array.isArray(res.records) ? res.records : [];
+
+      selectedSession = {
+        sessionId: String(sess.sessionId || sid),
+        token: String(sess.token || "").trim().toUpperCase(),
+        subject: String(sess.subject || "-"),
+        room: String(sess.room || "-"),
+        startTime: sess.startTime,
+        status: String(sess.status || "-")
+      };
+      selectedRecords = records;
+
+      modalSubtitle.textContent = `${selectedSession.subject} • ห้อง ${selectedSession.room} • TOKEN: ${selectedSession.token}`;
+
+      modalStats.innerHTML = `
+        <span class="badge">ทั้งหมด: ${Number(stats.total ?? records.length)}</span>
+        <span class="badge ok">มา: ${Number(stats.ok ?? 0)}</span>
+        <span class="badge late">สาย: ${Number(stats.late ?? 0)}</span>
+        <span class="badge absent">ขาด: ${Number(stats.absent ?? 0)}</span>
+      `;
+
+      modalFooterInfo.innerHTML = `
+        <span class="badge">สถานะ: ${escapeHtml(selectedSession.status)}</span>
+        <span class="badge">เริ่ม: ${escapeHtml(String(selectedSession.startTime ?? "-"))}</span>
+      `;
+
+      if(!records.length){
+        modalTableBody.innerHTML = `<tr><td colspan="4" class="empty">ยังไม่มีการเช็คชื่อในคาบนี้</td></tr>`;
+      }else{
+        modalTableBody.innerHTML = records.map(r => `
+          <tr>
+            <td>${escapeHtml(r.studentId || "-")}</td>
+            <td>${escapeHtml(r.studentName || "-")}</td>
+            <td>${escapeHtml(r.time || "-")}</td>
+            <td>${escapeHtml(String(r.status || "-").toUpperCase())}</td>
+          </tr>
+        `).join("");
+      }
+
+      exportSessionBtn.disabled = false;
+
+    }catch(err){
+      console.error(err);
+      modalSubtitle.textContent = "โหลดไม่สำเร็จ";
+      modalTableBody.innerHTML = `<tr><td colspan="4" class="empty">${escapeHtml(err?.message || "โหลดรายละเอียดไม่สำเร็จ")}</td></tr>`;
+      exportSessionBtn.disabled = true;
+    }
+  }
+
+  function exportCurrentSessionCSV(){
+    if(!selectedSession) return alert("ยังไม่ได้เปิดรายละเอียดคาบ");
+    const tok = selectedSession.token || "SESSION";
+    const filename = `attendance_${tok}_${todayKey()}.csv`;
+
+    // ✅ สร้าง CSV จากข้อมูล modal (ชัวร์ ไม่พึ่ง GAS exportSession ที่บั๊ก)
+    const header = ["TOKEN","SUBJECT","ROOM","START_TIME","STUDENT_ID","STUDENT_NAME","DATETIME","STATUS"];
+    const rows = [header];
+
+    (selectedRecords || []).forEach(r => {
+      rows.push([
+        selectedSession.token || "",
+        selectedSession.subject || "",
+        selectedSession.room || "",
+        selectedSession.startTime || "",
+        r.studentId || "",
+        r.studentName || "",
+        r.time || "",
+        String(r.status || "").toUpperCase()
+      ]);
+    });
+
+    const csv = toCSVFromRows(rows);
+    downloadCSV(csv, filename);
+  }
+
+  function openDetailModal(){
+    sessionModal?.classList.add("open");
+    sessionModal?.setAttribute("aria-hidden","false");
+  }
+  function closeDetailModal(){
+    sessionModal?.classList.remove("open");
+    sessionModal?.setAttribute("aria-hidden","true");
+  }
+
+  /* ================= CLOSE SESSION ================= */
+  function openCloseModal(token){
+    const t = String(token || "").trim().toUpperCase();
+    if(!t || t === "-") return alert("ไม่มี TOKEN");
+    closeToken = t;
+
+    if(modalText) modalText.textContent = `ยืนยันปิดคาบ TOKEN: ${closeToken}`;
+    closeModal?.classList.add("open");
+    closeModal?.setAttribute("aria-hidden","false");
+  }
+
+  function closeCloseModal(){
+    closeModal?.classList.remove("open");
+    closeModal?.setAttribute("aria-hidden","true");
+    closeToken = null;
+  }
+
+  async function confirmCloseSession(){
+    if(!closeToken) return alert("ไม่มี TOKEN");
+    btnConfirm.disabled = true;
+
+    try{
+      const res = await callApi("teacherCloseSession", { token: closeToken });
+      if(!res?.success) throw new Error(res?.message || "ปิดคาบไม่สำเร็จ");
+
+      closeCloseModal();
+      closeDetailModal();
+      await loadDashboard();
+
+    }catch(err){
+      console.error(err);
+      alert(err?.message || "ปิดคาบไม่สำเร็จ");
+    }finally{
+      btnConfirm.disabled = false;
+    }
+  }
+
+  /* ================= UTILS ================= */
+  function setMsg(t){ if(msgEl) msgEl.textContent = String(t || ""); }
+
+  function todayKey(){
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const da = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${da}`;
+  }
+
   function downloadCSV(csvText, filename){
-    const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+    // ✅ BOM กันภาษาไทยเพี้ยนใน Excel
+    const bom = "\uFEFF";
+    const blob = new Blob([bom + csvText], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
@@ -157,77 +382,10 @@ document.addEventListener("DOMContentLoaded", () => {
     URL.revokeObjectURL(url);
   }
 
-  function rowsToCSV(rows){
-    const cols = Array.from(new Set(rows.flatMap(r => Object.keys(r || {}))));
-    const esc = (v) => `"${String(v ?? "").replace(/"/g,'""')}"`;
-
-    const head = cols.map(esc).join(",");
-    const body = rows
-      .map(r => cols.map(c => esc(r?.[c])).join(","))
-      .join("\n");
-
-    return head + "\n" + body;
+  function toCSVFromRows(rows){
+    return rows.map(r => r.map(v => `"${String(v ?? "").replace(/"/g,'""')}"`).join(",")).join("\n");
   }
 
-  /* ================= CLOSE SESSION ================= */
-  function bindCloseButtons(){
-    document.querySelectorAll(".btn-close-session").forEach(btn => {
-      btn.addEventListener("click", () => {
-        currentSessionToken = btn.dataset.token;
-        currentButton = btn;
-
-        if (!currentSessionToken) {
-          alert("ปุ่มนี้ไม่มี token");
-          return;
-        }
-
-        openCloseModal();
-      });
-    });
-  }
-
-  function openCloseModal(){
-    if (modalText) modalText.textContent = `ยืนยันปิดคาบ TOKEN: ${currentSessionToken}`;
-    closeModal?.classList.remove("hidden");
-  }
-
-  function closeCloseModal(){
-    closeModal?.classList.add("hidden");
-    currentSessionToken = null;
-    currentButton = null;
-  }
-
-  async function confirmCloseSession(){
-    if(!currentSessionToken){
-      alert("ไม่มี token คาบ");
-      return;
-    }
-
-    btnConfirm.disabled = true;
-
-    try{
-      const res = await callApi("teacherCloseSession", { token: currentSessionToken });
-      if(!res?.success) throw new Error(res?.message || "ปิดคาบไม่สำเร็จ");
-
-      const row = currentButton?.closest("tr");
-      const statusEl = row?.querySelector(".status-pill");
-      if (statusEl) {
-        statusEl.className = "status-pill status-closed";
-        statusEl.textContent = "CLOSED";
-      }
-      if (currentButton?.parentElement) currentButton.parentElement.textContent = "-";
-
-      closeCloseModal();
-
-    }catch(err){
-      console.error(err);
-      alert(err?.message || "ปิดคาบไม่สำเร็จ");
-    }finally{
-      btnConfirm.disabled = false;
-    }
-  }
-
-  /* ================= SESSION ================= */
   function getTeacherSession(){
     try{
       const raw = localStorage.getItem("teacherSession");
@@ -250,5 +408,4 @@ document.addEventListener("DOMContentLoaded", () => {
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
     }[m]));
   }
-
 });

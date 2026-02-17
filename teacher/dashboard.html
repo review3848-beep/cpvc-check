@@ -1,411 +1,808 @@
-import { callApi } from "../api.js";
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NexAttend | Dashboard ครู</title>
 
-document.addEventListener("DOMContentLoaded", () => {
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
 
-  /* ================= DOM ================= */
-  const teacherNameEl   = document.getElementById("teacherName");
-  const teacherEmailEl  = document.getElementById("teacherEmail");
+  <link rel="stylesheet" href="../css/styles.css" />
 
-  const totalSessionsEl = document.getElementById("totalSessions");
-  const openSessionsEl  = document.getElementById("openSessions");
-  const totalAttendEl   = document.getElementById("totalAttendance");
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card: rgba(255,255,255,.72);
+      --card2: rgba(255,255,255,.96);
+      --text:#0f172a;
+      --muted:#64748b;
+      --border: rgba(226,232,240,.95);
 
-  const tableBody       = document.getElementById("sessionTable");
-  const msgEl           = document.getElementById("msg");
+      --blue:#38bdf8;
+      --violet:#8b5cf6;
 
-  // ✅ Export buttons (HTML ของคุณใช้ id นี้)
-  const exportBtnTop    = document.getElementById("exportAllBtn");
-  const exportBtnBar    = document.getElementById("exportAllBtn2");
+      --ok:#22c55e;
+      --late:#f59e0b;
+      --absent:#ef4444;
 
-  // ✅ Subject filter/chips (มีใน HTML)
-  const subjectFilter   = document.getElementById("subjectFilter");
-  const chipsEl         = document.getElementById("subjectSummaryChips");
-
-  /* ===== Session detail modal ===== */
-  const sessionModal      = document.getElementById("sessionModal");
-  const modalCloseBtn     = document.getElementById("modalCloseBtn");
-  const modalSubtitle     = document.getElementById("modalSubtitle");
-  const modalStats        = document.getElementById("modalStats");
-  const modalTableBody    = document.getElementById("modalTableBody");
-  const modalFooterInfo   = document.getElementById("modalFooterInfo");
-  const exportSessionBtn  = document.getElementById("exportSessionBtn");
-
-  /* ===== Close-session modal ===== */
-  const closeModal      = document.getElementById("closeModal");
-  const modalText       = document.getElementById("modalText");
-  const btnCancelX      = document.getElementById("btnCancel");   // ปุ่ม X ในหัว modal
-  const btnCancel2      = document.getElementById("btnCancel2");  // ปุ่มยกเลิกด้านล่าง
-  const btnConfirm      = document.getElementById("btnConfirm");
-
-  /* ================= STATE ================= */
-  let allSessions = [];
-  let selectedSession = null;     // {sessionId, token, subject, room, ...}
-  let closeTargetToken = null;
-
-  /* ================= INIT ================= */
-  const teacher = getTeacherSession();
-  if (!teacher) {
-    location.href = "login.html";
-    return;
-  }
-
-  teacherNameEl.textContent  = teacher.name || "-";
-  teacherEmailEl.textContent = teacher.email || "-";
-
-  exportBtnTop?.addEventListener("click", exportAllCSV);
-  exportBtnBar?.addEventListener("click", exportAllCSV);
-
-  modalCloseBtn?.addEventListener("click", closeSessionModal);
-  sessionModal?.addEventListener("click", (e) => { if (e.target === sessionModal) closeSessionModal(); });
-
-  btnCancelX?.addEventListener("click", closeCloseModal);
-  btnCancel2?.addEventListener("click", closeCloseModal);
-  closeModal?.addEventListener("click", (e) => { if (e.target === closeModal) closeCloseModal(); });
-
-  btnConfirm?.addEventListener("click", confirmCloseSession);
-
-  exportSessionBtn?.addEventListener("click", exportCurrentSessionCSV);
-
-  subjectFilter?.addEventListener("change", () => renderTableFiltered());
-
-  // ✅ event delegation: จิ้มปุ่มในตาราง
-  tableBody?.addEventListener("click", (e) => {
-    const btn = e.target?.closest("button");
-    if (!btn) return;
-
-    const token = btn.dataset.token || "";
-    const sid   = btn.dataset.sessionId || "";
-
-    if (btn.dataset.action === "detail") {
-      openSessionDetailById(sid);
-      return;
+      --shadow: 0 18px 55px rgba(2,6,23,.10);
+      --shadow2: 0 26px 70px rgba(2,6,23,.14);
+      --r: 22px;
+      --topbarH: 74px;
     }
 
-    if (btn.dataset.action === "close") {
-      if (!token) return alert("ปุ่มนี้ไม่มี token");
-      openCloseModal(token);
-      return;
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    html, body { margin:0; padding:0; }
+
+    body{
+      min-height:100vh;
+      font-family:"Kanit","Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 560px at 12% 14%, rgba(56,189,248,.16), transparent 62%),
+        radial-gradient(900px 560px at 88% 16%, rgba(139,92,246,.14), transparent 62%),
+        radial-gradient(900px 560px at 50% 92%, rgba(34,197,94,.10), transparent 62%),
+        linear-gradient(180deg,#fff,var(--bg));
+      padding-top: var(--topbarH); /* ✅ กันโดนหัวเว็บ fixed ทับ */
     }
-  });
 
-  loadDashboard();
-
-  /* ================= LOAD DASHBOARD ================= */
-  async function loadDashboard(){
-    try{
-      msgEl.textContent = "กำลังโหลด...";
-      const res = await callApi("teacherGetDashboard", {});
-      if(!res?.success) throw new Error(res?.message || "โหลดข้อมูลไม่สำเร็จ");
-
-      const stats = res.stats || {};
-      allSessions = Array.isArray(res.sessions) ? res.sessions : [];
-
-      renderStats(stats);
-      buildSubjectFilter(allSessions);
-      renderTableFiltered();
-      msgEl.textContent = "";
-
-    }catch(err){
-      console.error(err);
-      msgEl.textContent = err?.message || "โหลดข้อมูลไม่สำเร็จ";
+    /* ===== Scrollbar ===== */
+    html{ overflow-y: scroll; scrollbar-gutter: stable; }
+    ::-webkit-scrollbar{ width: 14px; }
+    ::-webkit-scrollbar-track{
+      background: rgba(2,6,23,.06);
+      border-left: 1px solid rgba(226,232,240,.9);
     }
-  }
+    ::-webkit-scrollbar-thumb{
+      background: linear-gradient(180deg, rgba(56,189,248,.90), rgba(139,92,246,.80));
+      border-radius: 999px;
+      border: 3px solid rgba(255,255,255,.90);
+    }
+    ::-webkit-scrollbar-thumb:hover{
+      background: linear-gradient(180deg, rgba(56,189,248,1), rgba(139,92,246,.95));
+    }
+    *{ scrollbar-width: auto; scrollbar-color: rgba(139,92,246,.80) rgba(2,6,23,.06); }
 
-  function renderStats(stats){
-    totalSessionsEl.textContent = stats.totalSessions ?? 0;
-    openSessionsEl.textContent  = stats.openSessions ?? 0;
-    totalAttendEl.textContent   = stats.totalAttendance ?? 0;
-  }
+    /* ===== Topbar (FIXED + ชิดขอบบน) ===== */
+    .topbar{
+      position: fixed; /* ✅ ชิดขอบบนจริง */
+      top: 0; left: 0; right: 0;
+      width:100%;
+      z-index: 9999;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(12px);
+      margin:0;
+      border-radius:0;
+    }
+    .topbar-inner{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 10px 18px;
+      min-height: var(--topbarH);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
 
-  function buildSubjectFilter(list){
-    if (!subjectFilter) return;
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 0;
+    }
 
-    const subjects = Array.from(new Set(
-      list.map(s => String(s.subject || "-").trim()).filter(x => x && x !== "-")
-    )).sort((a,b)=>a.localeCompare(b,"th"));
+    /* ✅ โลโก้ 🎓 */
+    .logo{
+      width:40px;height:40px;border-radius:14px;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      box-shadow: 0 12px 26px rgba(2,6,23,.10);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 1.15rem;
+      font-weight: 1000;
+      flex:0 0 auto;
+      user-select:none;
+    }
+    .logo-link{
+      display:inline-flex;
+      align-items:center;
+      text-decoration:none;
+    }
+    .logo-link:focus-visible{
+      outline: 3px solid rgba(56,189,248,.35);
+      outline-offset: 4px;
+      border-radius: 16px;
+    }
 
-    // reset
-    subjectFilter.innerHTML = `<option value="">ทั้งหมด</option>`;
-    subjects.forEach(sub => {
-      const opt = document.createElement("option");
-      opt.value = sub;
-      opt.textContent = sub;
-      subjectFilter.appendChild(opt);
+    .btext{ min-width:0; line-height:1.05; }
+    .btitle{
+      font-weight:1000;
+      letter-spacing:-.2px;
+      font-size: 1rem;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .bsub{
+      margin-top:6px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      color: var(--muted);
+      font-size: .86rem;
+      font-weight:900;
+    }
+    .tag{
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(2,6,23,.03);
+      color: rgba(15,23,42,.82);
+      font-weight:1000;
+      font-size: .78rem;
+      white-space:nowrap;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
+    }
+
+    .actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .btn{
+      border:none;
+      cursor:pointer;
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-weight:1000;
+      font-size:.88rem;
+      color:#04121f;
+      background: linear-gradient(90deg, var(--blue), #60a5fa);
+      box-shadow: 0 16px 40px rgba(56,189,248,.18);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      text-decoration:none;
+      user-select:none;
+      white-space:nowrap;
+      transition:.18s;
+    }
+    .btn:hover{ transform: translateY(-1px); box-shadow: 0 22px 58px rgba(56,189,248,.22); }
+
+    .btn.secondary{
+      background: transparent;
+      border: 1px solid var(--border);
+      box-shadow:none;
+      color: var(--text);
+    }
+    .btn.secondary:hover{
+      transform: translateY(-1px);
+      border-color: rgba(148,163,184,.70);
+      box-shadow: 0 16px 40px rgba(2,6,23,.10);
+    }
+
+    .btn.danger{
+      background: linear-gradient(135deg, rgba(239,68,68,.95), rgba(245,158,11,.95));
+      color:#fff;
+      box-shadow: 0 16px 40px rgba(239,68,68,.18);
+    }
+
+    /* ===== Main ===== */
+    .wrap{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 18px 18px 56px;
+    }
+
+    #msg{
+      margin: 8px 0 14px;
+      font-size: .95rem;
+      text-align:center;
+      color: #ef4444;
+      font-weight: 1000;
+      min-height: 20px;
+    }
+
+    /* ===== Stats ===== */
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .stat{
+      border-radius: var(--r);
+      background: var(--card2);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 14px 16px 14px;
+      position: relative;
+      overflow:hidden;
+    }
+    .stat::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(600px 220px at 0% 0%, rgba(56,189,248,.14), transparent 55%),
+        radial-gradient(600px 220px at 100% 0%, rgba(139,92,246,.12), transparent 55%);
+      pointer-events:none;
+    }
+    .stat > *{ position:relative; }
+    .stat-label{
+      font-size:.84rem;
+      color: var(--muted);
+      font-weight: 1000;
+    }
+    .stat-value{
+      font-size: 1.7rem;
+      font-weight: 1000;
+      margin-top: 2px;
+      letter-spacing: -.3px;
+    }
+    .stat-footer{
+      margin-top: 6px;
+      font-size: .86rem;
+      color: rgba(37,99,235,.95);
+      font-weight: 1000;
+    }
+
+    /* ===== Action bar ===== */
+    .action-bar{
+      border-radius: var(--r);
+      background: rgba(255,255,255,.70);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 12px 12px;
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+      margin-bottom: 18px;
+      backdrop-filter: blur(10px);
+    }
+    .action-left, .action-right{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .btn.big{
+      padding: 12px 16px;
+      font-size:.92rem;
+    }
+
+    /* ===== Table card ===== */
+    .card{
+      border-radius: var(--r);
+      background: var(--card2);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+    }
+    .card-head{
+      padding: 16px 18px 12px;
+      display:flex;
+      align-items:flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid rgba(226,232,240,.85);
+      background: rgba(255,255,255,.70);
+      backdrop-filter: blur(10px);
+    }
+    .card-head h3{
+      margin:0;
+      font-size:1.05rem;
+      font-weight:1000;
+      letter-spacing:-.2px;
+    }
+    .hint{
+      margin-top:6px;
+      color: var(--muted);
+      font-weight:900;
+      font-size: .9rem;
+    }
+
+    .filter-group{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:.92rem;
+      color: var(--muted);
+      font-weight: 1000;
+    }
+    #subjectFilter{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(255,255,255,.92);
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
+      color: var(--text);
+      font-weight: 1000;
+      outline:none;
+      min-width: 180px;
+    }
+
+    .chips{
+      padding: 12px 18px 0;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .chip{
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size:.82rem;
+      background: rgba(2,6,23,.03);
+      border: 1px solid rgba(226,232,240,.95);
+      color: rgba(15,23,42,.78);
+      font-weight: 1000;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
+    }
+    .chip .highlight{ color: rgba(34,197,94,1); font-weight: 1000; }
+
+    .table-wrap{ padding: 12px 18px 18px; }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      border-radius: 16px;
+      overflow:hidden;
+      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 12px 30px rgba(2,6,23,.06);
+    }
+    thead th{
+      text-align:left;
+      font-size:.82rem;
+      color: rgba(100,116,139,.95);
+      padding: 12px;
+      background: rgba(2,6,23,.02);
+      border-bottom: 1px solid rgba(226,232,240,.95);
+      font-weight: 1000;
+      letter-spacing:.7px;
+      white-space:nowrap;
+    }
+    tbody td{
+      padding: 12px;
+      border-bottom: 1px solid rgba(226,232,240,.75);
+      font-size: .92rem;
+      color: var(--text);
+      font-weight: 900;
+      white-space:nowrap;
+      vertical-align: top;
+    }
+    tbody tr:hover td{ background: rgba(56,189,248,.06); }
+    tbody tr:last-child td{ border-bottom:none; }
+    .empty{
+      text-align:center;
+      padding: 18px 12px;
+      color: var(--muted);
+      font-weight: 1000;
+      white-space: normal;
+    }
+
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: .82rem;
+      font-weight: 1000;
+      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(2,6,23,.03);
+      color: rgba(15,23,42,.78);
+    }
+    .status-pill.open{
+      border-color: rgba(34,197,94,.25);
+      background: rgba(34,197,94,.10);
+      color: rgba(21,128,61,1);
+    }
+    .status-pill.closed{
+      border-color: rgba(239,68,68,.20);
+      background: rgba(239,68,68,.08);
+      color: rgba(185,28,28,1);
+    }
+
+    .btn-mini{
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(255,255,255,.92);
+      cursor:pointer;
+      font-weight: 1000;
+      font-size: .84rem;
+      transition: .16s;
+      white-space:nowrap;
+    }
+    .btn-mini:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 16px 40px rgba(2,6,23,.10);
+      border-color: rgba(148,163,184,.70);
+    }
+    .btn-mini.danger{
+      background: rgba(239,68,68,.08);
+      border-color: rgba(239,68,68,.18);
+      color: rgba(185,28,28,1);
+    }
+
+    /* ===== Modal (session detail) ===== */
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 16px;
+      background: rgba(2,6,23,.35);
+      backdrop-filter: blur(10px);
+      z-index: 10000;
+    }
+    .modal-backdrop.open{ display:flex; }
+
+    .modal{
+      width: min(920px, 96vw);
+      max-height: 84vh;
+      background: rgba(255,255,255,.96);
+      border-radius: 18px;
+      border: 1px solid rgba(226,232,240,.95);
+      box-shadow: 0 26px 70px rgba(2,6,23,.18);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .modal-header{
+      padding: 12px 14px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      border-bottom: 1px solid rgba(226,232,240,.95);
+      background: rgba(255,255,255,.86);
+    }
+    .modal-title{
+      font-size: 1rem;
+      font-weight: 1000;
+      margin:0;
+    }
+    .modal-header small{
+      display:block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-weight: 900;
+      font-size: .86rem;
+    }
+    .btn-close{
+      border:none;
+      background: rgba(2,6,23,.04);
+      border: 1px solid rgba(226,232,240,.95);
+      cursor:pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      font-size: 1.2rem;
+      line-height: 1;
+      color: rgba(100,116,139,.95);
+      transition: .16s;
+    }
+    .btn-close:hover{
+      background: rgba(2,6,23,.06);
+      transform: translateY(-1px);
+    }
+
+    .modal-body{
+      padding: 12px 14px 14px;
+      overflow:auto;
+    }
+    .badge-group{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom: 10px;
+    }
+    .badge{
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(2,6,23,.03);
+      border: 1px solid rgba(226,232,240,.95);
+      font-weight: 1000;
+      font-size: .82rem;
+      color: rgba(15,23,42,.78);
+    }
+    .badge.ok{ color: rgba(21,128,61,1); border-color: rgba(34,197,94,.25); background: rgba(34,197,94,.10); }
+    .badge.late{ color: rgba(180,83,9,1); border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.10); }
+    .badge.absent{ color: rgba(185,28,28,1); border-color: rgba(239,68,68,.22); background: rgba(239,68,68,.08); }
+
+    .modal-table{
+      width:100%;
+      border-collapse: collapse;
+      border-radius: 14px;
+      overflow:hidden;
+      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(255,255,255,.98);
+      box-shadow: 0 12px 30px rgba(2,6,23,.06);
+    }
+    .modal-table th{
+      text-align:left;
+      font-size:.8rem;
+      color: rgba(100,116,139,.95);
+      padding: 10px;
+      background: rgba(2,6,23,.02);
+      border-bottom: 1px solid rgba(226,232,240,.95);
+      font-weight: 1000;
+      white-space:nowrap;
+    }
+    .modal-table td{
+      padding: 10px;
+      border-bottom: 1px solid rgba(226,232,240,.75);
+      font-size: .9rem;
+      font-weight: 900;
+      white-space:nowrap;
+    }
+    .modal-table tr:last-child td{ border-bottom:none; }
+
+    .modal-footer{
+      padding: 12px 14px 14px;
+      border-top: 1px solid rgba(226,232,240,.95);
+      background: rgba(255,255,255,.86);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    @media (max-width: 980px){
+      .stats{ grid-template-columns: 1fr; }
+      #subjectFilter{ min-width: 160px; }
+    }
+    @media (max-width: 768px){
+      .topbar-inner{ padding: 10px 14px; }
+      .wrap{ padding: 14px 14px 46px; }
+      .card-head{ padding: 14px 14px 10px; }
+      .table-wrap{ padding: 12px 14px 14px; }
+      .chips{ padding: 12px 14px 0; }
+      .bsub{ display:none; }
+    }
+    /* ✅ FIX: กัน styles.css ล็อกการเลื่อน */
+html, body{
+  height: auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* ถ้ามีอะไรไป fixed ทั้งหน้า (บางธีมทำแบบนั้น) */
+body{
+  position: relative !important;
+}
+
+/* กัน iOS/มือถือบางเครื่องสกรอลแปลก ๆ */
+body{
+  -webkit-overflow-scrolling: touch;
+}
+
+  </style>
+</head>
+
+<body>
+
+  <!-- ✅ Fixed Topbar: ชิดขอบบน -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <a class="logo-link" href="./dashboard.html" aria-label="NexAttend Dashboard">
+          <div class="logo">🎓</div>
+        </a>
+
+        <div class="btext">
+          <div class="btitle">Dashboard ครู</div>
+          <div class="bsub">
+            <span id="teacherName">-</span>
+            <span class="tag">✉️ <span id="teacherEmail">-</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="btn secondary" href="./open-session.html">➕ เปิดคาบใหม่</a>
+        <button class="btn secondary" id="exportAllBtn" type="button">⬇️ Export ทั้งหมด (CSV)</button>
+        <button class="btn danger" type="button" onclick="logoutTeacher()">🚪 ออกจากระบบ</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <div id="msg"></div>
+
+    <!-- Stats -->
+    <section class="stats">
+      <div class="stat">
+        <div class="stat-label">คาบทั้งหมดของคุณ</div>
+        <div class="stat-value" id="totalSessions">0</div>
+        <div class="stat-footer">จำนวนคาบที่เคยเปิดในระบบ</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-label">คาบที่ยังเปิดอยู่</div>
+        <div class="stat-value" id="openSessions">0</div>
+        <div class="stat-footer">STATUS = OPEN</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-label">จำนวนการเช็คชื่อทั้งหมด</div>
+        <div class="stat-value" id="totalAttendance">0</div>
+        <div class="stat-footer">แถวใน ATTENDANCE ของคุณ</div>
+      </div>
+    </section>
+
+    <!-- Action bar -->
+    <section class="action-bar" aria-label="actions">
+      <div class="action-left">
+        <a class="btn big" href="./open-session.html">➕ เปิดคาบใหม่</a>
+      </div>
+      <div class="action-right">
+        <button class="btn secondary big" id="exportAllBtn2" type="button">⬇️ Export การเช็คชื่อทั้งหมด (CSV)</button>
+      </div>
+    </section>
+
+    <!-- Table card -->
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h3>คาบล่าสุดของคุณ</h3>
+          <div class="hint">ดูรายละเอียดนักเรียน มา/สาย/ขาด และ export รายคาบ</div>
+        </div>
+
+        <div class="filter-group">
+          กรองรายวิชา:
+          <select id="subjectFilter">
+            <option value="">ทั้งหมด</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="subjectSummaryChips" class="chips"></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>รายวิชา / ห้อง</th>
+              <th>TOKEN</th>
+              <th>วันที่เริ่ม</th>
+              <th>สถานะ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="sessionTable">
+            <tr><td colspan="5" class="empty">ยังไม่มีข้อมูลคาบ</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL แสดงรายชื่อ มา/สาย/ขาด -->
+  <div id="sessionModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="modalTitle">รายละเอียดคาบเรียน</div>
+          <small id="modalSubtitle"></small>
+        </div>
+        <button class="btn-close" id="modalCloseBtn" aria-label="ปิด">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="badge-group" id="modalStats"></div>
+
+        <table class="modal-table" id="modalTable">
+          <thead>
+            <tr>
+              <th>รหัสนักเรียน</th>
+              <th>ชื่อนักเรียน</th>
+              <th>เวลาเช็คชื่อ</th>
+              <th>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody id="modalTableBody">
+            <tr><td colspan="4" class="empty">กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-footer">
+        <div class="badge-group" id="modalFooterInfo"></div>
+        <button class="btn secondary" id="exportSessionBtn" type="button">⬇️ Export คาบนี้ (CSV)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal ปิดคาบ (คง id เดิมให้ JS) -->
+  <div id="closeModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">⚠️ ปิดคาบเรียน</div>
+          <small>นักเรียนจะไม่สามารถเช็คชื่อได้อีก</small>
+        </div>
+        <button class="btn-close" id="btnCancel" aria-label="ปิด">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div id="modalText" style="font-weight:1000;color:var(--text);">
+          คุณต้องการปิดคาบนี้ใช่หรือไม่
+        </div>
+      </div>
+
+      <div class="modal-footer" style="justify-content:flex-end;">
+        <button class="btn secondary" id="btnCancel2" type="button">ยกเลิก</button>
+        <button class="btn danger" id="btnConfirm" type="button">ยืนยันปิดคาบ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS เดิมของหน้า -->
+  <script type="module" src="../js/teacher-dashboard.js"></script>
+
+  <script>
+    // เผื่อ JS เดิมไม่ได้ bind exportAllBtn ตัวที่ 2
+    document.getElementById("exportAllBtn2")?.addEventListener("click", () => {
+      document.getElementById("exportAllBtn")?.click();
     });
-  }
 
-  function renderTableFiltered(){
-    const filterVal = String(subjectFilter?.value || "").trim();
-    const list = filterVal ? allSessions.filter(s => String(s.subject || "").trim() === filterVal) : allSessions;
-    renderChips(list, filterVal);
-    renderTable(list);
-  }
-
-  function renderChips(list, filterVal){
-    if (!chipsEl) return;
-
-    const total = list.length;
-    const openCount = list.filter(s => String(s.status || "").toUpperCase() === "OPEN").length;
-
-    chipsEl.innerHTML = `
-      <div class="chip">แสดง: <span class="highlight">${escapeHtml(filterVal || "ทั้งหมด")}</span></div>
-      <div class="chip">จำนวนคาบ: <span class="highlight">${total}</span></div>
-      <div class="chip">คาบที่เปิดอยู่: <span class="highlight">${openCount}</span></div>
-    `;
-  }
-
-  function renderTable(list){
-    if(!tableBody) return;
-
-    if(!list.length){
-      tableBody.innerHTML = `<tr><td colspan="5" class="empty">ยังไม่มีข้อมูลคาบ</td></tr>`;
-      return;
+    function logoutTeacher(){
+      try{
+        localStorage.removeItem("teacherSession");
+        localStorage.removeItem("cpvc_teacher");
+        sessionStorage.clear();
+      }catch(e){}
+      location.href = "./login.html";
     }
 
-    tableBody.innerHTML = "";
+    // ปุ่มยกเลิกใน modal ปิดคาบ (fallback)
+    const closeModalEl = document.getElementById("closeModal");
+    const cancelA = document.getElementById("btnCancel");
+    const cancelB = document.getElementById("btnCancel2");
+    function hideCloseModal(){
+      closeModalEl?.classList.remove("open");
+      if(closeModalEl) closeModalEl.setAttribute("aria-hidden","true");
+    }
+    cancelA?.addEventListener("click", hideCloseModal);
+    cancelB?.addEventListener("click", hideCloseModal);
+    closeModalEl?.addEventListener("click", (e) => { if(e.target === closeModalEl) hideCloseModal(); });
 
-    list.forEach(s => {
-      const tr = document.createElement("tr");
-
-      const start  = s.startTime ?? s.startedAt ?? s.START_TIME ?? "-";
-      const token  = String(s.token || "-").trim();
-      const status = String(s.status || "-").toUpperCase();
-      const sid    = String(s.sessionId || s.id || s.SESSION_ID || "").trim();
-
-      tr.innerHTML = `
-        <td>
-          <div class="session-subject">${escapeHtml(s.subject || "-")}</div>
-          <div class="session-room">${escapeHtml(s.room || "-")}</div>
-        </td>
-        <td>${escapeHtml(token || "-")}</td>
-        <td>${escapeHtml(start)}</td>
-        <td>
-          <span class="status-pill ${status === "OPEN" ? "open" : "closed"}">
-            ${escapeHtml(status)}
-          </span>
-        </td>
-        <td style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button class="btn-mini" data-action="detail" data-session-id="${escapeHtml(sid)}">ดู</button>
-          ${
-            status === "OPEN"
-              ? `<button class="btn-mini danger" data-action="close" data-token="${escapeHtml(token)}">ปิดคาบ</button>`
-              : ``
-          }
-        </td>
-      `;
-
-      tableBody.appendChild(tr);
+    // ปิด session detail modal (fallback)
+    const sessionModal = document.getElementById("sessionModal");
+    document.getElementById("modalCloseBtn")?.addEventListener("click", () => {
+      sessionModal?.classList.remove("open");
+      if(sessionModal) sessionModal.setAttribute("aria-hidden","true");
     });
-  }
-
-  /* ================= EXPORT ALL ================= */
-  async function exportAllCSV(){
-    try{
-      setExportLoading(true);
-      msgEl.textContent = "กำลังสร้างไฟล์ CSV...";
-
-      const res = await callApi("teacherExportAll", {});
-      if(!res?.success) throw new Error(res?.message || "Export ไม่สำเร็จ");
-
-      const csvText = res.csv || res.csvText || "";
-      if(!csvText) throw new Error("ไม่มีข้อมูล CSV จาก server");
-
-      downloadCSV(csvText, `attendance_all_${new Date().toISOString().slice(0,10)}.csv`);
-      msgEl.textContent = "ดาวน์โหลดแล้ว ✅";
-
-    }catch(err){
-      console.error(err);
-      alert(err?.message || "Export ไม่สำเร็จ");
-      msgEl.textContent = err?.message || "Export ไม่สำเร็จ";
-    }finally{
-      setExportLoading(false);
-    }
-  }
-
-  function setExportLoading(isLoading){
-    if (exportBtnTop) exportBtnTop.disabled = !!isLoading;
-    if (exportBtnBar) exportBtnBar.disabled = !!isLoading;
-  }
-
-  /* ================= SESSION DETAIL MODAL ================= */
-  async function openSessionDetailById(sessionId){
-    const sid = String(sessionId || "").trim();
-    if(!sid) return alert("ไม่มี sessionId");
-
-    try{
-      selectedSession = null;
-      openSessionModal();
-
-      modalSubtitle.textContent = "กำลังโหลดรายละเอียด...";
-      modalStats.innerHTML = "";
-      modalFooterInfo.innerHTML = "";
-      modalTableBody.innerHTML = `<tr><td colspan="4" class="empty">กำลังโหลด...</td></tr>`;
-      exportSessionBtn.disabled = true;
-
-      const res = await callApi("teacherGetSessionDetail", { sessionId: sid });
-      if(!res?.success) throw new Error(res?.message || "โหลดรายละเอียดคาบไม่สำเร็จ");
-
-      const sess = res.session || {};
-      const stats = res.stats || {};
-      const records = Array.isArray(res.records) ? res.records : [];
-
-      selectedSession = {
-        sessionId: String(sess.sessionId || sid),
-        token: String(sess.token || ""),
-        subject: String(sess.subject || "-"),
-        room: String(sess.room || "-"),
-        startTime: sess.startTime,
-        status: String(sess.status || "-")
-      };
-
-      modalSubtitle.textContent = `${selectedSession.subject} • ห้อง ${selectedSession.room} • TOKEN: ${selectedSession.token}`;
-
-      modalStats.innerHTML = `
-        <span class="badge">ทั้งหมด: ${Number(stats.total ?? records.length)}</span>
-        <span class="badge ok">มา: ${Number(stats.ok ?? 0)}</span>
-        <span class="badge late">สาย: ${Number(stats.late ?? 0)}</span>
-        <span class="badge absent">ขาด: ${Number(stats.absent ?? 0)}</span>
-      `;
-
-      modalFooterInfo.innerHTML = `
-        <span class="badge">สถานะ: ${escapeHtml(selectedSession.status)}</span>
-        <span class="badge">เริ่ม: ${escapeHtml(String(selectedSession.startTime ?? "-"))}</span>
-      `;
-
-      if(!records.length){
-        modalTableBody.innerHTML = `<tr><td colspan="4" class="empty">ยังไม่มีการเช็คชื่อในคาบนี้</td></tr>`;
-      }else{
-        modalTableBody.innerHTML = records.map(r => `
-          <tr>
-            <td>${escapeHtml(r.studentId || "-")}</td>
-            <td>${escapeHtml(r.studentName || "-")}</td>
-            <td>${escapeHtml(r.time || "-")}</td>
-            <td>${escapeHtml(String(r.status || "-").toUpperCase())}</td>
-          </tr>
-        `).join("");
+    sessionModal?.addEventListener("click", (e) => {
+      if(e.target === sessionModal){
+        sessionModal.classList.remove("open");
+        sessionModal.setAttribute("aria-hidden","true");
       }
+    });
 
-      exportSessionBtn.disabled = !selectedSession.token;
+    // ✅ ทำให้ modal เปิดได้แม้ JS เดิมสั่ง display:flex / class open
+    // (ถ้า teacher-dashboard.js ใช้ classList.add("open") อยู่แล้ว อันนี้ก็ไม่รบกวน)
+  </script>
 
-    }catch(err){
-      console.error(err);
-      modalSubtitle.textContent = "โหลดไม่สำเร็จ";
-      modalTableBody.innerHTML = `<tr><td colspan="4" class="empty">${escapeHtml(err?.message || "โหลดรายละเอียดคาบไม่สำเร็จ")}</td></tr>`;
-      exportSessionBtn.disabled = true;
-    }
-  }
-
-  async function exportCurrentSessionCSV(){
-    try{
-      if(!selectedSession?.token){
-        alert("ยังไม่มี token ของคาบนี้");
-        return;
-      }
-
-      exportSessionBtn.disabled = true;
-
-      // ✅ ฝั่ง GAS ของคุณรองรับ teacherExportSession (คืน csv)
-      const res = await callApi("teacherExportSession", { token: selectedSession.token });
-      if(!res?.success) throw new Error(res?.message || "Export คาบไม่สำเร็จ");
-
-      const csvText = res.csv || res.csvText || "";
-      if(!csvText) throw new Error("ไม่มีข้อมูล CSV จาก server");
-
-      const safeTok = String(selectedSession.token || "SESSION").replace(/[^A-Z0-9_-]/gi, "_");
-      downloadCSV(csvText, `attendance_${safeTok}_${new Date().toISOString().slice(0,10)}.csv`);
-
-    }catch(err){
-      console.error(err);
-      alert(err?.message || "Export คาบไม่สำเร็จ");
-    }finally{
-      exportSessionBtn.disabled = false;
-    }
-  }
-
-  function openSessionModal(){
-    sessionModal?.classList.add("open");
-    sessionModal?.setAttribute("aria-hidden", "false");
-  }
-  function closeSessionModal(){
-    sessionModal?.classList.remove("open");
-    sessionModal?.setAttribute("aria-hidden", "true");
-  }
-
-  /* ================= CLOSE SESSION ================= */
-  function openCloseModal(token){
-    closeTargetToken = String(token || "").trim().toUpperCase();
-    if (modalText) modalText.textContent = `ยืนยันปิดคาบ TOKEN: ${closeTargetToken}`;
-    closeModal?.classList.add("open");
-    closeModal?.setAttribute("aria-hidden", "false");
-  }
-
-  function closeCloseModal(){
-    closeModal?.classList.remove("open");
-    closeModal?.setAttribute("aria-hidden", "true");
-    closeTargetToken = null;
-  }
-
-  async function confirmCloseSession(){
-    if(!closeTargetToken){
-      alert("ไม่มี token คาบ");
-      return;
-    }
-
-    btnConfirm.disabled = true;
-
-    try{
-      const res = await callApi("teacherCloseSession", { token: closeTargetToken });
-      if(!res?.success) throw new Error(res?.message || "ปิดคาบไม่สำเร็จ");
-
-      closeCloseModal();
-      await loadDashboard();
-
-    }catch(err){
-      console.error(err);
-      alert(err?.message || "ปิดคาบไม่สำเร็จ");
-    }finally{
-      btnConfirm.disabled = false;
-    }
-  }
-
-  /* ================= UTILS ================= */
-  function downloadCSV(csvText, filename){
-    // ✅ ใส่ BOM กันภาษาไทยใน Excel
-    const bom = "\uFEFF";
-    const blob = new Blob([bom + csvText], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    URL.revokeObjectURL(url);
-  }
-
-  function getTeacherSession(){
-    try{
-      const raw = localStorage.getItem("teacherSession");
-      if(!raw) return null;
-      const obj = JSON.parse(raw);
-
-      const teacherId = String(obj.teacherId ?? obj.id ?? "").trim();
-      const email = String(obj.email ?? "").trim();
-      const name = String(obj.name ?? "").trim();
-
-      if(!teacherId && !email && !name) return null;
-      return { ...obj, teacherId, id: teacherId || obj.id || "", email, name };
-    }catch{
-      return null;
-    }
-  }
-
-  function escapeHtml(v){
-    return String(v ?? "").replace(/[&<>"']/g, (m) => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[m]));
-  }
-
-});
+</body>
+</html>
