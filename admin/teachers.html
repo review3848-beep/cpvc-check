@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
 
-  <!-- ✅ เปลี่ยนชื่อไฟล์ให้ตรงกับของเธอ -->
+  <!-- ✅ JS -->
   <script type="module" src="./teachers.js" defer></script>
 
   <style>
@@ -46,7 +46,6 @@
         linear-gradient(180deg,#fff,var(--bg0));
     }
 
-    /* Scrollbar */
     html{ overflow-y: scroll; scrollbar-gutter: stable; }
     ::-webkit-scrollbar{ width:12px; }
     ::-webkit-scrollbar-track{ background: rgba(2,6,23,.06); }
@@ -60,7 +59,6 @@
     }
     *{ scrollbar-width: thin; scrollbar-color: rgba(139,92,246,.65) rgba(2,6,23,.06); }
 
-    /* Topbar */
     .topbar{
       position: sticky;
       top: 0;
@@ -119,7 +117,6 @@
     .dot{ width:10px;height:10px;border-radius:999px;background:var(--green); box-shadow:0 0 0 4px rgba(34,197,94,.14); }
     .pill-danger{ color:#b91c1c; border-color: rgba(239,68,68,.35); }
 
-    /* Layout */
     .wrap{ width:min(1180px,92vw); margin:0 auto; padding:22px 0 56px; }
 
     .card{
@@ -231,7 +228,6 @@
       padding: 10px 10px 14px;
     }
 
-    /* Sticky header */
     thead th{
       position: sticky;
       top: 0;
@@ -268,6 +264,7 @@
     tbody td:first-child{
       font-variant-numeric: tabular-nums;
       letter-spacing:.2px;
+      overflow-wrap:anywhere;
     }
     tbody td:last-child{ text-align:right; }
 
@@ -444,7 +441,6 @@
     }
   </style>
 
-  <!-- นับจำนวนแถวอัตโนมัติ -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const chip = document.getElementById("countChip");
@@ -490,7 +486,7 @@
         <div class="tools">
           <div class="search">
             <div class="ico">🔎</div>
-            <input id="q" type="text" placeholder="ค้นหา: รหัส / ชื่อ..." />
+            <input id="q" type="text" placeholder="ค้นหา: รหัส / ชื่อ / อีเมล..." />
           </div>
           <button id="btnAdd" class="btn-add" type="button">➕ เพิ่มครู</button>
         </div>
@@ -501,8 +497,9 @@
           <table>
             <thead>
               <tr>
-                <th style="width:220px;">TEACHER_ID</th>
+                <th style="width:320px;">TEACHER_ID</th>
                 <th>NAME</th>
+                <th style="width:280px;">EMAIL</th>
                 <th style="width:220px; text-align:right;">ACTIONS</th>
               </tr>
             </thead>
@@ -516,7 +513,7 @@
     </section>
   </main>
 
-  <!-- Modal: ให้ teachers.js เปิดได้ -->
+  <!-- Modal -->
   <div id="teacherModal" class="auth-modal" hidden>
     <div class="auth-card">
       <div class="auth-head">
@@ -529,13 +526,19 @@
 
       <div class="auth-body">
         <label class="field">
-          <span>รหัสครู</span>
+          <span>รหัสครู (เว้นว่างได้ ระบบจะสร้างให้)</span>
           <input id="fId" type="text" placeholder="เช่น T001 หรือ 1001" />
         </label>
 
         <label class="field">
           <span>ชื่อ – นามสกุล</span>
           <input id="fName" type="text" placeholder="ชื่อครูตามระบบ" />
+        </label>
+
+        <!-- ✅ เพิ่มช่อง EMAIL ที่หายไป (สำคัญสุด) -->
+        <label class="field">
+          <span>EMAIL</span>
+          <input id="fEmail" type="email" placeholder="เช่น teacher@gmail.com" />
         </label>
 
         <label class="field">
