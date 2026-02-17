@@ -13,6 +13,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const tableBody       = document.getElementById("sessionTable");
   const msgEl           = document.getElementById("msg");
 
+  // ✅ Export button (ต้องมีใน HTML)
+  const exportBtn       = document.getElementById("btnExportAll");
+
   /* close-session modal */
   const closeModal      = document.getElementById("closeModal");
   const modalText       = document.getElementById("modalText");
@@ -34,6 +37,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btnCancel?.addEventListener("click", closeCloseModal);
   btnConfirm?.addEventListener("click", confirmCloseSession);
+
+  // ✅ bind export
+  exportBtn?.addEventListener("click", exportAllCSV);
 
   loadDashboard();
 
@@ -100,6 +106,69 @@ document.addEventListener("DOMContentLoaded", () => {
     bindCloseButtons();
   }
 
+  /* ================= EXPORT CSV ================= */
+  async function exportAllCSV(){
+    if(!exportBtn){
+      alert("ไม่พบปุ่ม Export (btnExportAll)");
+      return;
+    }
+
+    try{
+      exportBtn.disabled = true;
+      msgEl.textContent = "กำลังสร้างไฟล์ CSV...";
+
+      // ✅ ต้องมี action นี้ใน GAS: teacherExportAll
+      const res = await callApi("teacherExportAll", {});
+      if(!res?.success) throw new Error(res?.message || "Export ไม่สำเร็จ");
+
+      // รองรับหลายรูปแบบ response
+      const csvText =
+        res.csvText ||
+        res.csv ||
+        res.data?.csvText ||
+        res.data?.csv ||
+        (Array.isArray(res.rows) ? rowsToCSV(res.rows) : "");
+
+      if(!csvText) throw new Error("Server ไม่ได้ส่งข้อมูล CSV กลับมา");
+
+      downloadCSV(csvText, `attendance_all_${new Date().toISOString().slice(0,10)}.csv`);
+      msgEl.textContent = "ดาวน์โหลดแล้ว ✅";
+
+    }catch(err){
+      console.error(err);
+      alert(err?.message || "Export ไม่สำเร็จ");
+      msgEl.textContent = err?.message || "Export ไม่สำเร็จ";
+    }finally{
+      exportBtn.disabled = false;
+    }
+  }
+
+  function downloadCSV(csvText, filename){
+    const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(url);
+  }
+
+  function rowsToCSV(rows){
+    const cols = Array.from(new Set(rows.flatMap(r => Object.keys(r || {}))));
+    const esc = (v) => `"${String(v ?? "").replace(/"/g,'""')}"`;
+
+    const head = cols.map(esc).join(",");
+    const body = rows
+      .map(r => cols.map(c => esc(r?.[c])).join(","))
+      .join("\n");
+
+    return head + "\n" + body;
+  }
+
   /* ================= CLOSE SESSION ================= */
   function bindCloseButtons(){
     document.querySelectorAll(".btn-close-session").forEach(btn => {
@@ -118,7 +187,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function openCloseModal(){
-    // optional: ใส่ข้อความใน modal ถ้ามี element
     if (modalText) modalText.textContent = `ยืนยันปิดคาบ TOKEN: ${currentSessionToken}`;
     closeModal?.classList.remove("hidden");
   }
@@ -141,7 +209,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await callApi("teacherCloseSession", { token: currentSessionToken });
       if(!res?.success) throw new Error(res?.message || "ปิดคาบไม่สำเร็จ");
 
-      // update UI
       const row = currentButton?.closest("tr");
       const statusEl = row?.querySelector(".status-pill");
       if (statusEl) {
