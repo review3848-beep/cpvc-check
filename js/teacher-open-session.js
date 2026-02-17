@@ -1,4 +1,4 @@
-import { callApi, getTeacherSession } from "../api.js";
+import { callApi } from "../api.js";
 
 /* ================= DOM ================= */
 const teacherNameEl   = document.getElementById("teacherName");
@@ -29,7 +29,7 @@ let currentToken = "";
 document.addEventListener("DOMContentLoaded", init);
 
 async function init(){
-  const teacher = getTeacherSession();
+  const teacher = readTeacherSession_();
   if(!teacher){
     location.href = "login.html";
     return;
@@ -37,25 +37,22 @@ async function init(){
 
   teacherNameEl.textContent = teacher.name || "-";
 
-  openBtn.addEventListener("click", openSession);
-  closeBtn.addEventListener("click", showCloseModal);
-  cancelCloseBtn.addEventListener("click", hideCloseModal);
-  confirmCloseBtn.addEventListener("click", closeSession);
+  openBtn?.addEventListener("click", openSession);
+  closeBtn?.addEventListener("click", showCloseModal);
+  cancelCloseBtn?.addEventListener("click", hideCloseModal);
+  confirmCloseBtn?.addEventListener("click", closeSession);
 
   backBtn?.addEventListener("click", () => location.href = "dashboard.html");
 
-  // ถ้าคุณยังไม่มี action นี้ใน GAS ให้ปล่อยไว้เฉยๆได้
-  // await loadCurrentSession();
-
-  resetUI(); // เริ่มต้น
+  resetUI();
 }
 
 /* ================= SESSION ================= */
 async function openSession(){
-  const teacher = getTeacherSession();
+  const teacher = readTeacherSession_();
   const email   = (teacher?.email || "").trim();
-  const subject = (subjectInput.value || "").trim();
-  const room    = (roomInput.value || "").trim();
+  const subject = (subjectInput?.value || "").trim();
+  const room    = (roomInput?.value || "").trim();
 
   if(!email){
     showMsg("❌ ไม่พบอีเมลครูในระบบ (ลอง logout/login ใหม่)", "err");
@@ -71,12 +68,7 @@ async function openSession(){
   openBtn.textContent = "กำลังเปิดคาบ...";
 
   try{
-    const res = await callApi("teacherOpenSession", {
-      email,     // ✅ สำคัญมาก
-      subject,
-      room
-    });
-
+    const res = await callApi("teacherOpenSession", { email, subject, room });
     if(!res?.success) throw new Error(res?.message || "เปิดคาบไม่สำเร็จ");
 
     renderSession({
@@ -136,9 +128,7 @@ async function closeSession(){
   confirmCloseBtn.textContent = "กำลังปิดคาบ...";
 
   try{
-    // ✅ GAS ของคุณต้องรับ token (คุณเขียน teacherCloseSession_ ให้รับ token แล้ว)
     const res = await callApi("teacherCloseSession", { token: currentToken });
-
     if(!res?.success) throw new Error(res?.message || "ปิดคาบไม่สำเร็จ");
 
     showMsg("✅ ปิดคาบเรียนเรียบร้อย", "ok");
@@ -163,10 +153,6 @@ function resetUI(){
 
   openBtn.disabled  = false;
   closeBtn.disabled = true;
-
-  // ไม่ล้าง subject/room ก็ได้ แต่ผมล้างให้เพื่อกันเผลอ
-  // subjectInput.value = "";
-  // roomInput.value = "";
 }
 
 function showMsg(text, type=""){
@@ -181,4 +167,32 @@ function escapeHtml(v){
   return String(v ?? "").replace(/[&<>"']/g, (m) => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   }[m]));
+}
+
+/* ================= LOCAL SESSION (FIX เด้งกลับ) ================= */
+function readTeacherSession_(){
+  try{
+    const raw = localStorage.getItem("teacherSession");
+    if(!raw) return null;
+
+    const obj = JSON.parse(raw);
+
+    // normalize
+    const teacherId = String(obj.teacherId ?? obj.id ?? "").trim();
+    const name = String(obj.name ?? "").trim();
+    const email = String(obj.email ?? "").trim();
+
+    // มีอย่างน้อย 1 อย่างก็ถือว่า session ใช้ได้
+    if(!teacherId && !email && !name) return null;
+
+    return {
+      ...obj,
+      teacherId,
+      id: teacherId || obj.id || "",
+      name,
+      email
+    };
+  }catch{
+    return null;
+  }
 }
