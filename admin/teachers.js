@@ -1,27 +1,40 @@
 import { callApi } from "../api.js";
 
-/* ===== DOM ===== */
-const tbody = document.getElementById("tbody");
-const q = document.getElementById("q");
-const msgEl = document.getElementById("msg");
-const countEl = document.getElementById("count");
+/* ================== DOM (safe) ================== */
+const $ = (id) => document.getElementById(id);
 
-const btnAdd = document.getElementById("btnAdd");
-const btnExport = document.getElementById("btnExport");
-const btnLogout = document.getElementById("btnLogout");
+/** หา element จากหลาย id (กัน html ใช้ชื่อไม่ตรงกับ js) */
+function pickEl(...ids) {
+  for (const id of ids) {
+    const el = $(id);
+    if (el) return el;
+  }
+  return null;
+}
+
+/* table + search */
+const tbody   = pickEl("tbody");
+const q       = pickEl("q", "search", "keyword");
+const msgEl   = pickEl("msg", "message");
+const countEl = pickEl("count", "countEl");
+
+/* buttons */
+const btnAdd    = pickEl("btnAdd", "addBtn");
+const btnExport = pickEl("btnExport", "exportBtn");
+const btnLogout = pickEl("btnLogout", "logoutBtn");
 
 /* modal */
-const modal = document.getElementById("modal");
-const modalTitle = document.getElementById("modalTitle");
-const btnClose = document.getElementById("btnClose");
-const btnCancel = document.getElementById("btnCancel");
-const btnSave = document.getElementById("btnSave");
+const modal      = pickEl("modal", "teacherModal");
+const modalTitle = pickEl("modalTitle");
+const btnClose   = pickEl("btnClose", "btnCloseModal");
+const btnCancel  = pickEl("btnCancel");
+const btnSave    = pickEl("btnSave");
 
-/* fields */
-const fId = document.getElementById("fId");
-const fName = document.getElementById("fName");
-const fEmail = document.getElementById("fEmail");
-const fPass = document.getElementById("fPass");
+/* fields (fallback หลายชื่อ) */
+const fId    = pickEl("fId", "teacherId", "id", "TEACHER_ID");
+const fName  = pickEl("fName", "name", "teacherName", "NAME");
+const fEmail = pickEl("fEmail", "email", "teacherEmail", "EMAIL");
+const fPass  = pickEl("fPass", "password", "pass", "PASSWORD");
 
 let rows = [];
 let editingId = null;
@@ -60,20 +73,16 @@ function guardAdmin() {
 }
 
 /* ================== API ================== */
-const ACTION_LIST = "adminGetTeachers";
+const ACTION_LIST   = "adminGetTeachers";
 const ACTION_UPSERT = "adminUpsertTeacher";
 const ACTION_DELETE = "adminDeleteTeacher";
 const ACTION_EXPORT = "adminExportTeachers";
 
-/**
- * รองรับ callApi ได้ 2 แบบ:
- * 1) callApi("actionString", payloadObj)
- * 2) callApi({ action:"...", ...payloadObj })
- */
+/** รองรับ callApi ได้ 2 แบบ */
 async function apiCall(action, payload = {}) {
   try {
     return await callApi(action, payload);
-  } catch (e) {
+  } catch {
     return await callApi({ action, ...payload });
   }
 }
@@ -82,6 +91,15 @@ async function apiCall(action, payload = {}) {
 async function init() {
   const admin = guardAdmin();
   if (!admin) return;
+
+  // ถ้า field สำคัญไม่เจอ ให้เตือนเลย (แต่ไม่ทำให้หน้า crash)
+  if (!tbody) console.warn("Missing #tbody in HTML");
+  if (!modal) console.warn("Missing #modal/#teacherModal in HTML");
+  if (!btnSave) console.warn("Missing #btnSave in HTML");
+  if (!fName || !fEmail) {
+    console.warn("Missing form fields:", { fId, fName, fEmail, fPass });
+    toast("ฟอร์ม HTML ยังใช้ id ไม่ตรงกับ JS (แต่ฉันกัน crash ให้แล้ว)");
+  }
 
   wireEvents();
   await loadTeachers();
@@ -104,7 +122,6 @@ function wireEvents() {
   btnSave?.addEventListener("click", onSave);
 
   btnLogout?.addEventListener("click", () => {
-    // ลบ session แบบกวาด ๆ (กัน key ชื่อแปลก)
     const keys = [...Object.keys(localStorage || {}), ...Object.keys(sessionStorage || {})];
     keys.filter(k => String(k).toLowerCase().includes("admin"))
       .forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k); });
@@ -133,16 +150,17 @@ async function loadTeachers() {
 
 /* ================== RENDER ================== */
 function render() {
+  if (!tbody) return;
+
   const keyword = (q?.value || "").trim().toLowerCase();
 
   const filtered = !keyword ? rows : rows.filter(r => {
-    const id = String(getTeacherId(r)).toLowerCase();
-    const name = String(getName(r)).toLowerCase();
-    const email = String(getEmail(r)).toLowerCase();
+    const id    = getTeacherId(r).toLowerCase();
+    const name  = getName(r).toLowerCase();
+    const email = getEmail(r).toLowerCase();
     return id.includes(keyword) || name.includes(keyword) || email.includes(keyword);
   });
 
-  // count pill
   if (countEl) countEl.textContent = `${filtered.length} รายการ`;
 
   if (!filtered.length) {
@@ -151,9 +169,9 @@ function render() {
   }
 
   tbody.innerHTML = filtered.map(r => {
-    const id = esc(getTeacherId(r));
-    const name = esc(getName(r));
-    const email = esc(getEmail(r));
+    const id        = esc(getTeacherId(r));
+    const name      = esc(getName(r));
+    const email     = esc(getEmail(r));
     const createdAt = esc(getCreatedAt(r));
 
     return `
@@ -175,7 +193,7 @@ function render() {
   tbody.querySelectorAll("[data-edit]").forEach(btn => {
     btn.addEventListener("click", () => {
       const id = btn.getAttribute("data-edit");
-      const row = rows.find(r => String(getTeacherId(r)) === String(id));
+      const row = rows.find(r => getTeacherId(r) === String(id));
       openModal("edit", row);
     });
   });
@@ -189,50 +207,62 @@ function render() {
 }
 
 /* ================== MODAL ================== */
+function setVal(el, v) {
+  if (!el) return;
+  el.value = (v == null) ? "" : String(v);
+}
+
 function openModal(mode, row = null) {
   const isAdd = (mode === "add");
 
+  if (!modal) { toast("หา modal ไม่เจอ (id ไม่ตรง)"); return; }
+
   if (isAdd) {
     editingId = null;
-    modalTitle.textContent = "เพิ่มครู";
-    fId.value = "";
-    fName.value = "";
-    fEmail.value = "";
-    fPass.value = "";
-    fId.disabled = false;
+    if (modalTitle) modalTitle.textContent = "เพิ่มครู";
+
+    setVal(fId, "");
+    setVal(fName, "");
+    setVal(fEmail, "");
+    setVal(fPass, "");
+
+    if (fId) fId.disabled = false;
   } else {
-    editingId = String(getTeacherId(row));
-    modalTitle.textContent = "แก้ไขครู";
-    fId.value = editingId;
-    fName.value = String(getName(row) || "");
-    fEmail.value = String(getEmail(row) || "");
-    fPass.value = "";
-    fId.disabled = true;
+    editingId = getTeacherId(row);
+    if (modalTitle) modalTitle.textContent = "แก้ไขครู";
+
+    setVal(fId, editingId);
+    setVal(fName, getName(row));
+    setVal(fEmail, getEmail(row));
+    setVal(fPass, "");
+
+    if (fId) fId.disabled = true;
   }
 
   modal.classList.add("show");
-  setTimeout(() => (fId.disabled ? fName.focus() : fId.focus()), 0);
+  setTimeout(() => {
+    if (fId?.disabled) fName?.focus();
+    else fId?.focus();
+  }, 0);
 }
 
 function closeModal() {
-  modal.classList.remove("show");
+  modal?.classList.remove("show");
 }
 
 /* ================== SAVE ================== */
 async function onSave() {
-  const teacherId = (fId.value || "").trim();
-  const name = (fName.value || "").trim();
-  const email = (fEmail.value || "").trim();
-  const password = (fPass.value || "").trim();
+  const teacherId = (fId?.value || "").trim();
+  const name = (fName?.value || "").trim();
+  const email = (fEmail?.value || "").trim();
+  const password = (fPass?.value || "").trim();
 
   const isEdit = !!editingId;
 
-  // เพิ่มครู: id ว่างได้ (ระบบสร้างให้เอง) → แต่ name/email ต้องมี
-  if (!name) { toast("กรอกชื่อครูก่อน"); fName.focus(); return; }
-  if (!email) { toast("กรอกอีเมลก่อน"); fEmail.focus(); return; }
+  if (!name) { toast("กรอกชื่อครูก่อน"); fName?.focus(); return; }
+  if (!email) { toast("กรอกอีเมลก่อน"); fEmail?.focus(); return; }
 
   const payload = {
-    // ส่งทั้งแบบ key เผื่อหัวตารางต่างกัน
     teacherId: teacherId || undefined,
     TEACHER_ID: teacherId || undefined,
     id: teacherId || undefined,
@@ -244,11 +274,10 @@ async function onSave() {
     email
   };
 
-  // ✅ password เป็น optional ทั้ง add/edit (ไม่กรอก = ไม่ส่งไป)
   if (password) payload.password = password;
 
-  btnSave.disabled = true;
-  btnSave.textContent = "กำลังบันทึก...";
+  if (btnSave) { btnSave.disabled = true; btnSave.textContent = "กำลังบันทึก..."; }
+
   try {
     const res = await apiCall(ACTION_UPSERT, payload);
     if (res?.success === false) throw new Error(res?.message || "save failed");
@@ -261,23 +290,24 @@ async function onSave() {
     console.error(err);
     toast(err?.message ? `บันทึกไม่สำเร็จ: ${err.message}` : "บันทึกไม่สำเร็จ");
   } finally {
-    btnSave.disabled = false;
-    btnSave.textContent = "บันทึก";
+    if (btnSave) { btnSave.disabled = false; btnSave.textContent = "บันทึก"; }
   }
 }
 
 /* ================== DELETE ================== */
 async function onDelete(id) {
-  if (!id) return;
-  const ok = confirm(`ลบครู ID: ${id} ?`);
+  const tid = String(id || "").trim();
+  if (!tid) return;
+
+  const ok = confirm(`ลบครู ID: ${tid} ?`);
   if (!ok) return;
 
   toast("กำลังลบ...");
   try {
     const res = await apiCall(ACTION_DELETE, {
-      teacherId: id,
-      TEACHER_ID: id,
-      id
+      teacherId: tid,
+      TEACHER_ID: tid,
+      id: tid
     });
     if (res?.success === false) throw new Error(res?.message || "delete failed");
 
@@ -292,12 +322,11 @@ async function onDelete(id) {
 
 /* ================== EXPORT ================== */
 async function onExport() {
-  btnExport.disabled = true;
-  btnExport.textContent = "กำลัง Export...";
+  if (btnExport) { btnExport.disabled = true; btnExport.textContent = "กำลัง Export..."; }
+
   try {
     const res = await apiCall(ACTION_EXPORT, {});
     const csv = res?.csv;
-
     if (!csv) throw new Error("ไม่พบข้อมูล CSV จากระบบ");
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -316,24 +345,29 @@ async function onExport() {
     console.error(err);
     toast(err?.message ? `Export ไม่สำเร็จ: ${err.message}` : "Export ไม่สำเร็จ");
   } finally {
-    btnExport.disabled = false;
-    btnExport.textContent = "Export CSV";
+    if (btnExport) { btnExport.disabled = false; btnExport.textContent = "Export CSV"; }
   }
 }
 
-/* ================== MAPPERS ================== */
+/* ================== MAPPERS (กัน "undefined") ================== */
+function safeStr(v) {
+  return (v == null || v === "undefined") ? "" : String(v);
+}
 function getTeacherId(r) {
-  return String(r?.TEACHER_ID ?? r?.teacherId ?? r?.id ?? r?.UID ?? "").trim();
+  const v = r?.TEACHER_ID ?? r?.teacherId ?? r?.id ?? r?.UID ?? "";
+  return safeStr(v).trim();
 }
 function getName(r) {
-  return String(r?.NAME ?? r?.name ?? "").trim();
+  const v = r?.NAME ?? r?.name ?? "";
+  return safeStr(v).trim();
 }
 function getEmail(r) {
-  return String(r?.EMAIL ?? r?.email ?? "").trim();
+  const v = r?.EMAIL ?? r?.email ?? "";
+  return safeStr(v).trim();
 }
 function getCreatedAt(r) {
   const v = r?.CREATED_AT ?? r?.createdAt ?? r?.timestamp ?? r?.เวลา ?? "";
-  return String(v || "").trim();
+  return safeStr(v).trim();
 }
 
 /* ================== UTILS ================== */
