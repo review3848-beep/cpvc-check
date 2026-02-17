@@ -1,45 +1,47 @@
 import { callApi } from "../api.js";
 
-/* ================== DOM (safe) ================== */
-const $ = (id) => document.getElementById(id);
+/* ================== DOM ================== */
+const tbody = document.getElementById("tbody");
+const q = document.getElementById("q");
+const msgEl = document.getElementById("msg");
+const btnAdd = document.getElementById("btnAdd");
 
-/** หา element จากหลาย id (กัน html ใช้ชื่อไม่ตรงกับ js) */
-function pickEl(...ids) {
-  for (const id of ids) {
-    const el = $(id);
-    if (el) return el;
-  }
-  return null;
-}
+/* modal (ของ HTML คุณ) */
+const modal = document.getElementById("teacherModal");
+const modalTitle = document.getElementById("modalTitle");
+const btnCloseModal = document.getElementById("btnCloseModal");
+const btnCancel = document.getElementById("btnCancel");
+const btnSave = document.getElementById("btnSave");
 
-/* table + search */
-const tbody   = pickEl("tbody");
-const q       = pickEl("q", "search", "keyword");
-const msgEl   = pickEl("msg", "message");
-const countEl = pickEl("count", "countEl");
+/* fields */
+const fId = document.getElementById("fId");
+const fName = document.getElementById("fName");
+const fEmail = document.getElementById("fEmail");
+const fPass = document.getElementById("fPass");
 
-/* buttons */
-const btnAdd    = pickEl("btnAdd", "addBtn");
-const btnExport = pickEl("btnExport", "exportBtn");
-const btnLogout = pickEl("btnLogout", "logoutBtn");
-
-/* modal */
-const modal      = pickEl("modal", "teacherModal");
-const modalTitle = pickEl("modalTitle");
-const btnClose   = pickEl("btnClose", "btnCloseModal");
-const btnCancel  = pickEl("btnCancel");
-const btnSave    = pickEl("btnSave");
-
-/* fields (fallback หลายชื่อ) */
-const fId    = pickEl("fId", "teacherId", "id", "TEACHER_ID");
-const fName  = pickEl("fName", "name", "teacherName", "NAME");
-const fEmail = pickEl("fEmail", "email", "teacherEmail", "EMAIL");
-const fPass  = pickEl("fPass", "password", "pass", "PASSWORD");
-
+/* ================== STATE ================== */
 let rows = [];
 let editingId = null;
 
 document.addEventListener("DOMContentLoaded", init);
+
+/* ================== API CONFIG ================== */
+const ACTION_LIST = "adminGetTeachers";
+const ACTION_UPSERT = "adminUpsertTeacher";
+const ACTION_DELETE = "adminDeleteTeacher";
+
+/**
+ * ✅ รองรับ callApi 2 แบบ:
+ * 1) callApi("actionString", payloadObj)
+ * 2) callApi({ action:"...", ...payloadObj })
+ */
+async function apiCall(action, payload = {}) {
+  try {
+    return await callApi(action, payload);
+  } catch (e) {
+    return await callApi({ action, ...payload });
+  }
+}
 
 /* ================== GUARD ================== */
 function guardAdmin() {
@@ -72,34 +74,10 @@ function guardAdmin() {
   catch { return { token: raw }; }
 }
 
-/* ================== API ================== */
-const ACTION_LIST   = "adminGetTeachers";
-const ACTION_UPSERT = "adminUpsertTeacher";
-const ACTION_DELETE = "adminDeleteTeacher";
-const ACTION_EXPORT = "adminExportTeachers";
-
-/** รองรับ callApi ได้ 2 แบบ */
-async function apiCall(action, payload = {}) {
-  try {
-    return await callApi(action, payload);
-  } catch {
-    return await callApi({ action, ...payload });
-  }
-}
-
 /* ================== INIT ================== */
 async function init() {
   const admin = guardAdmin();
   if (!admin) return;
-
-  // ถ้า field สำคัญไม่เจอ ให้เตือนเลย (แต่ไม่ทำให้หน้า crash)
-  if (!tbody) console.warn("Missing #tbody in HTML");
-  if (!modal) console.warn("Missing #modal/#teacherModal in HTML");
-  if (!btnSave) console.warn("Missing #btnSave in HTML");
-  if (!fName || !fEmail) {
-    console.warn("Missing form fields:", { fId, fName, fEmail, fPass });
-    toast("ฟอร์ม HTML ยังใช้ id ไม่ตรงกับ JS (แต่ฉันกัน crash ให้แล้ว)");
-  }
 
   wireEvents();
   await loadTeachers();
@@ -109,25 +87,16 @@ async function init() {
 /* ================== EVENTS ================== */
 function wireEvents() {
   btnAdd?.addEventListener("click", () => openModal("add"));
-  btnExport?.addEventListener("click", onExport);
-
-  btnClose?.addEventListener("click", closeModal);
+  btnCloseModal?.addEventListener("click", closeModal);
   btnCancel?.addEventListener("click", closeModal);
 
+  // คลิกพื้นหลังปิด modal
   modal?.addEventListener("click", (e) => {
     if (e.target === modal) closeModal();
   });
 
   q?.addEventListener("input", render);
   btnSave?.addEventListener("click", onSave);
-
-  btnLogout?.addEventListener("click", () => {
-    const keys = [...Object.keys(localStorage || {}), ...Object.keys(sessionStorage || {})];
-    keys.filter(k => String(k).toLowerCase().includes("admin"))
-      .forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k); });
-
-    location.href = "./login.html";
-  });
 }
 
 /* ================== LOAD ================== */
@@ -135,8 +104,10 @@ async function loadTeachers() {
   toast("กำลังโหลด...");
   try {
     const res = await apiCall(ACTION_LIST, {});
+
     rows = Array.isArray(res?.rows) ? res.rows
       : Array.isArray(res?.data) ? res.data
+      : Array.isArray(res?.teachers) ? res.teachers
       : Array.isArray(res) ? res
       : [];
 
@@ -150,40 +121,36 @@ async function loadTeachers() {
 
 /* ================== RENDER ================== */
 function render() {
-  if (!tbody) return;
-
   const keyword = (q?.value || "").trim().toLowerCase();
 
   const filtered = !keyword ? rows : rows.filter(r => {
-    const id    = getTeacherId(r).toLowerCase();
-    const name  = getName(r).toLowerCase();
+    const id = getTeacherId(r).toLowerCase();
+    const name = getName(r).toLowerCase();
     const email = getEmail(r).toLowerCase();
     return id.includes(keyword) || name.includes(keyword) || email.includes(keyword);
   });
 
-  if (countEl) countEl.textContent = `${filtered.length} รายการ`;
+  if (!tbody) return;
 
   if (!filtered.length) {
-    tbody.innerHTML = `<tr><td class="empty" colspan="5">ไม่พบข้อมูล</td></tr>`;
+    tbody.innerHTML = `<tr><td class="empty" colspan="4">ไม่พบข้อมูล</td></tr>`;
     return;
   }
 
   tbody.innerHTML = filtered.map(r => {
-    const id        = esc(getTeacherId(r));
-    const name      = esc(getName(r));
-    const email     = esc(getEmail(r));
-    const createdAt = esc(getCreatedAt(r));
+    const id = esc(getTeacherId(r));
+    const name = esc(getName(r));
+    const email = esc(getEmail(r));
 
     return `
       <tr>
-        <td class="mono nowrap" data-label="TEACHER_ID">${id}</td>
-        <td data-label="NAME">${name}</td>
-        <td class="mono" data-label="EMAIL">${email}</td>
-        <td class="muted nowrap" data-label="CREATED_AT">${createdAt}</td>
+        <td class="mono nowrap" data-label="TEACHER_ID">${id || "-"}</td>
+        <td data-label="NAME">${name || "-"}</td>
+        <td class="mono" data-label="EMAIL">${email || "-"}</td>
         <td data-label="ACTIONS">
-          <div class="right">
-            <button class="btn btn--ghost" data-edit="${id}" type="button">แก้ไข</button>
-            <button class="btn btn--danger" data-del="${id}" type="button">ลบ</button>
+          <div class="row-actions">
+            <button class="btn-mini" data-edit="${id}">แก้ไข</button>
+            <button class="btn-mini" data-del="${id}">ลบ</button>
           </div>
         </td>
       </tr>
@@ -207,47 +174,35 @@ function render() {
 }
 
 /* ================== MODAL ================== */
-function setVal(el, v) {
-  if (!el) return;
-  el.value = (v == null) ? "" : String(v);
-}
-
 function openModal(mode, row = null) {
   const isAdd = (mode === "add");
-
-  if (!modal) { toast("หา modal ไม่เจอ (id ไม่ตรง)"); return; }
 
   if (isAdd) {
     editingId = null;
     if (modalTitle) modalTitle.textContent = "เพิ่มครู";
 
-    setVal(fId, "");
-    setVal(fName, "");
-    setVal(fEmail, "");
-    setVal(fPass, "");
+    fId && (fId.value = "");
+    fName && (fName.value = "");
+    fEmail && (fEmail.value = "");
+    fPass && (fPass.value = "");
 
     if (fId) fId.disabled = false;
   } else {
     editingId = getTeacherId(row);
     if (modalTitle) modalTitle.textContent = "แก้ไขครู";
 
-    setVal(fId, editingId);
-    setVal(fName, getName(row));
-    setVal(fEmail, getEmail(row));
-    setVal(fPass, "");
-
-    if (fId) fId.disabled = true;
+    if (fId) { fId.value = editingId; fId.disabled = true; }
+    if (fName) fName.value = getName(row);
+    if (fEmail) fEmail.value = getEmail(row);
+    if (fPass) fPass.value = "";
   }
 
-  modal.classList.add("show");
-  setTimeout(() => {
-    if (fId?.disabled) fName?.focus();
-    else fId?.focus();
-  }, 0);
+  if (modal) modal.hidden = false;
+  setTimeout(() => (fId?.disabled ? fName?.focus() : fId?.focus()), 0);
 }
 
 function closeModal() {
-  modal?.classList.remove("show");
+  if (modal) modal.hidden = true;
 }
 
 /* ================== SAVE ================== */
@@ -267,16 +222,18 @@ async function onSave() {
     TEACHER_ID: teacherId || undefined,
     id: teacherId || undefined,
 
-    NAME: name,
     name,
+    NAME: name,
 
-    EMAIL: email,
-    email
+    email,
+    EMAIL: email
   };
 
+  // ✅ ส่งรหัสผ่านเฉพาะตอนกรอก
   if (password) payload.password = password;
 
-  if (btnSave) { btnSave.disabled = true; btnSave.textContent = "กำลังบันทึก..."; }
+  btnSave.disabled = true;
+  btnSave.textContent = "กำลังบันทึก...";
 
   try {
     const res = await apiCall(ACTION_UPSERT, payload);
@@ -290,7 +247,8 @@ async function onSave() {
     console.error(err);
     toast(err?.message ? `บันทึกไม่สำเร็จ: ${err.message}` : "บันทึกไม่สำเร็จ");
   } finally {
-    if (btnSave) { btnSave.disabled = false; btnSave.textContent = "บันทึก"; }
+    btnSave.disabled = false;
+    btnSave.textContent = "บันทึก";
   }
 }
 
@@ -320,54 +278,20 @@ async function onDelete(id) {
   }
 }
 
-/* ================== EXPORT ================== */
-async function onExport() {
-  if (btnExport) { btnExport.disabled = true; btnExport.textContent = "กำลัง Export..."; }
-
-  try {
-    const res = await apiCall(ACTION_EXPORT, {});
-    const csv = res?.csv;
-    if (!csv) throw new Error("ไม่พบข้อมูล CSV จากระบบ");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `teachers_${new Date().toISOString().slice(0,10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    URL.revokeObjectURL(url);
-    toast("Export เรียบร้อย");
-  } catch (err) {
-    console.error(err);
-    toast(err?.message ? `Export ไม่สำเร็จ: ${err.message}` : "Export ไม่สำเร็จ");
-  } finally {
-    if (btnExport) { btnExport.disabled = false; btnExport.textContent = "Export CSV"; }
-  }
-}
-
-/* ================== MAPPERS (กัน "undefined") ================== */
+/* ================== MAPPERS ================== */
 function safeStr(v) {
-  return (v == null || v === "undefined") ? "" : String(v);
+  if (v === undefined || v === null) return "";
+  const s = String(v);
+  return s === "undefined" ? "" : s;
 }
 function getTeacherId(r) {
-  const v = r?.TEACHER_ID ?? r?.teacherId ?? r?.id ?? r?.UID ?? "";
-  return safeStr(v).trim();
+  return safeStr(r?.TEACHER_ID ?? r?.teacherId ?? r?.id ?? r?.UID ?? "").trim();
 }
 function getName(r) {
-  const v = r?.NAME ?? r?.name ?? "";
-  return safeStr(v).trim();
+  return safeStr(r?.NAME ?? r?.name ?? "").trim();
 }
 function getEmail(r) {
-  const v = r?.EMAIL ?? r?.email ?? "";
-  return safeStr(v).trim();
-}
-function getCreatedAt(r) {
-  const v = r?.CREATED_AT ?? r?.createdAt ?? r?.timestamp ?? r?.เวลา ?? "";
-  return safeStr(v).trim();
+  return safeStr(r?.EMAIL ?? r?.email ?? "").trim();
 }
 
 /* ================== UTILS ================== */
